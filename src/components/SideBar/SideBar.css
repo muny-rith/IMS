@@ -1,11 +1,11 @@
 :root {
   --sb-bg: #ffffff;
   --sb-border: rgba(209, 209, 209, 0.384);
-  --sb-accent: var(--primary-color);
+  --sb-accent: #fff;
   --sb-text: rgba(0, 0, 0, 0.836);
   --sb-text-active: #000000;
-  --sb-hover-bg: var(--primary-color);
-  --sb-active-bg: var(--second-color);
+  --sb-hover-bg: var(--second-color);
+  --sb-active-bg: var(--primary-color);
 }
 
 .sidebar {
@@ -52,6 +52,7 @@
   flex: 1;
   overflow-y: auto;
   scrollbar-width: none;
+  /* gap: 20px; */
 }
 .sidebar__nav::-webkit-scrollbar { display: none; }
 
@@ -66,10 +67,12 @@
   font-size: 14px;
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
+  margin: 5px 0;
 }
 .sidebar__link:hover {
   background: var(--sb-hover-bg);
-  color: #ffffff;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
 }
 .sidebar__link--active {
   background: var(--sb-active-bg);
