@@ -1,58 +1,106 @@
 import { Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Sidebar from "../../components/SideBar/SideBar";
 import Navbar from "../../components/Navbar/Navbar";
 import styles from "./MainLayout.module.css";
-import { useState } from "react";
 
-import { motion } from 'framer-motion';
+const SIDEBAR_WIDTH = 250;
+const SIDEBAR_COLLAPSED = 80;
 
 export default function MainLayout() {
+  const [collapsed, setCollapsed]   = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
 
-    const [open, setOpen] = useState("open");
-
-    const sideContainerVariants = {
-        open: {
-            // width: "15rem",
-            opacity: 1,
-            transition: {
-                duration: 0.3,
-                // ease: "easeInOut"
-            },
-            width: "250px",
-
-        },
-        close: {
-            opacity: 0,
-            pointerEvents: "none",
-            transition: { duration: 0.3 },
-            width: "0px",
-        }
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileOpen(false);
     };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
-    return (
-        <div className={styles.layout}>
-            <motion.div
-                className={styles.sidebar}
-                initial={"open"}
-                variants={sideContainerVariants}
-                animate={open}
-            >
-                <Sidebar />
-            </motion.div>
+  // Sidebar animation
+  const sidebarVariants = {
+    // Desktop
+    expanded:  { width: SIDEBAR_WIDTH,     x: 0,                   transition: { duration: 0.3, ease: "easeInOut" } },
+    collapsed: { width: SIDEBAR_COLLAPSED, x: 0,                   transition: { duration: 0.3, ease: "easeInOut" } },
+    // Mobile
+    mobileOpen:   { x: 0,                  width: SIDEBAR_WIDTH,   transition: { duration: 0.3, ease: "easeInOut" } },
+    mobileClosed: { x: -SIDEBAR_WIDTH,     width: SIDEBAR_WIDTH,   transition: { duration: 0.3, ease: "easeInOut" } },
+  };
 
-            <div
-                className={styles.main}
-                // animate={open}
-                // variants={mainContainerVariants}
+  // Main content shift (desktop only)
+  const mainVariants = {
+    expanded:  { marginLeft: SIDEBAR_WIDTH,     transition: { duration: 0.3, ease: "easeInOut" } },
+    collapsed: { marginLeft: SIDEBAR_COLLAPSED, transition: { duration: 0.3, ease: "easeInOut" } },
+    mobile:    { marginLeft: 0,                 transition: { duration: 0.3, ease: "easeInOut" } },
+  };
 
-            >
-                <div className={styles.navbar}>
-                    <Navbar setOpen={setOpen} />
-                </div>
-                <div className={styles.content}>
-                    <Outlet />
-                </div>
-            </div>
+  const getSidebarAnimate = () => {
+    if (isMobile) return mobileOpen ? "mobileOpen" : "mobileClosed";
+    return collapsed ? "collapsed" : "expanded";
+  };
+
+  const getMainAnimate = () => {
+    if (isMobile) return "mobile";
+    return collapsed ? "collapsed" : "expanded";
+  };
+
+  return (
+    <div className={styles.layout}>
+
+      {/* Backdrop (mobile only) */}
+      {isMobile && mobileOpen && (
+        <div
+          className={styles.backdrop}
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <motion.div
+        className={styles.sidebar}
+        variants={sidebarVariants}
+        animate={getSidebarAnimate()}
+        initial={false}
+      >
+        <Sidebar
+          collapsed={collapsed && !isMobile}
+          isMobile={isMobile}
+          onClose={() => setMobileOpen(false)}
+        />
+      </motion.div>
+
+      {/* Main */}
+      <motion.div
+        className={styles.main}
+        variants={mainVariants}
+        animate={getMainAnimate()}
+        initial={false}
+      >
+        {/* Navbar */}
+        <div className={styles.navbar}>
+          <Navbar
+            collapsed={collapsed}
+            isMobile={isMobile}
+            onMenuClick={() =>
+              isMobile
+                ? setMobileOpen(true)
+                : setCollapsed((c) => !c)
+            }
+          />
         </div>
-    );
+
+        {/* Page content */}
+        <div className={styles.content}>
+          <Outlet />
+        </div>
+      </motion.div>
+
+    </div>
+  );
 }
