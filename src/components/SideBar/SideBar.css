@@ -1,6 +1,6 @@
 :root {
   --sb-bg: #ffffff;
-  --sb-border: rgba(255,255,255,0.07);
+  --sb-border: rgba(209, 209, 209, 0.384);
   --sb-accent: var(--primary-color);
   --sb-text: rgba(0, 0, 0, 0.836);
   --sb-text-active: #000000;
@@ -24,9 +24,10 @@
   align-items: center;
   gap: 10px;
   padding: 20px 16px;
-  border-bottom: 1px solid var(--sb-border);
+  border-bottom: 1px solid rgba(219, 219, 219, 0.315);
+
   flex-shrink: 0;
-  min-height: 64px;
+  height: 60px;
   overflow: hidden;
 }
 .sidebar__logo img {
