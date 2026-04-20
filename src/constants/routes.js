@@ -4,6 +4,7 @@ export const ROUTE_SEGMENTS = Object.freeze({
   categories: "categories",
   loans: "loans",
   workers: "workers",
+  stocks: "stocks",
   reports: "reports",
 });
 
@@ -13,5 +14,6 @@ export const ROUTE_PATHS = Object.freeze({
   categories: `/${ROUTE_SEGMENTS.categories}`,
   loans: `/${ROUTE_SEGMENTS.loans}`,
   workers: `/${ROUTE_SEGMENTS.workers}`,
+  stocks: `/${ROUTE_SEGMENTS.stocks}`,
   reports: `/${ROUTE_SEGMENTS.reports}`,
 });

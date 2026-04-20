@@ -7,11 +7,13 @@ import ShoppingCartIcon      from '@mui/icons-material/ShoppingCart'
 import TableRowsIcon         from '@mui/icons-material/TableRows'
 import PaidIcon              from '@mui/icons-material/Paid'
 import PersonIcon            from '@mui/icons-material/Person'
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import InsertDriveFileIcon   from '@mui/icons-material/InsertDriveFile'
 
 const navItems = [
   { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard' },
   { to: '/products',   icon: <ShoppingCartIcon />,   label: 'Product'   },
+  { to: '/stocks',    icon: <Inventory2Icon />,          label: 'Stock'    },
   { to: '/categories',  icon: <TableRowsIcon />,       label: 'Category'  },
   { to: '/loans',      icon: <PaidIcon />,            label: 'Loan'      },
   { to: '/workers',    icon: <PersonIcon />,          label: 'Worker'    },

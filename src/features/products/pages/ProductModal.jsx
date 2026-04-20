@@ -1,14 +1,19 @@
-// pages/product/ProductModal.jsx
+import React, { useEffect, useMemo } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 
-import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-
-import './ProductModal.css'
+import './ProductModal.css';
 
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Box, MenuItem, Select, FormControl, InputLabel,
+  Box,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
 
 import Button from '../../../components/ui/Button/Button';
@@ -22,30 +27,97 @@ const RULES = {
     required: 'Price is required',
     min: { value: 0, message: 'Price must be ≥ 0' },
   },
-  qty: {
-    required: 'Quantity is required',
-    min: { value: 0, message: 'Quantity must be ≥ 0' },
+  openingQty: {
+    min: { value: 0, message: 'Opening stock must be ≥ 0' },
   },
 };
 
-const ProductModal = ({ open, onClose, onSubmit, submitting, categories, defaultValues, viewOnly }) => {
-  const isEdit = Boolean(defaultValues) && !viewOnly  // has data + not viewing
-  const isView = Boolean(defaultValues) && viewOnly   // has data + viewing
+const EMPTY_FORM = {
+  code: '',
+  name: '',
+  categoryId: '',
+  department: '',
+  price: '',
+  openingQty: '',
+  openingNote: '',
+};
+
+const normalizeFormValues = (defaultValues, mode) => {
+  if (!defaultValues || mode === 'create') {
+    return EMPTY_FORM;
+  }
+
+  return {
+    code: defaultValues.code ?? '',
+    name: defaultValues.name ?? '',
+    categoryId:
+      defaultValues.categoryId !== undefined && defaultValues.categoryId !== null
+        ? String(defaultValues.categoryId)
+        : '',
+    department: defaultValues.department ?? '',
+    price: defaultValues.price ?? '',
+    openingQty: '',
+    openingNote: '',
+  };
+};
+
+const ProductModal = ({
+  open,
+  onClose,
+  onSubmit,
+  submitting,
+  categories = [],
+  defaultValues = null,
+  mode = 'create',
+}) => {
+  const isCreate = mode === 'create';
+  const isEdit = mode === 'edit';
+  const isView = mode === 'view';
+
+  const formValues = useMemo(
+    () => normalizeFormValues(defaultValues, mode),
+    [defaultValues, mode]
+  );
+
   const {
+    control,
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({ defaultValues: defaultValues ?? {} });
+  } = useForm({
+    defaultValues: EMPTY_FORM,
+  });
 
   useEffect(() => {
-    if (open) reset(defaultValues ?? {});
-  }, [open, defaultValues, reset]);
+    if (open) {
+      reset(formValues);
+      return;
+    }
+
+    reset(EMPTY_FORM);
+  }, [open, formValues, reset]);
 
   const handleClose = () => {
-    reset();
+    reset(EMPTY_FORM);
     onClose();
   };
+
+  const handleFormSubmit = (values) => {
+    onSubmit({
+      code: values.code.trim(),
+      name: values.name.trim(),
+      categoryId: values.categoryId ? Number(values.categoryId) : null,
+      department: values.department.trim(),
+      price: Number(values.price),
+      openingQty: isCreate && values.openingQty !== '' ? Number(values.openingQty) : 0,
+      openingNote: isCreate ? values.openingNote?.trim() || '' : '',
+    });
+  };
+
+  const onHandQty = Number(defaultValues?.qty ?? 0);
+  const reservedQty = Number(defaultValues?.reservedQty ?? 0);
+  const availableQty = Number(defaultValues?.availableQty ?? onHandQty - reservedQty);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -57,7 +129,7 @@ const ProductModal = ({ open, onClose, onSubmit, submitting, categories, default
         <Box
           component="form"
           id="product-form"
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(handleFormSubmit)}
           sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
         >
           <Box>
@@ -85,79 +157,128 @@ const ProductModal = ({ open, onClose, onSubmit, submitting, categories, default
           <Box>
             <label className="form-label">Category</label>
 
-            <FormControl fullWidth size="small" error={Boolean(errors.categoryId)}>
+            <Controller
+              name="categoryId"
+              control={control}
+              rules={RULES.categoryId}
+              render={({ field }) => (
+                <FormControl fullWidth size="small" error={Boolean(errors.categoryId)}>
+                  <InputLabel id="product-category-label">Category *</InputLabel>
+                  <Select
+                    {...field}
+                    labelId="product-category-label"
+                    label="Category *"
+                    disabled={isView}
+                    value={field.value ?? ''}
+                    onChange={(event) => field.onChange(event.target.value)}
+                  >
+                    <MenuItem value="" disabled>
+                      Select category
+                    </MenuItem>
+                    {categories.map((c) => (
+                      <MenuItem key={c.id} value={String(c.id)}>
+                        {c.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            />
 
-              <InputLabel>Category *</InputLabel>
-              <Select
-                {...register('categoryId', RULES.categoryId)}
-                disabled={isView}
-                label="Category *"
-                defaultValue=""
-              >
-                <MenuItem value="" disabled>Select category</MenuItem>
-                {categories.map((c) => (
-                  <MenuItem key={c.cate_id} value={c.cate_id}>
-                    {c.cate_name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {errors.categoryId && <span className="error-msg">{errors.categoryId.message}</span>}
+            {errors.categoryId && (
+              <span className="error-msg">{errors.categoryId.message}</span>
+            )}
           </Box>
 
           <Box>
             <label className="form-label">Department</label>
-
             <input
               {...register('department', RULES.department)}
               disabled={isView}
               placeholder="Department *"
               className={`form-field${errors.department ? ' field-error' : ''}`}
             />
-            {errors.department && <span className="error-msg">{errors.department.message}</span>}
+            {errors.department && (
+              <span className="error-msg">{errors.department.message}</span>
+            )}
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-
-            <Box>
+          <Box>
             <label className="form-label">Price</label>
-
-              <input
-                {...register('price', RULES.price)}
-                disabled={isView}
-                type="number"
-                min="0"
-                placeholder="Price *"
-                className={`form-field${errors.price ? ' field-error' : ''}`}
-              />
-              {errors.price && <span className="error-msg">{errors.price.message}</span>}
-            </Box>
-            <Box>
-              <label className="form-label">Qty</label>
-
-              <input
-                {...register('qty', RULES.qty)}
-                disabled={isView}
-                type="number"
-                min="0"
-                placeholder="Quantity *"
-                className={`form-field${errors.qty ? ' field-error' : ''}`}
-              />
-              {errors.qty && <span className="error-msg">{errors.qty.message}</span>}
-            </Box>
+            <input
+              {...register('price', RULES.price)}
+              disabled={isView}
+              type="number"
+              min="0"
+              placeholder="Price *"
+              className={`form-field${errors.price ? ' field-error' : ''}`}
+            />
+            {errors.price && <span className="error-msg">{errors.price.message}</span>}
           </Box>
+
+          {isCreate && (
+            <>
+              <Box>
+                <label className="form-label">Opening Stock</label>
+                <input
+                  {...register('openingQty', RULES.openingQty)}
+                  type="number"
+                  min="0"
+                  placeholder="Optional opening stock"
+                  className={`form-field${errors.openingQty ? ' field-error' : ''}`}
+                />
+                {errors.openingQty && (
+                  <span className="error-msg">{errors.openingQty.message}</span>
+                )}
+              </Box>
+
+              <Box>
+                <label className="form-label">Opening Note</label>
+                <input
+                  {...register('openingNote')}
+                  placeholder="Optional opening stock note"
+                  className="form-field"
+                />
+              </Box>
+            </>
+          )}
+
+          {isView && (
+            <Box className="product-stock-summary">
+              <div>
+                <strong>On Hand</strong>
+                <span>{onHandQty}</span>
+              </div>
+              <div>
+                <strong>Reserved</strong>
+                <span>{reservedQty}</span>
+              </div>
+              <div>
+                <strong>Available</strong>
+                <span>{availableQty}</span>
+              </div>
+            </Box>
+          )}
         </Box>
       </DialogContent>
 
       <DialogActions>
-        <Button variant="text" onClick={handleClose} disabled={submitting} value={"Cancel"}></Button>
         <Button
-          type="submit"
-          form="product-form"
-          value={submitting ? '' : isEdit ? 'Save changes' : 'Add product'}
+          variant="text"
+          onClick={handleClose}
           disabled={submitting}
-          startIcon={submitting ? <CircularProgress size={16} /> : null}
+          value={isView ? 'Close' : 'Cancel'}
         />
+
+        {!isView && (
+          <Button
+            type="submit"
+            form="product-form"
+            value={submitting ? '' : isEdit ? 'Save changes' : 'Add product'}
+            disabled={submitting}
+            startIcon={submitting ? <CircularProgress size={16} /> : null}
+          />
+        )}
       </DialogActions>
     </Dialog>
   );

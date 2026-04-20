@@ -9,6 +9,7 @@ import ProductPage from "../features/products/pages/ProductPage";
 import CategoryPage from "../features/categories/pages/CategoryPage";
 import LoanPage from "../features/loans/pages/LoanPage";
 import WorkerPage from "../features/workers/pages/WorkerPage";
+import StockPage from "../features/stocks/pages/StockAdjustmentPage";
 import ReportPage from "../features/reports/pages/ReportPage";
 
 
@@ -19,6 +20,8 @@ function AppRoutes() {
         <Route index element={<Navigate to={ROUTE_PATHS.dashboard} replace />} />
         <Route path={ROUTE_SEGMENTS.dashboard} element={<DashboardPage />} />
         <Route path={ROUTE_SEGMENTS.products} element={<ProductPage />} />
+        <Route path={ROUTE_SEGMENTS.stocks} element={<StockPage />} />
+
         <Route path={ROUTE_SEGMENTS.categories} element={<CategoryPage />} />
         <Route path={ROUTE_SEGMENTS.loans} element={<LoanPage />} />
         <Route path={ROUTE_SEGMENTS.workers} element={<WorkerPage />} />

@@ -1,28 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  fetchProducts,
   fetchCategories,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-} from '../services/productService';
+  addCategory,
+  updateCategory,
+  deleteCategory,
+} from '../services/categoryService';
 
-export const useProducts = () => {
+export const useCategories = () => {
   const [rows, setRows] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadProducts = useCallback(async () => {
-    const data = await fetchProducts();
-    setRows(data);
-    return data;
-  }, []);
-
   const loadCategories = useCallback(async () => {
     const data = await fetchCategories();
-    setCategories(data);
+    setRows(data);
     return data;
   }, []);
 
@@ -34,18 +26,13 @@ export const useProducts = () => {
         setLoading(true);
         setError(null);
 
-        const [productRows, categoryRows] = await Promise.all([
-          fetchProducts(),
-          fetchCategories(),
-        ]);
+        const data = await fetchCategories();
 
         if (!active) return;
-
-        setRows(productRows);
-        setCategories(categoryRows);
+        setRows(data);
       } catch (err) {
         if (!active) return;
-        setError(err.message || 'Failed to load products.');
+        setError(err.message || 'Failed to load categories.');
       } finally {
         if (active) {
           setLoading(false);
@@ -65,11 +52,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await addProduct(data);
-      await loadProducts();
+      await addCategory(data);
+      await loadCategories();
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to add product.';
+      const message = err.message || 'Failed to add category.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -82,11 +69,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await updateProduct(id, data);
-      await loadProducts();
+      await updateCategory(id, data);
+      await loadCategories();
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to update product.';
+      const message = err.message || 'Failed to update category.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -99,11 +86,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await deleteProduct(id);
+      await deleteCategory(id);
       setRows((prev) => prev.filter((row) => row.id !== id));
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to delete product.';
+      const message = err.message || 'Failed to delete category.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -113,14 +100,12 @@ export const useProducts = () => {
 
   return {
     rows,
-    categories,
     loading,
     submitting,
     error,
     handleAdd,
     handleUpdate,
     handleDelete,
-    reload: loadProducts,
-    reloadCategories: loadCategories,
+    reload: loadCategories,
   };
 };

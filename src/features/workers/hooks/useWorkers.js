@@ -1,28 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  fetchProducts,
-  fetchCategories,
-  addProduct,
-  updateProduct,
-  deleteProduct,
-} from '../services/productService';
+  addWorker,
+  deleteWorker,
+  fetchWorkers,
+  updateWorker,
+} from '../services/workerService';
 
-export const useProducts = () => {
+export const useWorkers = () => {
   const [rows, setRows] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadProducts = useCallback(async () => {
-    const data = await fetchProducts();
+  const loadWorkers = useCallback(async () => {
+    const data = await fetchWorkers();
     setRows(data);
-    return data;
-  }, []);
-
-  const loadCategories = useCallback(async () => {
-    const data = await fetchCategories();
-    setCategories(data);
     return data;
   }, []);
 
@@ -34,18 +26,13 @@ export const useProducts = () => {
         setLoading(true);
         setError(null);
 
-        const [productRows, categoryRows] = await Promise.all([
-          fetchProducts(),
-          fetchCategories(),
-        ]);
+        const data = await fetchWorkers();
 
         if (!active) return;
-
-        setRows(productRows);
-        setCategories(categoryRows);
+        setRows(data);
       } catch (err) {
         if (!active) return;
-        setError(err.message || 'Failed to load products.');
+        setError(err.message || 'Failed to load workers.');
       } finally {
         if (active) {
           setLoading(false);
@@ -65,11 +52,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await addProduct(data);
-      await loadProducts();
+      await addWorker(data);
+      await loadWorkers();
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to add product.';
+      const message = err.message || 'Failed to add worker.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -82,11 +69,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await updateProduct(id, data);
-      await loadProducts();
+      await updateWorker(id, data);
+      await loadWorkers();
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to update product.';
+      const message = err.message || 'Failed to update worker.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -99,11 +86,11 @@ export const useProducts = () => {
     setError(null);
 
     try {
-      await deleteProduct(id);
+      await deleteWorker(id);
       setRows((prev) => prev.filter((row) => row.id !== id));
       return { success: true };
     } catch (err) {
-      const message = err.message || 'Failed to delete product.';
+      const message = err.message || 'Failed to delete worker.';
       setError(message);
       return { success: false, message };
     } finally {
@@ -113,14 +100,12 @@ export const useProducts = () => {
 
   return {
     rows,
-    categories,
     loading,
     submitting,
     error,
     handleAdd,
     handleUpdate,
     handleDelete,
-    reload: loadProducts,
-    reloadCategories: loadCategories,
+    reload: loadWorkers,
   };
 };
