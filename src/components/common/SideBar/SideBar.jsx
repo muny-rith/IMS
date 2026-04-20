@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import logo from '../../assets/images/logo.png'
+import logo from '../../../assets/images/logo.png'
 import './SideBar.css'
 
 import SpaceDashboardIcon   from '@mui/icons-material/SpaceDashboard'
@@ -11,11 +11,11 @@ import InsertDriveFileIcon   from '@mui/icons-material/InsertDriveFile'
 
 const navItems = [
   { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard' },
-  { to: '/product',   icon: <ShoppingCartIcon />,   label: 'Product'   },
-  { to: '/category',  icon: <TableRowsIcon />,       label: 'Category'  },
-  { to: '/loan',      icon: <PaidIcon />,            label: 'Loan'      },
-  { to: '/worker',    icon: <PersonIcon />,          label: 'Worker'    },
-  { to: '/report',    icon: <InsertDriveFileIcon />, label: 'Report'    },
+  { to: '/products',   icon: <ShoppingCartIcon />,   label: 'Product'   },
+  { to: '/categories',  icon: <TableRowsIcon />,       label: 'Category'  },
+  { to: '/loans',      icon: <PaidIcon />,            label: 'Loan'      },
+  { to: '/workers',    icon: <PersonIcon />,          label: 'Worker'    },
+  { to: '/reports',    icon: <InsertDriveFileIcon />, label: 'Report'    },
 ]
 
 const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {

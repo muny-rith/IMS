@@ -1,7 +1,10 @@
 import React from 'react';
-import DataTable from '../../components/DataTable/DataTable';
-import Button from '../../components/Form/Button';
-import Input from '../../components/Form/Input'
+
+
+
+import DataTable from '../../../components/ui/DataTable/DataTable';
+import Button from '../../../components/ui/Button/Button';
+import Input from '../../../components/ui/Input/Input'
 
 import styles from './loan.module.css'
 
@@ -9,18 +12,6 @@ import { Box, Avatar } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UndoIcon from '@mui/icons-material/Undo';
-
-// const rows = [
-//   { id: 1, name: 'Product A', price: 25 },
-//   { id: 2, name: 'Product B', price: 30 },
-// ];
-
-// const columns = [
-//   { field: 'name', headerName: 'Product', flex: 1 },
-//   { field: 'price', headerName: 'Price', flex: 1 },
-// ];
-
-
 
 
 const rows = [
@@ -83,7 +74,7 @@ const columns = [
     ),
   },
 ];
-const Loan = () => {
+const LoanPage = () => {
   return (
     <div className='container-fluid'>
       <h5 style={{ alignSelf: 'flex-start' }}>Loan list</h5>
@@ -99,4 +90,4 @@ const Loan = () => {
   );
 };
 
-export default Loan;
+export default LoanPage;

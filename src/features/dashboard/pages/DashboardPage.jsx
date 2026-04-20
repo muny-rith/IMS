@@ -1,9 +1,8 @@
 import React from 'react';
 import styles from './dashboard.module.css'
-import '../../components/LoanoutChart/LoanoutChart'
-import LoanoutChart from '../../components/LoanoutChart/LoanoutChart';
+import LoanoutChart from '../../../components/ui/LoanoutChart/LoanoutChart'
 
-const Dashboard = () => {
+const DashboardPage = () => {
     return (
         <div className={styles.dashboard}>
             <h5 style={{ alignSelf: 'flex-start' }}>Hi, Welcome backk!!!</h5>
@@ -61,4 +60,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default DashboardPage;

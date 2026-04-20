@@ -12,9 +12,10 @@ import reportWebVitals from './reportWebVitals';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'  // ← add this
-import App from './App'
+import App from './app/App'
 import './index.css'
-import './typography.css';
+import '../src/styles/globals.css'
+import '../src/styles/typography.css';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'))

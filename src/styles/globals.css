@@ -1,0 +1,144 @@
+:root {
+  --primary-color: #eb0029;
+  --second-color: #fde5e9;
+  --third-color: #fc791a;
+  --fourth-color: #010f1c;
+  --background: #f4f1ea;
+  --text: #5C6574;
+  --radius : 9px;
+}
+html, body, #root {
+  height: 100%;
+}
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+}
+.input{
+  border-radius: var(--radius);
+  padding: 10px 20px;
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Epilogue", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* html {
+    scrollbar-gutter: stable;
+
+} */
+
+body {
+  overflow-x: hidden;
+  background-color: var(--background);
+}
+
+
+.container {
+  width: 100%;
+  padding: 0px 15px 0px 15px;
+
+}
+
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-fluid {
+  width: 100%;
+  margin-inline: auto;
+  /* center it */
+}
+
+
+/* --- Fluid: always 100%, just has padding --- */
+
+.container-fluid {
+  max-width: 100%;
+}
+
+
+/* --- sm: 576px and up --- */
+
+@media (min-width: 576px) {
+
+  .container,
+  .container-sm {
+    /* max-width: 540px; */
+    padding: 20px 20px 20px 20px;
+  }
+}
+
+
+/* --- md: 768px and up --- */
+
+@media (min-width: 768px) {
+
+  .container,
+  .container-sm,
+  .container-md {
+    /* max-width: 720px; */
+    /* padding-inline: 1.5rem; */
+    padding: 20px 30px 20px 30px;
+  }
+}
+
+
+/* --- lg: 992px and up --- */
+
+@media (min-width: 992px) {
+
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg {
+    max-width: 100%;
+    /* padding-inline: 2rem; */
+  }
+}
+
+
+/* --- xl: 1200px and up --- */
+
+@media (min-width: 1200px) {
+
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl {
+    max-width: 1140px;
+  }
+}
+
+
+/* --- xxl: 1400px and up --- */
+
+@media (min-width: 1400px) {
+
+  .container,
+  .container-sm,
+  .container-md,
+  .container-lg,
+  .container-xl {
+    max-width: 1320px;
+    /* padding-inline: 2.5rem; */
+  }
+}
+
+.cover-container {
+  padding: 20px 10px 20px 10px;
+  width: 100%;
+}

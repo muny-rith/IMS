@@ -11,7 +11,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import Button from '../../components/Form/Button';
+import Button from '../../../components/ui/Button/Button';
 
 const RULES = {
   code: { required: 'Code is required' },

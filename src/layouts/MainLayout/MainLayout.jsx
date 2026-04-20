@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "../../components/SideBar/SideBar";
-import Navbar from "../../components/Navbar/Navbar";
+import Sidebar from "../../components/common/SideBar/SideBar";
+import Navbar from "../../components/common/Navbar/Navbar";
 import styles from "./MainLayout.module.css";
 
 const SIDEBAR_WIDTH = 250;

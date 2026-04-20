@@ -1,12 +1,12 @@
-// pages/product/Product.jsx
-
 import React, { useState, useMemo } from 'react';
 import './product.css';
 
-import DataTable from '../../components/DataTable/DataTable';
-import Button from '../../components/Form/Button';
-import Input from '../../components/Form/Input';
+
+import DataTable from '../../../components/ui/DataTable/DataTable';
+import Button from '../../../components/ui/Button/Button';
+import Input from '../../../components/ui/Input/Input';
 import ProductModal from './ProductModal';   // ← imported from same folder
+
 
 import {
   Box, Avatar, Tooltip, Snackbar, Alert,
@@ -14,15 +14,16 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-import { useProducts } from '../../hooks/useProducts';
+import { useProducts } from '../hooks/useProducts';
 
 const INITIAL_TOAST = { open: false, message: '', severity: 'success' };
 
-const Product = () => {
+const ProductPage = () => {
   const { rows, categories, loading, submitting, handleAdd, handleUpdate, handleDelete } =
     useProducts();
 
@@ -182,4 +183,4 @@ const Product = () => {
   );
 };
 
-export default Product;
+export default ProductPage;
