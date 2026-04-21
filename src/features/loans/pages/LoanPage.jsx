@@ -116,9 +116,10 @@ const LoanPage = () => {
       (row) => row.status === 'RETURNED'
     ).length;
 
-    const partialLoans = rows.filter(
-      (row) => row.status === 'PARTIAL'
-    ).length;
+    // const partialLoans = rows.filter(
+    //   (row) => row.status === 'PARTIAL'
+    // ).length;
+    // console.log(partialLoans)
 
     const itemsOut = rows.reduce(
       (sum, row) => sum + Number(row.outstandingQty ?? 0),
