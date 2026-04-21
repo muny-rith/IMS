@@ -10,6 +10,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Snackbar,
   Tooltip,
 } from '@mui/material';
@@ -17,6 +18,10 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -36,10 +41,26 @@ const EMPTY_MODAL_STATE = {
   editRow: null,
 };
 
+const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
+  <div className={`product-summary-card product-summary-card--${tone}`}>
+    <div className="product-summary-card__icon">{icon}</div>
+    <div className="product-summary-card__content">
+      <div className="product-summary-card__title">{title}</div>
+      <div className="product-summary-card__value">{value}</div>
+      <div className="product-summary-card__helper">{helper}</div>
+    </div>
+  </div>
+);
+
 const ProductPage = () => {
   const {
-    rows,
-    categories,
+    rows = [],
+    categories = [],
     loading,
     submitting,
     handleAdd,
@@ -76,6 +97,54 @@ const ProductPage = () => {
     );
   }, [rows, search]);
 
+  const stats = useMemo(() => {
+    const lowStockCount = rows.filter((row) => {
+      const qty = Number(row.qty ?? 0);
+      return qty > 0 && qty <= 10;
+    }).length;
+
+    const outOfStockCount = rows.filter(
+      (row) => Number(row.qty ?? 0) <= 0
+    ).length;
+
+    const stockValue = rows.reduce((sum, row) => {
+      const qty = Number(row.qty ?? 0);
+      const price = Number(row.price ?? 0);
+      return sum + qty * price;
+    }, 0);
+
+    return [
+      {
+        label: 'Products',
+        value: rows.length,
+        helper: `${filteredRows.length} visible in table`,
+        icon: <Inventory2OutlinedIcon fontSize="small" />,
+        tone: 'default',
+      },
+      {
+        label: 'Categories',
+        value: categories.length,
+        helper: 'Organized groups',
+        icon: <CategoryOutlinedIcon fontSize="small" />,
+        tone: 'info',
+      },
+      {
+        label: 'Low Stock',
+        value: lowStockCount,
+        helper: `${outOfStockCount} out of stock`,
+        icon: <WarningAmberOutlinedIcon fontSize="small" />,
+        tone: 'warning',
+      },
+      {
+        label: 'Stock Value',
+        value: currencyFormatter.format(stockValue),
+        helper: 'Visible inventory value',
+        icon: <PaymentsOutlinedIcon fontSize="small" />,
+        tone: 'success',
+      },
+    ];
+  }, [rows, categories, filteredRows.length]);
+
   const handleSubmit = async (data) => {
     const isEdit = modal.mode === 'edit' && modal.editRow?.id;
 
@@ -109,53 +178,126 @@ const ProductPage = () => {
       {
         field: 'product',
         headerName: 'Product',
-        flex: 1.2,
+        flex: 0.8,
+        sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
             <Avatar
               src={params.row.image ?? undefined}
-              sx={{ width: 32, height: 32, fontSize: 13 }}
+              className="product-avatar"
             >
-              {params.row.name?.[0]?.toUpperCase()}
+              {params.row.name?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
-            {params.row.name}
           </Box>
         ),
       },
-      { field: 'name', headerName: 'Name', flex: 1 },
-      { field: 'code', headerName: 'Code', flex: 1 },
-      { field: 'category', headerName: 'Category', flex: 1 },
-      { field: 'department', headerName: 'Department', flex: 1.2 },
+      {
+        field: 'name',
+        headerName: 'Name',
+        flex: 1.35,
+        renderCell: (params) => (
+          <Box className="product-name-cell">
+            <span className="product-name-cell__title">
+              {params.row.name || '—'}
+            </span>
+            <span className="product-name-cell__meta">
+              {params.row.code ? `SKU ${params.row.code}` : 'No code'}
+            </span>
+          </Box>
+        ),
+      },
+      { field: 'code', headerName: 'Code', flex: 0.9 },
+      {
+        field: 'category',
+        headerName: 'Category',
+        flex: 1,
+        renderCell: (params) => params.row.category || '—',
+      },
+      {
+        field: 'department',
+        headerName: 'Department',
+        flex: 1.1,
+        renderCell: (params) => params.row.department || 'N/A',
+      },
       {
         field: 'price',
         headerName: 'Price',
-        flex: 1,
-        valueFormatter: (value) =>
-          value != null
-            ? new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-              }).format(value)
-            : '—',
+        flex: 0.9,
+        align: 'right',
+        headerAlign: 'right',
+        renderCell: (params) => {
+          const price = params.row.price;
+          return (
+            <Box className="product-price-cell">
+              {price != null && price !== ''
+                ? currencyFormatter.format(Number(price))
+                : '—'}
+            </Box>
+          );
+        },
       },
       {
         field: 'qty',
         headerName: 'Qty',
         flex: 0.7,
         type: 'number',
-        align: 'left',
-        headerAlign: 'left',
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => {
+          const qty = Number(params.row.qty ?? 0);
+          const qtyClass =
+            qty <= 0
+              ? 'product-qty-badge product-qty-badge--empty'
+              : qty <= 10
+              ? 'product-qty-badge product-qty-badge--low'
+              : 'product-qty-badge';
+
+          return (
+            <Box
+              sx={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <span className={qtyClass}>{qty}</span>
+            </Box>
+          );
+        },
       },
       {
         field: 'action',
         headerName: 'Actions',
-        flex: 1.2,
+        flex: 1,
         sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
-          <Box display="flex" gap={1} alignItems="center" height="100%">
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 0.5,
+              flexWrap: 'nowrap',
+            }}
+          >
             <Tooltip title="View">
-              <VisibilityIcon
-                sx={{ color: '#29b6f6', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="product-action product-action--view"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -163,12 +305,15 @@ const ProductPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <VisibilityIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Edit">
-              <EditIcon
-                sx={{ color: '#66bb6a', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="product-action product-action--edit"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -176,14 +321,19 @@ const ProductPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <EditIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Delete">
-              <DeleteIcon
-                sx={{ color: '#ef5350', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="product-action product-action--delete"
                 onClick={() => setDeleting(params.row.id)}
-              />
+              >
+                <DeleteIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
           </Box>
         ),
@@ -193,36 +343,83 @@ const ProductPage = () => {
   );
 
   return (
-    <div className="container-fluid">
-      <h5 style={{ alignSelf: 'flex-start' }}>Product list</h5>
+    <div className="product-page">
+      <section className="product-page__hero">
+        <div>
+          <p className="product-page__eyebrow">Catalog</p>
+          <h4 className="product-page__title">Product List</h4>
+          <p className="product-page__subtitle">
+            Manage product identity, pricing, and quantity snapshots in one
+            clean admin workspace.
+          </p>
+        </div>
 
-      <div className="filter">
-        <Button
-          value="Add product"
-          onClick={() =>
-            setModal({
-              open: true,
-              mode: 'create',
-              editRow: null,
-            })
-          }
-        />
+        <div className="product-page__stats">
+          {stats.map((item) => (
+            <SummaryCard
+              key={item.label}
+              icon={item.icon}
+              title={item.label}
+              value={item.value}
+              helper={item.helper}
+              tone={item.tone}
+            />
+          ))}
+        </div>
+      </section>
 
-        <Input
-          leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, code, category..."
-        />
-      </div>
+      <section className="product-panel">
+        <section className="product-toolbar">
+          <div>
+            <h6 className="product-panel__title">Current Products</h6>
+            <p className="product-panel__subtitle">
+              Search products quickly, review pricing and stock posture, and
+              keep product actions close to the table.
+            </p>
+          </div>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <DataTable rows={filteredRows} columns={columns} />
-      )}
+          <div className="product-toolbar__controls">
+            <Button
+              value="Add product"
+              onClick={() =>
+                setModal({
+                  open: true,
+                  mode: 'create',
+                  editRow: null,
+                })
+              }
+            />
+
+            <div className="product-toolbar__search">
+              <Input
+                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, code, category..."
+              />
+            </div>
+          </div>
+        </section>
+
+        <div className="product-panel__header">
+          <div className="product-panel__meta">
+            <p className="product-panel__eyebrow">Live products</p>
+            <div className="product-panel__badge">
+              {filteredRows.length} visible
+            </div>
+          </div>
+        </div>
+
+        <div className="product-panel__body">
+          {loading ? (
+            <Box display="flex" justifyContent="center" alignItems="center" py={6}>
+              <CircularProgress size={30} />
+            </Box>
+          ) : (
+            <DataTable rows={filteredRows} columns={columns} />
+          )}
+        </div>
+      </section>
 
       <ProductModal
         open={modal.open}

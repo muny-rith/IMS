@@ -10,6 +10,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Snackbar,
   Tooltip,
 } from '@mui/material';
@@ -17,6 +18,10 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
+import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -35,6 +40,17 @@ const EMPTY_MODAL_STATE = {
   mode: 'create',
   editRow: null,
 };
+
+const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
+  <div className={`worker-summary-card worker-summary-card--${tone}`}>
+    <div className="worker-summary-card__icon">{icon}</div>
+    <div className="worker-summary-card__content">
+      <div className="worker-summary-card__title">{title}</div>
+      <div className="worker-summary-card__value">{value}</div>
+      <div className="worker-summary-card__helper">{helper}</div>
+    </div>
+  </div>
+);
 
 const WorkerPage = () => {
   const {
@@ -71,6 +87,42 @@ const WorkerPage = () => {
     );
   }, [rows, search]);
 
+  const stats = useMemo(() => {
+    const withPosition = rows.filter((row) => row.positionTitle?.trim()).length;
+    const withDepartment = rows.filter((row) => row.department?.trim()).length;
+
+    return [
+      {
+        label: 'Total Workers',
+        value: rows.length,
+        helper: 'People records available',
+        icon: <BadgeOutlinedIcon fontSize="small" />,
+        tone: 'default',
+      },
+      {
+        label: 'With Position',
+        value: withPosition,
+        helper: 'Role title recorded',
+        icon: <WorkOutlineOutlinedIcon fontSize="small" />,
+        tone: 'info',
+      },
+      {
+        label: 'With Department',
+        value: withDepartment,
+        helper: 'Assigned to department',
+        icon: <ApartmentOutlinedIcon fontSize="small" />,
+        tone: 'success',
+      },
+      {
+        label: 'Visible Results',
+        value: filteredRows.length,
+        helper: 'Current search result',
+        icon: <VisibilityOutlinedIcon fontSize="small" />,
+        tone: 'default',
+      },
+    ];
+  }, [rows, filteredRows.length]);
+
   const handleSubmit = async (data) => {
     const isEdit = modal.mode === 'edit' && modal.editRow?.id;
 
@@ -104,30 +156,81 @@ const WorkerPage = () => {
       {
         field: 'worker',
         headerName: 'Worker',
-        flex: 1.2,
+        flex: 0.85,
+        sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
-          <Box display="flex" alignItems="center" gap={1}>
-            <Avatar sx={{ width: 32, height: 32, fontSize: 13 }}>
+          <Box
+            sx={{
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Avatar className="worker-avatar">
               {params.row.name?.[0]?.toUpperCase()}
             </Avatar>
-            {params.row.name}
           </Box>
         ),
       },
-      { field: 'name', headerName: 'Name', flex: 1 },
-      { field: 'code', headerName: 'Code', flex: 1 },
-      { field: 'positionTitle', headerName: 'Position', flex: 1.2 },
-      { field: 'department', headerName: 'Department', flex: 1.2 },
+      {
+        field: 'name',
+        headerName: 'Name',
+        flex: 1.25,
+        renderCell: (params) => (
+          <Box className="worker-name-cell">
+            <span className="worker-name-cell__title">
+              {params.row.name || '—'}
+            </span>
+            <span className="worker-name-cell__meta">
+              {params.row.code ? `Code ${params.row.code}` : 'No code'}
+            </span>
+          </Box>
+        ),
+      },
+      {
+        field: 'code',
+        headerName: 'Code',
+        flex: 0.9,
+      },
+      {
+        field: 'positionTitle',
+        headerName: 'Position',
+        flex: 1.1,
+        renderCell: (params) => params.row.positionTitle || '—',
+      },
+      {
+        field: 'department',
+        headerName: 'Department',
+        flex: 1.1,
+        renderCell: (params) => params.row.department || '—',
+      },
       {
         field: 'action',
         headerName: 'Actions',
-        flex: 1.1,
+        flex: 1,
         sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
-          <Box display="flex" gap={1} alignItems="center" height="100%">
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 0.5,
+              flexWrap: 'nowrap',
+            }}
+          >
             <Tooltip title="View">
-              <VisibilityIcon
-                sx={{ color: '#29b6f6', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="worker-action worker-action--view"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -135,12 +238,15 @@ const WorkerPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <VisibilityIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Edit">
-              <EditIcon
-                sx={{ color: '#66bb6a', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="worker-action worker-action--edit"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -148,14 +254,19 @@ const WorkerPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <EditIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Delete">
-              <DeleteIcon
-                sx={{ color: '#ef5350', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="worker-action worker-action--delete"
                 onClick={() => setDeleting(params.row.id)}
-              />
+              >
+                <DeleteIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
           </Box>
         ),
@@ -165,36 +276,83 @@ const WorkerPage = () => {
   );
 
   return (
-    <div className="container-fluid">
-      <h5 style={{ alignSelf: 'flex-start' }}>Worker list</h5>
+    <div className="worker-page">
+      <section className="worker-page__hero">
+        <div>
+          <p className="worker-page__eyebrow">People</p>
+          <h4 className="worker-page__title">Worker List</h4>
+          <p className="worker-page__subtitle">
+            Manage worker records, keep job roles organized, and maintain clean
+            department ownership in one admin workspace.
+          </p>
+        </div>
 
-      <div className="filter">
-        <Button
-          value="Add worker"
-          onClick={() =>
-            setModal({
-              open: true,
-              mode: 'create',
-              editRow: null,
-            })
-          }
-        />
+        <div className="worker-page__stats">
+          {stats.map((item) => (
+            <SummaryCard
+              key={item.label}
+              icon={item.icon}
+              title={item.label}
+              value={item.value}
+              helper={item.helper}
+              tone={item.tone}
+            />
+          ))}
+        </div>
+      </section>
 
-        <Input
-          leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, code, position..."
-        />
-      </div>
+      <section className="worker-panel">
+        <section className="worker-toolbar">
+          <div>
+            <h6 className="worker-panel__title">Current Workers</h6>
+            <p className="worker-panel__subtitle">
+              Review people records, search by identity or role, and keep worker
+              actions close to the table.
+            </p>
+          </div>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <DataTable rows={filteredRows} columns={columns} />
-      )}
+          <div className="worker-toolbar__controls">
+            <Button
+              value="Add worker"
+              onClick={() =>
+                setModal({
+                  open: true,
+                  mode: 'create',
+                  editRow: null,
+                })
+              }
+            />
+
+            <div className="worker-toolbar__search">
+              <Input
+                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, code, position..."
+              />
+            </div>
+          </div>
+        </section>
+
+        <div className="worker-panel__header">
+          <div className="worker-panel__meta">
+            <p className="worker-panel__eyebrow">Live workers</p>
+            <div className="worker-panel__badge">
+              {filteredRows.length} visible
+            </div>
+          </div>
+        </div>
+
+        <div className="worker-panel__body">
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : (
+            <DataTable rows={filteredRows} columns={columns} />
+          )}
+        </div>
+      </section>
 
       <WorkerModal
         open={modal.open}

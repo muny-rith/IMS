@@ -41,13 +41,13 @@ const columns = [
   {
     field: 'createdAt',
     headerName: 'Created At',
-    flex: 1.2,
+    flex: 1.7,
     renderCell: (params) => formatDateTime(params.row.createdAt),
   },
   {
     field: 'movementType',
     headerName: 'Movement Type',
-    flex: 1,
+    flex: 1.4,
     renderCell: (params) => (
       <Chip
         size="small"
@@ -66,7 +66,7 @@ const columns = [
   {
     field: 'notes',
     headerName: 'Notes',
-    flex: 1.8,
+    flex: 1.6,
     renderCell: (params) => params.row.notes || '—',
   },
 ];
@@ -101,8 +101,10 @@ const StockHistoryDrawer = ({
         >
           <Box>
             <h3 style={{ margin: 0 }}>Product History</h3>
-            <p style={{ margin: '6px 0 0', color: '#667085' }}>
-              {product?.productCode} - {product?.productName}
+            <p style={{ margin: '10px 0 0', color: '#667085' }}>
+              code: <span style={{color: '#000', fontWeight: 'bold'}}>{product?.productCode}</span> 
+              <br></br> 
+              name: <span style={{color: '#000', fontWeight: 'bold'}}>{product?.productName}</span> 
             </p>
           </Box>
 

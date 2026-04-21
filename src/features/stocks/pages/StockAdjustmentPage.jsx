@@ -39,12 +39,29 @@ const EMPTY_HISTORY_STATE = {
 
 const FILTERS = ['ALL', 'LOW_STOCK', 'OUT_OF_STOCK'];
 
-const SummaryCard = ({ icon, title, value, tone = 'default' }) => (
-  <div className={`stock-summary-card stock-summary-card--${tone}`}>
+const getFilterLabel = (value) => {
+  if (value === 'LOW_STOCK') return 'Low Stock';
+  if (value === 'OUT_OF_STOCK') return 'Out of Stock';
+  return 'All';
+};
+
+const SummaryCard = ({
+  icon,
+  title,
+  value,
+  helper,
+  tone = 'default',
+  compact = false,
+}) => (
+  <div
+    className={`stock-summary-card stock-summary-card--${tone}${compact ? ' stock-summary-card--compact' : ''
+      }`}
+  >
     <div className="stock-summary-card__icon">{icon}</div>
     <div className="stock-summary-card__content">
       <div className="stock-summary-card__title">{title}</div>
       <div className="stock-summary-card__value">{value}</div>
+      <div className="stock-summary-card__helper">{helper}</div>
     </div>
   </div>
 );
@@ -190,51 +207,52 @@ const StockAdjustmentPage = () => {
 
   return (
     <div className="stock-page">
-      <div className="stock-page__header">
-        <div className="stock-page__header-content">
+      <section className="stock-page__hero">
+        <div>
+          <p className="stock-page__eyebrow">Inventory</p>
           <h4 className="stock-page__title">Stock Control</h4>
           <p className="stock-page__subtitle">
-            Review current balances, spot stock issues quickly, and inspect
-            movement history by product.
+            Review live balances, catch low-stock problems early, and inspect
+            movement history without changing your existing stock components.
           </p>
         </div>
 
-        <div className="stock-page__header-actions">
-          <Button value="Refresh" onClick={handleRefresh} />
-          <Input
-            leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by code, product, category..."
-          />
+        <div className="stock-page__hero-card">
+          <div className="stock-page__hero-summary-grid">
+            <SummaryCard
+              icon={<Inventory2OutlinedIcon fontSize="small" />}
+              title="Total SKUs"
+              value={summary.totalSkus}
+              helper="Tracked inventory items"
+              compact
+            />
+            <SummaryCard
+              icon={<WarningAmberOutlinedIcon fontSize="small" />}
+              title="Low Stock"
+              value={summary.lowStock}
+              helper={`On hand at ${LOW_STOCK_THRESHOLD} or below`}
+              tone="warning"
+              compact
+            />
+            <SummaryCard
+              icon={<RemoveShoppingCartOutlinedIcon fontSize="small" />}
+              title="Out of Stock"
+              value={summary.outOfStock}
+              helper="Needs replenishment"
+              tone="danger"
+              compact
+            />
+            <SummaryCard
+              icon={<LockOutlinedIcon fontSize="small" />}
+              title="Reserved Qty"
+              value={summary.reserved}
+              helper="Locked for orders"
+              tone="info"
+              compact
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="stock-summary-grid">
-        <SummaryCard
-          icon={<Inventory2OutlinedIcon fontSize="small" />}
-          title="Total SKUs"
-          value={summary.totalSkus}
-        />
-        <SummaryCard
-          icon={<WarningAmberOutlinedIcon fontSize="small" />}
-          title="Low Stock"
-          value={summary.lowStock}
-          tone="warning"
-        />
-        <SummaryCard
-          icon={<RemoveShoppingCartOutlinedIcon fontSize="small" />}
-          title="Out of Stock"
-          value={summary.outOfStock}
-          tone="danger"
-        />
-        <SummaryCard
-          icon={<LockOutlinedIcon fontSize="small" />}
-          title="With Reserved Qty"
-          value={summary.reserved}
-          tone="info"
-        />
-      </div>
+      </section>
 
       {error && (
         <Alert severity="error" className="stock-page__alert">
@@ -242,8 +260,12 @@ const StockAdjustmentPage = () => {
         </Alert>
       )}
 
-      <div className="stock-panel">
-        <div className="stock-panel__header">
+
+
+
+      <section className="stock-panel">
+
+        <section className="stock-toolbar">
           <div>
             <h6 className="stock-panel__title">Current Stock Balances</h6>
             <p className="stock-panel__subtitle">
@@ -252,53 +274,74 @@ const StockAdjustmentPage = () => {
             </p>
           </div>
 
-          <div className="stock-panel__filters">
-            {FILTERS.map((item) => (
-              <Chip
-                key={item}
-                label={
-                  item === 'ALL'
-                    ? 'All'
-                    : item === 'LOW_STOCK'
-                    ? 'Low Stock'
-                    : 'Out of Stock'
-                }
-                clickable
-                color={filter === item ? 'primary' : 'default'}
-                variant={filter === item ? 'filled' : 'outlined'}
-                onClick={() => setFilter(item)}
+          <div className="stock-toolbar__controls">
+            <Button value="Refresh" onClick={handleRefresh} />
+            <div className="stock-toolbar__search">
+              <Input
+                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search by code, product, category..."
               />
-            ))}
+            </div>
           </div>
+        </section>
+
+        <div className="stock-panel__header">
+          <div style={{ display: "flex", alignItems: 'center', gap: '9px' }}>
+            <p className="stock-panel__eyebrow">Live balances</p>
+            <div className="stock-panel__badge">
+              {filteredBalances.length} visible
+            </div>
+          </div>
+          <div className="stock-panel__header-side">
+            <div className="stock-panel__filters">
+              {FILTERS.map((item) => (
+                <Chip
+                  key={item}
+                  label={getFilterLabel(item)}
+                  clickable
+                  variant="outlined"
+                  className={`stock-filter-chip${filter === item ? ' stock-filter-chip--active' : ''
+                    }`}
+                  onClick={() => setFilter(item)}
+                />
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        {loading ? (
-          <div className="stock-page__loading">
-            <CircularProgress size={30} />
-          </div>
-        ) : balances.length === 0 ? (
-          <EmptyState
-            title="No stock balances yet"
-            description="Create products with opening stock or use stock adjustment to begin tracking inventory."
-          />
-        ) : filteredBalances.length === 0 ? (
-          <EmptyState
-            title="No matching products"
-            description="Try a different search or switch filters to view more stock items."
-          />
-        ) : (
-          <StockBalanceTable
-            rows={filteredBalances}
-            onAdjust={(row) =>
-              setModal({
-                open: true,
-                balance: row,
-              })
-            }
-            onViewHistory={loadHistory}
-          />
-        )}
-      </div>
+        <div className="stock-panel__body">
+          {loading ? (
+            <div className="stock-page__loading">
+              <CircularProgress size={30} />
+            </div>
+          ) : balances.length === 0 ? (
+            <EmptyState
+              title="No stock balances yet"
+              description="Create products with opening stock or use stock adjustment to begin tracking inventory."
+            />
+          ) : filteredBalances.length === 0 ? (
+            <EmptyState
+              title="No matching products"
+              description="Try a different search or switch filters to view more stock items."
+            />
+          ) : (
+            <StockBalanceTable
+              rows={filteredBalances}
+              onAdjust={(row) =>
+                setModal({
+                  open: true,
+                  balance: row,
+                })
+              }
+              onViewHistory={loadHistory}
+            />
+          )}
+        </div>
+
+      </section>
 
       <StockAdjustmentModal
         open={modal.open}

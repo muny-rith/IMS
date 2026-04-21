@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Snackbar,
   Tooltip,
 } from '@mui/material';
@@ -16,6 +17,10 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -34,6 +39,17 @@ const EMPTY_MODAL_STATE = {
   mode: 'create',
   editRow: null,
 };
+
+const SummaryCard = ({ icon, title, value, helper }) => (
+  <div className="category-summary-card">
+    <div className="category-summary-card__icon">{icon}</div>
+    <div className="category-summary-card__content">
+      <div className="category-summary-card__title">{title}</div>
+      <div className="category-summary-card__value">{value}</div>
+      <div className="category-summary-card__helper">{helper}</div>
+    </div>
+  </div>
+);
 
 const CategoryPage = () => {
   const {
@@ -74,6 +90,41 @@ const CategoryPage = () => {
     );
   }, [rows, search]);
 
+  const stats = useMemo(() => {
+    const withDescription = rows.filter((row) =>
+      row.description?.trim()
+    ).length;
+
+    const withoutDescription = rows.length - withDescription;
+
+    return [
+      {
+        label: 'Total Categories',
+        value: rows.length,
+        helper: 'Catalog groups available',
+        icon: <CategoryOutlinedIcon fontSize="small" />,
+      },
+      {
+        label: 'With Description',
+        value: withDescription,
+        helper: 'Clearer category details',
+        icon: <DescriptionOutlinedIcon fontSize="small" />,
+      },
+      {
+        label: 'Need Description',
+        value: withoutDescription,
+        helper: 'Should be completed',
+        icon: <ChecklistOutlinedIcon fontSize="small" />,
+      },
+      {
+        label: 'Visible Results',
+        value: filteredRows.length,
+        helper: 'Current search result',
+        icon: <VisibilityOutlinedIcon fontSize="small" />,
+      },
+    ];
+  }, [rows, filteredRows.length]);
+
   const handleSubmit = async (data) => {
     const isEdit = modal.mode === 'edit' && modal.editRow?.id;
 
@@ -104,23 +155,52 @@ const CategoryPage = () => {
 
   const columns = useMemo(
     () => [
-      { field: 'name', headerName: 'Category Name', flex: 1.2 },
+      {
+        field: 'name',
+        headerName: 'Category Name',
+        flex: 1.2,
+        renderCell: (params) => (
+          <Box className="category-name-cell">
+            <span className="category-name-cell__title">
+              {params.row.name || '—'}
+            </span>
+          </Box>
+        ),
+      },
       {
         field: 'description',
         headerName: 'Description',
         flex: 1.8,
-        renderCell: (params) => params.row.description || '—',
+        renderCell: (params) => (
+          <Box className="category-description-cell">
+            {params.row.description || '—'}
+          </Box>
+        ),
       },
       {
         field: 'action',
         headerName: 'Actions',
         flex: 1,
         sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
-          <Box display="flex" gap={1} alignItems="center" height="100%">
+          <Box
+            sx={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 0.5,
+              flexWrap: 'nowrap',
+            }}
+          >
             <Tooltip title="View">
-              <VisibilityIcon
-                sx={{ color: '#29b6f6', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="category-action category-action--view"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -128,12 +208,15 @@ const CategoryPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <VisibilityIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Edit">
-              <EditIcon
-                sx={{ color: '#66bb6a', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="category-action category-action--edit"
                 onClick={() =>
                   setModal({
                     open: true,
@@ -141,14 +224,19 @@ const CategoryPage = () => {
                     editRow: params.row,
                   })
                 }
-              />
+              >
+                <EditIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
 
             <Tooltip title="Delete">
-              <DeleteIcon
-                sx={{ color: '#ef5350', cursor: 'pointer', fontSize: 20 }}
+              <IconButton
+                size="small"
+                className="category-action category-action--delete"
                 onClick={() => setDeleting(params.row.id)}
-              />
+              >
+                <DeleteIcon sx={{ fontSize: 18 }} />
+              </IconButton>
             </Tooltip>
           </Box>
         ),
@@ -158,36 +246,83 @@ const CategoryPage = () => {
   );
 
   return (
-    <div className="container-fluid">
-      <h5 style={{ alignSelf: 'flex-start' }}>Category list</h5>
+    <div className="category-page">
+      <section className="category-page__hero">
+        <div>
+          <p className="category-page__eyebrow">Catalog</p>
+          <h4 className="category-page__title">Category List</h4>
+          <p className="category-page__subtitle">
+            Manage category names, organize descriptions, and keep product
+            grouping clean across your admin workspace.
+          </p>
+        </div>
 
-      <div className="filter">
-        <Button
-          value="Add category"
-          onClick={() =>
-            setModal({
-              open: true,
-              mode: 'create',
-              editRow: null,
-            })
-          }
-        />
+        <div className="category-page__stats">
+          {stats.map((item) => (
+            <SummaryCard
+              key={item.label}
+              icon={item.icon}
+              title={item.label}
+              value={item.value}
+              helper={item.helper}
+            />
+          ))}
+        </div>
+      </section>
 
-        <Input
-          leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by category name or description..."
-        />
-      </div>
+      {loading === false && rows.length === 0 ? null : null}
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <DataTable rows={filteredRows} columns={columns} />
-      )}
+      <section className="category-panel">
+        <section className="category-toolbar">
+          <div>
+            <h6 className="category-panel__title">Current Categories</h6>
+            <p className="category-panel__subtitle">
+              Track category names, review descriptions, and open management
+              actions per record.
+            </p>
+          </div>
+
+          <div className="category-toolbar__controls">
+            <Button
+              value="Add category"
+              onClick={() =>
+                setModal({
+                  open: true,
+                  mode: 'create',
+                  editRow: null,
+                })
+              }
+            />
+            <div className="category-toolbar__search">
+              <Input
+                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by category name or description..."
+              />
+            </div>
+          </div>
+        </section>
+
+        <div className="category-panel__header">
+          <div className="category-panel__meta">
+            <p className="category-panel__eyebrow">Live categories</p>
+            <div className="category-panel__badge">
+              {filteredRows.length} visible
+            </div>
+          </div>
+        </div>
+
+        <div className="category-panel__body">
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={4}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : (
+            <DataTable rows={filteredRows} columns={columns} />
+          )}
+        </div>
+      </section>
 
       <CategoryModal
         open={modal.open}
@@ -205,9 +340,7 @@ const CategoryPage = () => {
         fullWidth
       >
         <DialogTitle>Delete category?</DialogTitle>
-        <DialogContent>
-          This action cannot be undone.
-        </DialogContent>
+        <DialogContent>This action cannot be undone.</DialogContent>
         <DialogActions>
           <Button
             value="Cancel"
