@@ -83,39 +83,61 @@
 }
 
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-width: max-content;
+  white-space: nowrap;
+  flex-shrink: 0;
+
   border-radius: var(--radius);
   border: 1px solid var(--primary-color);
   padding: 10px 20px;
   background-color: var(--primary-color);
   color: var(--second-color);
+
   font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: max-content;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  user-select: none;
 
   -webkit-tap-highlight-color: transparent;
+
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease,
+    box-shadow 0.18s ease;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-
 @media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover {
+  .btn-primary:hover:not(:disabled) {
     background-color: var(--second-color);
     color: var(--primary-color);
+    border-color: var(--primary-color);
     transform: translateY(-1px);
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
   }
 }
 
-
-.btn-primary:active {
-  transform: translateY(0);
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .btn-primary:active:not(:disabled) {
+    background-color: var(--second-color);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: scale(0.96);
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.12);
+  }
 }
 
 .btn-primary:focus {
@@ -123,8 +145,18 @@
 }
 
 .btn-primary:focus-visible {
-  box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.4);
+  box-shadow:
+    0 0 0 3px rgba(100, 150, 255, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
+.btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+  box-shadow: none;
+}
+
 
 .file-input {
   border: 1px dashed #ccc;
