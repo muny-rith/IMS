@@ -99,13 +99,12 @@ const CategoryModal = ({
 
           <Box>
             <label className="form-label">Description</label>
-            <textarea
+            <input
               {...register('description')}
               disabled={isView}
               placeholder="Description"
               rows={4}
-              className={`form-field form-textarea${
-                errors.description ? ' field-error' : ''
+              className={`form-field${errors.description ? ' field-error' : ''
               }`}
             />
           </Box>
