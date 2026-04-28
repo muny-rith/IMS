@@ -334,7 +334,7 @@
 }
 
 .chartPanel .trendChart {
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto 1fr auto;
 }
 
 .trendSummary {
@@ -406,13 +406,13 @@
   background-size: 100% 25%;
 }
 
-/* .chartPanel .trendCanvas {
+.chartPanel .trendCanvas {
   min-height: 420px;
-} */
+}
 
 .trendColumn {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   align-items: end;
 }
 
@@ -424,16 +424,31 @@
   min-height: 210px;
 }
 
-/* .chartPanel .trendBars {
+.chartPanel .trendBars {
   min-height: 340px;
-} */
-
-.trendBar {
-  width: 40px;
-  min-height: 8px;
-  border-radius: 6px 6px 0 0;
 }
 
+.trendBar {
+  position: relative;
+  width: 40px;
+  min-height: 8px;
+  border: 0;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  padding: 0;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.trendBar:hover,
+.trendBar:focus-visible {
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.trendBar:focus-visible {
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.16);
+}
 
 .trendBarLoan {
   background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
@@ -447,6 +462,64 @@
   justify-self: center;
   color: #667085;
   font-size: 12px;
+}
+
+.trendTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #111827;
+  border-radius: 8px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.trendTooltip strong {
+  color: #ffffff;
+}
+
+.trendTooltip span {
+  color: #d1d5db;
+  white-space: nowrap;
+}
+
+.trendBar:hover .trendTooltip,
+.trendBar:focus-visible .trendTooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.trendSelectedDetail {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.trendSelectedDetail span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.trendSelectedDetail strong {
+  color: #111827;
+  font-size: 13px;
 }
 
 .statePanel {
@@ -473,8 +546,8 @@
   padding: 9px 12px;
   cursor: pointer;
 }
-@media(width<=1440px){
-  
+
+@media (max-width: 1440px) {
   .trendBars {
     gap: 4px;
   }
@@ -482,10 +555,9 @@
   .trendBar {
     width: 32px;
   }
-
 }
-@media (max-width: 1100px) {
 
+@media (max-width: 1100px) {
   .hero,
   .mainGrid {
     grid-template-columns: 1fr;
@@ -503,16 +575,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media(width<=768px){
 
-
+@media (max-width: 768px) {
   .trendBar {
     width: 28px;
   }
-
 }
-@media (max-width: 640px) {
 
+@media (max-width: 640px) {
   .heroContent,
   .heroPanel,
   .statCard,
@@ -541,13 +611,13 @@
     min-height: 220px;
   }
 
-
+  .trendBars {
+    min-height: 180px;
+  }
 
   .chartPanel .trendBars {
     min-height: 180px;
   }
-
-
 
   .trendBars {
     gap: 2px;
@@ -557,10 +627,17 @@
     width: 24px;
     border-radius: 8px 8px 0 0;
   }
-}
-@media(width<=576px) {
 
-  
+  .trendTooltip {
+    display: none;
+  }
+
+  .trendSelectedDetail {
+    display: flex;
+  }
+}
+
+@media (max-width: 576px) {
   .trendBars {
     gap: 1px;
   }
@@ -568,5 +645,4 @@
   .trendBar {
     width: 18px;
   }
-
 }

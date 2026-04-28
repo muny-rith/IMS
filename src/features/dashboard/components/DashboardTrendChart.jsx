@@ -1,6 +1,9 @@
+import { useState } from "react";
 import styles from "../dashboard.module.css";
 
 function DashboardTrendChart({ data }) {
+  const [selectedBar, setSelectedBar] = useState(null);
+
   const maxValue = Math.max(
     1,
     ...data.flatMap((item) => [item.loanOut, item.returned])
@@ -13,6 +16,12 @@ function DashboardTrendChart({ data }) {
     }),
     { loanOut: 0, returned: 0 }
   );
+
+  const getBarId = (label, type) => `${label}-${type}`;
+
+  const handleSelectBar = (bar) => {
+    setSelectedBar((current) => (current?.id === bar.id ? null : bar));
+  };
 
   return (
     <div className={styles.trendChart}>
@@ -42,21 +51,59 @@ function DashboardTrendChart({ data }) {
         {data.map((item) => (
           <div className={styles.trendColumn} key={item.label}>
             <div className={styles.trendBars}>
-              <span
+              <button
+                type="button"
                 className={`${styles.trendBar} ${styles.trendBarLoan}`}
                 style={{ height: `${(item.loanOut / maxValue) * 340}px` }}
-                title={`${item.label}: ${item.loanOut} loan-outs`}
-              />
-              <span
+                aria-label={`${item.label}: ${item.loanOut} loan-outs`}
+                onClick={() =>
+                  handleSelectBar({
+                    id: getBarId(item.label, "loanOut"),
+                    label: item.label,
+                    type: "Loan out",
+                    value: item.loanOut,
+                  })
+                }
+              >
+                <span className={styles.trendTooltip}>
+                  <strong>{item.label}</strong>
+                  <span>Loan out: {item.loanOut}</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
                 className={`${styles.trendBar} ${styles.trendBarReturn}`}
                 style={{ height: `${(item.returned / maxValue) * 340}px` }}
-                title={`${item.label}: ${item.returned} returns`}
-              />
+                aria-label={`${item.label}: ${item.returned} returns`}
+                onClick={() =>
+                  handleSelectBar({
+                    id: getBarId(item.label, "returned"),
+                    label: item.label,
+                    type: "Returned",
+                    value: item.returned,
+                  })
+                }
+              >
+                <span className={styles.trendTooltip}>
+                  <strong>{item.label}</strong>
+                  <span>Returned: {item.returned}</span>
+                </span>
+              </button>
             </div>
             <span className={styles.trendLabel}>{item.label}</span>
           </div>
         ))}
       </div>
+
+      {selectedBar ? (
+        <div className={styles.trendSelectedDetail}>
+          <span>{selectedBar.label}</span>
+          <strong>
+            {selectedBar.type}: {selectedBar.value}
+          </strong>
+        </div>
+      ) : null}
     </div>
   );
 }
