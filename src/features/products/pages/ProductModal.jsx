@@ -210,6 +210,7 @@ const ProductModal = ({
               disabled={isView}
               type="number"
               min="0"
+              step="0.01"
               placeholder="Price *"
               className={`form-field${errors.price ? ' field-error' : ''}`}
             />
