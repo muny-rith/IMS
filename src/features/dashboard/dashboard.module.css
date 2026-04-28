@@ -433,17 +433,7 @@
   min-height: 8px;
   border-radius: 6px 6px 0 0;
 }
-@media(width<=1440px){
-  
-  .trendBars {
-    gap: 4px;
-  }
 
-  .trendBar {
-    width: 32px;
-  }
-
-}
 
 .trendBarLoan {
   background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
@@ -483,7 +473,17 @@
   padding: 9px 12px;
   cursor: pointer;
 }
+@media(width<=1440px){
+  
+  .trendBars {
+    gap: 4px;
+  }
 
+  .trendBar {
+    width: 32px;
+  }
+
+}
 @media (max-width: 1100px) {
 
   .hero,
@@ -550,4 +550,16 @@
     width: 28px;
     border-radius: 8px 8px 0 0;
   }
+}
+@media(width<=576px) {
+
+  
+  .trendBars {
+    gap: 1px;
+  }
+
+  .trendBar {
+    width: 22px;
+  }
+
 }
