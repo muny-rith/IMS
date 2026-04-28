@@ -380,7 +380,7 @@ const ProductPage = () => {
 
           <div className="product-toolbar__controls">
             <Button
-              value="Add product"
+              value="Add Product"
               onClick={() =>
                 setModal({
                   open: true,

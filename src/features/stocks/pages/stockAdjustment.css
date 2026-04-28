@@ -272,13 +272,6 @@
   font-weight: 700;
 }
 
-.stock-panel__filters {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
 .stock-filter-chip.MuiChip-root {
   border-radius: 999px;
   border-color: #e5e7eb;
@@ -286,11 +279,28 @@
   color: #475569;
   font-weight: 600;
   transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.stock-filter-chip.MuiChip-root:hover {
-  background: #fff7ed;
-  border-color: #fdba74;
+@media (hover: hover) and (pointer: fine) {
+  .stock-filter-chip.MuiChip-root:not(.stock-filter-chip--active):hover {
+    background: #fff7ed;
+    border-color: #fdba74;
+  }
+
+  .stock-filter-chip--active.MuiChip-root:hover {
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    border-color: transparent;
+  }
+}
+
+
+.stock-filter-chip.MuiChip-root:focus {
+  outline: none;
+}
+
+.stock-filter-chip.MuiChip-root:focus-visible {
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.25);
 }
 
 .stock-filter-chip--active.MuiChip-root {

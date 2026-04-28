@@ -90,33 +90,39 @@
   color: var(--second-color);
   font-weight: 600;
   cursor: pointer;
-
-  /* Smooth animation */
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: max-content;
   transition: all 0.3s ease;
-
-  /* Modern touch */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* Hover effect */
-.btn-primary:hover {
-  background-color: var(--second-color);
-  color: var(--primary-color);
 
-  /* lift effect */
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background-color: var(--second-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  }
 }
 
-/* Click effect */
+
 .btn-primary:active {
   transform: translateY(0);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Optional: focus (accessibility) */
 .btn-primary:focus {
   outline: none;
+}
+
+.btn-primary:focus-visible {
   box-shadow: 0 0 0 3px rgba(100, 150, 255, 0.4);
 }
 
