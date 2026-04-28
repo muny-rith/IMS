@@ -1,3 +1,5 @@
+
+
 .product-page {
   display: flex;
   flex-direction: column;
@@ -323,3 +325,24 @@
     padding: 18px;
   }
 }
+.product-desktop-table {
+  display: block;
+}
+
+.product-mobile-list {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .product-desktop-table {
+    display: none;
+  }
+
+  .product-mobile-list {
+    display: grid;
+  }
+}
+
+
+
+

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import './product.css';
 
 import {
@@ -15,19 +15,20 @@ import {
   Tooltip,
 } from '@mui/material';
 
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 
-import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
+import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
-import ProductModal from './ProductModal';
 import { useProducts } from '../hooks/useProducts';
+import ProductModal from './ProductModal';
+import ProductMobileList from '../components/ProductMobileList';
 
 const INITIAL_TOAST = {
   open: false,
@@ -73,17 +74,45 @@ const ProductPage = () => {
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModal(EMPTY_MODAL_STATE);
-  };
+  }, []);
 
-  const showToast = (message, severity = 'success') => {
+  const showToast = useCallback((message, severity = 'success') => {
     setToast({
       open: true,
       message,
       severity,
     });
-  };
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    setModal({
+      open: true,
+      mode: 'create',
+      editRow: null,
+    });
+  }, []);
+
+  const openViewModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'view',
+      editRow: row,
+    });
+  }, []);
+
+  const openEditModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'edit',
+      editRow: row,
+    });
+  }, []);
+
+  const requestDelete = useCallback((id) => {
+    setDeleting(id);
+  }, []);
 
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -184,17 +213,8 @@ const ProductPage = () => {
         align: 'center',
         headerAlign: 'center',
         renderCell: (params) => (
-          <Box
-            sx={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <Avatar
-              src={params.row.image ?? undefined}
-              className="product-avatar"
-            >
+          <Box className="product-avatar-cell">
+            <Avatar src={params.row.image ?? undefined} className="product-avatar">
               {params.row.name?.[0]?.toUpperCase() ?? '?'}
             </Avatar>
           </Box>
@@ -236,6 +256,7 @@ const ProductPage = () => {
         headerAlign: 'right',
         renderCell: (params) => {
           const price = params.row.price;
+
           return (
             <Box className="product-price-cell">
               {price != null && price !== ''
@@ -258,17 +279,11 @@ const ProductPage = () => {
             qty <= 0
               ? 'product-qty-badge product-qty-badge--empty'
               : qty <= 10
-              ? 'product-qty-badge product-qty-badge--low'
-              : 'product-qty-badge';
+                ? 'product-qty-badge product-qty-badge--low'
+                : 'product-qty-badge';
 
           return (
-            <Box
-              sx={{
-                width: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-              }}
-            >
+            <Box className="product-qty-cell">
               <span className={qtyClass}>{qty}</span>
             </Box>
           );
@@ -283,28 +298,12 @@ const ProductPage = () => {
         align: 'center',
         headerAlign: 'center',
         renderCell: (params) => (
-          <Box
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: 0.5,
-              flexWrap: 'nowrap',
-            }}
-          >
+          <Box className="product-table-actions">
             <Tooltip title="View">
               <IconButton
                 size="small"
                 className="product-action product-action--view"
-                onClick={() =>
-                  setModal({
-                    open: true,
-                    mode: 'view',
-                    editRow: params.row,
-                  })
-                }
+                onClick={() => openViewModal(params.row)}
               >
                 <VisibilityIcon sx={{ fontSize: 18 }} />
               </IconButton>
@@ -314,13 +313,7 @@ const ProductPage = () => {
               <IconButton
                 size="small"
                 className="product-action product-action--edit"
-                onClick={() =>
-                  setModal({
-                    open: true,
-                    mode: 'edit',
-                    editRow: params.row,
-                  })
-                }
+                onClick={() => openEditModal(params.row)}
               >
                 <EditIcon sx={{ fontSize: 18 }} />
               </IconButton>
@@ -330,7 +323,7 @@ const ProductPage = () => {
               <IconButton
                 size="small"
                 className="product-action product-action--delete"
-                onClick={() => setDeleting(params.row.id)}
+                onClick={() => requestDelete(params.row.id)}
               >
                 <DeleteIcon sx={{ fontSize: 18 }} />
               </IconButton>
@@ -339,7 +332,7 @@ const ProductPage = () => {
         ),
       },
     ],
-    []
+    [openEditModal, openViewModal, requestDelete]
   );
 
   return (
@@ -379,16 +372,7 @@ const ProductPage = () => {
           </div>
 
           <div className="product-toolbar__controls">
-            <Button
-              value="Add Product"
-              onClick={() =>
-                setModal({
-                  open: true,
-                  mode: 'create',
-                  editRow: null,
-                })
-              }
-            />
+            <Button value="Add Product" onClick={openCreateModal} />
 
             <div className="product-toolbar__search">
               <Input
@@ -416,7 +400,18 @@ const ProductPage = () => {
               <CircularProgress size={30} />
             </Box>
           ) : (
-            <DataTable rows={filteredRows} columns={columns} />
+            <>
+              <div className="product-desktop-table">
+                <DataTable rows={filteredRows} columns={columns} />
+              </div>
+
+              <ProductMobileList
+                rows={filteredRows}
+                onView={openViewModal}
+                onEdit={openEditModal}
+                onDelete={requestDelete}
+              />
+            </>
           )}
         </div>
       </section>
@@ -440,16 +435,8 @@ const ProductPage = () => {
         <DialogTitle>Delete product?</DialogTitle>
         <DialogContent>This action cannot be undone.</DialogContent>
         <DialogActions>
-          <Button
-            value="Cancel"
-            variant="text"
-            onClick={() => setDeleting(null)}
-          />
-          <Button
-            value="Delete"
-            onClick={confirmDelete}
-            sx={{ color: '#ef5350' }}
-          />
+          <Button value="Cancel" variant="text" onClick={() => setDeleting(null)} />
+          <Button value="Delete" onClick={confirmDelete} />
         </DialogActions>
       </Dialog>
 
@@ -459,10 +446,7 @@ const ProductPage = () => {
         onClose={() => setToast(INITIAL_TOAST)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert
-          severity={toast.severity}
-          onClose={() => setToast(INITIAL_TOAST)}
-        >
+        <Alert severity={toast.severity} onClose={() => setToast(INITIAL_TOAST)}>
           {toast.message}
         </Alert>
       </Snackbar>
