@@ -51,7 +51,8 @@ const InfoItem = ({ label, value }) => (
 );
 
 const LoanPrintModal = ({ open, onClose, loan = null }) => {
-  const items = loan?.items ?? [];
+  const items = useMemo(() => loan?.items ?? [], [loan]);
+
 
   const totals = useMemo(
     () =>
