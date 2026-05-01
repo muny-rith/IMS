@@ -7,7 +7,7 @@ import {
 } from '../../stocks/services/stockService';
 
 const generateLoanCode = () =>
-  `LN-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
+  `${new Date().toISOString().replace(/\D/g, '').slice(0, 13)}`;
 
 const asObject = (value) => (Array.isArray(value) ? value[0] : value);
 
