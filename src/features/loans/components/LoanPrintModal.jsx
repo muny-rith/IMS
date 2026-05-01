@@ -99,7 +99,7 @@ const LoanPrintModal = ({ open, onClose, loan = null }) => {
                             </div>
 
                             <div className="loan-print-document">
-                                <strong>Loan Issue Form</strong>
+                                <strong>Loan Form</strong>
                                 <span>A5 Document</span>
                             </div>
                         </header>
