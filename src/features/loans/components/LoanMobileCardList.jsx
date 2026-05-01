@@ -2,6 +2,7 @@ import React from 'react';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 
 import MobileCard from '../../../components/ui/MobileCard/MobileCard';
 
@@ -24,6 +25,7 @@ const LoanMobileCardList = ({
   rows = [],
   onView,
   onReturn,
+  onPrint,
 }) => {
   if (!rows.length) {
     return <div className="mobile-empty">No loans match this search.</div>;
@@ -79,13 +81,18 @@ const LoanMobileCardList = ({
               },
               ...(remainingQty > 0
                 ? [
-                    {
-                      label: 'Return',
-                      icon: <KeyboardReturnIcon fontSize="small" />,
-                      onClick: () => onReturn(row),
-                    },
-                  ]
+                  {
+                    label: 'Return',
+                    icon: <KeyboardReturnIcon fontSize="small" />,
+                    onClick: () => onReturn(row),
+                  },
+                ]
                 : []),
+              {
+                label: 'Print',
+                icon: <PrintOutlinedIcon fontSize="small" />,
+                onClick: () => onPrint(row),
+              }
             ]}
           />
         );

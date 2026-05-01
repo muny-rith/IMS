@@ -17,6 +17,8 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
 import DoneAllOutlinedIcon from '@mui/icons-material/DoneAllOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -25,7 +27,7 @@ import LoanModal from './LoanModal';
 import ReturnLoanModal from './ReturnLoanModal';
 import { useLoans } from '../hooks/useLoans';
 import LoanMobileCardList from '../components/LoanMobileCardList';
-
+import LoanPrintModal from '../components/LoanPrintModal'
 
 const INITIAL_TOAST = {
   open: false,
@@ -84,6 +86,19 @@ const LoanPage = () => {
   const [modal, setModal] = useState(EMPTY_MODAL_STATE);
   const [returnModal, setReturnModal] = useState(EMPTY_RETURN_MODAL_STATE);
   const [toast, setToast] = useState(INITIAL_TOAST);
+  const [printModal, setPrintModal] = useState({
+    open: false,
+    loan: null,
+  });
+
+  const closePrintModal = () => {
+    setPrintModal({
+      open: false,
+      loan: null,
+    });
+  };
+
+
 
   const closeModal = () => {
     setModal(EMPTY_MODAL_STATE);
@@ -286,6 +301,21 @@ const LoanPage = () => {
               flexWrap: 'nowrap',
             }}
           >
+            <Tooltip title="Print">
+              <IconButton
+                size="small"
+                className="loan-action loan-action--print"
+                onClick={() =>
+                  setPrintModal({
+                    open: true,
+                    loan: params.row,
+                  })
+                }
+              >
+                <PrintOutlinedIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+
             <Tooltip title="View">
               <IconButton
                 size="small"
@@ -428,6 +458,12 @@ const LoanPage = () => {
                       loan: row,
                     })
                   }
+                  onPrint={(row) =>
+                    setPrintModal({
+                      open: true,
+                      loan: row,
+                    })
+                  }
                 />
               </div>
             </>
@@ -435,6 +471,11 @@ const LoanPage = () => {
         </div>
 
       </section>
+      <LoanPrintModal
+        open={printModal.open}
+        onClose={closePrintModal}
+        loan={printModal.loan}
+      />
 
       <LoanModal
         open={modal.open}
