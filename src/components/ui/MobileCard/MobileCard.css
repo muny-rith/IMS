@@ -109,16 +109,17 @@
 
 
 }
+
 .mobile-card__meta-item strong.mobile-card__qty {
-  color: #15803d;
+    color: #15803d;
 }
 
 .mobile-card__meta-item strong.mobile-card__qty--low {
-  color: #b45309;
+    color: #b45309;
 }
 
 .mobile-card__meta-item strong.mobile-card__qty--empty {
-  color: #b91c1c;
+    color: #b91c1c;
 }
 
 
@@ -207,13 +208,7 @@
     }
 
     .mobile-card__top {
-        grid-template-columns: 44px minmax(0, 1fr);
-    }
-
-    .mobile-card__price {
-        grid-column: 2;
-        justify-self: start;
-        margin-top: -4px;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
     }
 
     .mobile-card__avatar {
@@ -221,6 +216,14 @@
         height: 44px;
         border-radius: 14px;
     }
+
+
+    .mobile-card__price {
+        grid-column: 2;
+        justify-self: start;
+        margin-top: -4px;
+    }
+
 
     .mobile-card__meta {
         grid-template-columns: 1fr;

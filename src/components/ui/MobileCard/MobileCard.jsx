@@ -11,6 +11,7 @@ const MobileCard = ({
     return (
         <article className="mobile-card">
             <div className="mobile-card__top">
+
                 {avatar && (
                     <div className="mobile-card__avatar">
                         {avatar}
@@ -21,6 +22,8 @@ const MobileCard = ({
                     <strong>{title}</strong>
                     {subtitle && <span>{subtitle}</span>}
                 </div>
+
+
 
                 {rightContent && (
                     <div className="mobile-card__right">
