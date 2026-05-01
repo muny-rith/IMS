@@ -29,17 +29,17 @@ const formatDate = (value) => {
   }).format(date);
 };
 
-const formatDateTime = (value) => {
-  const date = value ? new Date(value) : new Date();
+// const formatDateTime = (value) => {
+//   const date = value ? new Date(value) : new Date();
 
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date);
-};
+//   return new Intl.DateTimeFormat('en-GB', {
+//     day: '2-digit',
+//     month: 'short',
+//     year: 'numeric',
+//     hour: '2-digit',
+//     minute: '2-digit',
+//   }).format(date);
+// };
 
 const formatQty = (value) => Number(value ?? 0).toLocaleString('en-US');
 
