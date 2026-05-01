@@ -79,6 +79,11 @@ const LoanMobileCardList = ({
                 icon: <VisibilityIcon fontSize="small" />,
                 onClick: () => onView(row),
               },
+                            {
+                label: 'Print',
+                icon: <PrintOutlinedIcon fontSize="small" />,
+                onClick: () => onPrint(row),
+              },
               ...(remainingQty > 0
                 ? [
                   {
@@ -88,11 +93,7 @@ const LoanMobileCardList = ({
                   },
                 ]
                 : []),
-              {
-                label: 'Print',
-                icon: <PrintOutlinedIcon fontSize="small" />,
-                onClick: () => onPrint(row),
-              }
+
             ]}
           />
         );
