@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 const DataTable = ({ rows, columns, pageSize = 5 }) => {
     return (
-        <Box sx={{ height: 500, width: '100%' }}>
+        <Box sx={{height:'100%', width: '100%' }}>
             <DataGrid
                 rows={rows}
                 columns={columns}

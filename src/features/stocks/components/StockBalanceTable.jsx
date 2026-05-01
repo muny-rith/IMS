@@ -37,9 +37,9 @@ const StockBalanceTable = ({ rows, onAdjust, onViewHistory }) => {
       { field: 'productCode', headerName: 'Code', flex: 0.7 },
       { field: 'productName', headerName: 'Product', flex: 1.3 },
       // { field: 'category', headerName: 'Category', flex: 1 },
-      { field: 'onHandQty', headerName: 'On Hand', flex: 0.8, type: 'number',  align: 'left', headerAlign: 'left'},
-      { field: 'reservedQty', headerName: 'Reserved', flex: 0.8, type: 'number' ,  align: 'left', headerAlign: 'left'},
-      { field: 'availableQty', headerName: 'Available', flex: 0.85, type: 'number',  align: 'left', headerAlign: 'left' },
+      { field: 'onHandQty', headerName: 'On Hand', flex: 0.8, type: 'number', align: 'left', headerAlign: 'left' },
+      { field: 'reservedQty', headerName: 'Reserved', flex: 0.8, type: 'number', align: 'left', headerAlign: 'left' },
+      { field: 'availableQty', headerName: 'Available', flex: 0.85, type: 'number', align: 'left', headerAlign: 'left' },
       {
         field: 'status',
         headerName: 'Status',
@@ -103,7 +103,7 @@ const StockBalanceTable = ({ rows, onAdjust, onViewHistory }) => {
         renderCell: (params) => (
           <Box
             sx={{
-              
+
               width: '100%',
               height: '100%',
               display: 'flex',
@@ -137,7 +137,11 @@ const StockBalanceTable = ({ rows, onAdjust, onViewHistory }) => {
     [onAdjust, onViewHistory]
   );
 
-  return <DataTable rows={rows} columns={columns} />;
+  return (
+    <div className="stock-table-shell">
+      <DataTable rows={rows} columns={columns} />
+    </div>
+  );
 };
 
 export default StockBalanceTable;
