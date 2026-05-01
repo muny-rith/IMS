@@ -76,13 +76,13 @@ const WorkerPage = () => {
   }, []);
 
 
-  const openCreateModal = useCallback(() => {
-    setModal({
-      open: true,
-      mode: 'create',
-      editRow: null,
-    });
-  }, []);
+  // const openCreateModal = useCallback(() => {
+  //   setModal({
+  //     open: true,
+  //     mode: 'create',
+  //     editRow: null,
+  //   });
+  // }, []);
 
   const openViewModal = useCallback((row) => {
     setModal({

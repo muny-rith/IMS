@@ -14,7 +14,6 @@ import Input from '../../../components/ui/Input/Input';
 import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import StockBalanceTable from '../components/StockBalanceTable';
 import StockHistoryDrawer from '../components/StockHistoryDrawer';
-import MobileCard from '../../../components/ui/MobileCard/MobileCard';
 import StockMobileCardList from '../components/StockMobileCardList'
 
 

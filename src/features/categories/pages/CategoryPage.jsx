@@ -1,4 +1,4 @@
-import React, { useMemo, useState,useCallback } from 'react';
+import React, { useMemo, useState ,useCallback} from 'react';
 import './category.css';
 
 import {
@@ -156,13 +156,7 @@ const CategoryPage = () => {
   
 
   
-  const openCreateModal = useCallback(() => {
-    setModal({
-      open: true,
-      mode: 'create',
-      editRow: null,
-    });
-  }, []);
+
   const openViewModal = useCallback((row) => {
     setModal({
       open: true,
