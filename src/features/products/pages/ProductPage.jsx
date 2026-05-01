@@ -28,7 +28,7 @@ import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
 import ProductModal from './ProductModal';
-import ProductMobileList from '../components/ProductMobileList';
+import ProductMobileCardList from '../components/ProductMobileCardList';
 
 const INITIAL_TOAST = {
   open: false,
@@ -404,13 +404,15 @@ const ProductPage = () => {
               <div className="product-desktop-table">
                 <DataTable rows={filteredRows} columns={columns} />
               </div>
+              <div className='product-mobile-cards'>
+                <ProductMobileCardList
+                  rows={filteredRows}
+                  onView={openViewModal}
+                  onEdit={openEditModal}
+                  onDelete={requestDelete}
+                />  
+              </div>
 
-              <ProductMobileList
-                rows={filteredRows}
-                onView={openViewModal}
-                onEdit={openEditModal}
-                onDelete={requestDelete}
-              />
             </>
           )}
         </div>

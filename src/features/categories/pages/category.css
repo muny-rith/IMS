@@ -268,3 +268,22 @@
     padding: 18px;
   }
 }
+
+
+.category-desktop-table {
+  display: block;
+}
+
+.category-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .category-desktop-table {
+    display: none;
+  }
+
+  .category-mobile-cards {
+    display: block;
+  }
+}

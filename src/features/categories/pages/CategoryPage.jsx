@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState,useCallback } from 'react';
 import './category.css';
 
 import {
@@ -27,6 +27,7 @@ import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import CategoryModal from './CategoryModal';
 import { useCategories } from '../hooks/useCategories';
+import CategoryMobileCardList from '../components/CategoryMobileCardList';
 
 const INITIAL_TOAST = {
   open: false,
@@ -152,6 +153,35 @@ const CategoryPage = () => {
 
     showToast(result.message || 'Delete failed.', 'error');
   };
+  
+
+  
+  const openCreateModal = useCallback(() => {
+    setModal({
+      open: true,
+      mode: 'create',
+      editRow: null,
+    });
+  }, []);
+  const openViewModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'view',
+      editRow: row,
+    });
+  }, []);
+
+  const openEditModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'edit',
+      editRow: row,
+    });
+  }, []);
+
+  const requestDelete = useCallback((id) => {
+    setDeleting(id);
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -318,10 +348,26 @@ const CategoryPage = () => {
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress size={28} />
             </Box>
+          ) : filteredRows.length === 0 ? (
+            <div className="mobile-empty">No categories match this search.</div>
           ) : (
-            <DataTable rows={filteredRows} columns={columns} />
+            <>
+              <div className="category-desktop-table">
+                <DataTable rows={filteredRows} columns={columns} />
+              </div>
+
+              <div className="category-mobile-cards">
+                <CategoryMobileCardList
+                  rows={filteredRows}
+                  onView={openViewModal}
+                  onEdit={openEditModal}
+                  onDelete={requestDelete}
+                />
+              </div>
+            </>
           )}
         </div>
+
       </section>
 
       <CategoryModal

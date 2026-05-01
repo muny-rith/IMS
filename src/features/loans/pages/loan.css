@@ -313,3 +313,48 @@
     padding: 18px;
   }
 }
+
+.loan-desktop-table {
+  display: block;
+}
+
+.loan-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .loan-desktop-table {
+    display: none;
+  }
+
+  .loan-mobile-cards {
+    display: block;
+  }
+}
+
+
+.loan-mobile-status,
+.loan-mobile-remaining {
+  font-weight: 800;
+}
+
+.loan-mobile-status--open {
+  color: #2563eb;
+}
+
+.loan-mobile-status--partial {
+  color: #b45309;
+}
+
+.loan-mobile-status--returned {
+  color: #15803d;
+}
+
+.loan-mobile-status--cancelled {
+  color: #64748b;
+}
+
+.loan-mobile-remaining--open {
+  color: #dc2626;
+}
+

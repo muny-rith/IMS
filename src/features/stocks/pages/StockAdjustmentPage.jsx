@@ -8,11 +8,16 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import RemoveShoppingCartOutlinedIcon from '@mui/icons-material/RemoveShoppingCartOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
+
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import StockBalanceTable from '../components/StockBalanceTable';
 import StockHistoryDrawer from '../components/StockHistoryDrawer';
+import MobileCard from '../../../components/ui/MobileCard/MobileCard';
+import StockMobileCardList from '../components/StockMobileCardList'
+
+
 import { useStock } from '../hooks/useStock';
 import { fetchStockMovementsByProduct } from '../services/stockService';
 
@@ -328,18 +333,36 @@ const StockAdjustmentPage = () => {
               description="Try a different search or switch filters to view more stock items."
             />
           ) : (
-            <StockBalanceTable
-              rows={filteredBalances}
-              onAdjust={(row) =>
-                setModal({
-                  open: true,
-                  balance: row,
-                })
-              }
-              onViewHistory={loadHistory}
-            />
+            <>
+              <div className="stock-desktop-table">
+                <StockBalanceTable
+                  rows={filteredBalances}
+                  onAdjust={(row) =>
+                    setModal({
+                      open: true,
+                      balance: row,
+                    })
+                  }
+                  onViewHistory={loadHistory}
+                />
+              </div>
+
+              <div className="stock-mobile-cards">
+                <StockMobileCardList
+                  rows={filteredBalances}
+                  onAdjust={(row) =>
+                    setModal({
+                      open: true,
+                      balance: row,
+                    })
+                  }
+                  onViewHistory={loadHistory}
+                />
+              </div>
+            </>
           )}
         </div>
+
 
       </section>
 

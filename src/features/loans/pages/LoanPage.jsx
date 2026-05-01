@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState,useCallback } from 'react';
 import './loan.css';
 
 import {
@@ -24,6 +24,8 @@ import Input from '../../../components/ui/Input/Input';
 import LoanModal from './LoanModal';
 import ReturnLoanModal from './ReturnLoanModal';
 import { useLoans } from '../hooks/useLoans';
+import LoanMobileCardList from '../components/LoanMobileCardList';
+
 
 const INITIAL_TOAST = {
   open: false,
@@ -402,10 +404,36 @@ const LoanPage = () => {
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress size={28} />
             </Box>
+          ) : filteredRows.length === 0 ? (
+            <div className="mobile-empty">No loans match this search.</div>
           ) : (
-            <DataTable rows={filteredRows} columns={columns} />
+            <>
+              <div className="loan-desktop-table">
+                <DataTable rows={filteredRows} columns={columns} />
+              </div>
+
+              <div className="loan-mobile-cards">
+                <LoanMobileCardList
+                  rows={filteredRows}
+                  onView={(row) =>
+                    setModal({
+                      open: true,
+                      mode: 'view',
+                      loan: row,
+                    })
+                  }
+                  onReturn={(row) =>
+                    setReturnModal({
+                      open: true,
+                      loan: row,
+                    })
+                  }
+                />
+              </div>
+            </>
           )}
         </div>
+
       </section>
 
       <LoanModal

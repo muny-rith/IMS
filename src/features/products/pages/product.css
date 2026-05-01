@@ -329,7 +329,7 @@
   display: block;
 }
 
-.product-mobile-list {
+.product-mobile-cards {
   display: none;
 }
 
@@ -338,7 +338,7 @@
     display: none;
   }
 
-  .product-mobile-list {
+  .product-mobile-cards {
     display: grid;
   }
 }

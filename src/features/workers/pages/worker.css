@@ -290,3 +290,22 @@
     padding: 18px;
   }
 }
+
+
+.worker-desktop-table {
+  display: block;
+}
+
+.worker-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .worker-desktop-table {
+    display: none;
+  }
+
+  .worker-mobile-cards {
+    display: block;
+  }
+}

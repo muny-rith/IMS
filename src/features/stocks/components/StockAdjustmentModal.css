@@ -1,0 +1,15 @@
+.stock-desktop-table{
+    display: block;
+}
+.stock-moblie-cards{
+    display: none;
+}
+@media (max-width: 768px) {
+  .stock-desktop-table {
+    display: none;
+  }
+
+  .stock-mobile-cards {
+    display: grid;
+  }
+}

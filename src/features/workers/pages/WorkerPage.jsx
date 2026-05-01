@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState,useCallback } from 'react';
 import './worker.css';
 
 import {
@@ -28,6 +28,7 @@ import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import WorkerModal from './WorkerModal';
 import { useWorkers } from '../hooks/useWorkers';
+import WorkerMobileCardList from '../components/WorkerMobileCardList';
 
 const INITIAL_TOAST = {
   open: false,
@@ -40,6 +41,8 @@ const EMPTY_MODAL_STATE = {
   mode: 'create',
   editRow: null,
 };
+
+
 
 const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
   <div className={`worker-summary-card worker-summary-card--${tone}`}>
@@ -67,9 +70,40 @@ const WorkerPage = () => {
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
 
-  const closeModal = () => {
+  
+  const closeModal = useCallback(() => {
     setModal(EMPTY_MODAL_STATE);
-  };
+  }, []);
+
+
+  const openCreateModal = useCallback(() => {
+    setModal({
+      open: true,
+      mode: 'create',
+      editRow: null,
+    });
+  }, []);
+
+  const openViewModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'view',
+      editRow: row,
+    });
+  }, []);
+
+  const openEditModal = useCallback((row) => {
+    setModal({
+      open: true,
+      mode: 'edit',
+      editRow: row,
+    });
+  }, []);
+
+  const requestDelete = useCallback((id) => {
+    setDeleting(id);
+  }, []);
+
 
   const showToast = (message, severity = 'success') => {
     setToast({ open: true, message, severity });
@@ -348,10 +382,26 @@ const WorkerPage = () => {
             <Box display="flex" justifyContent="center" py={4}>
               <CircularProgress size={28} />
             </Box>
+          ) : filteredRows.length === 0 ? (
+            <div className="mobile-empty">No workers match this search.</div>
           ) : (
-            <DataTable rows={filteredRows} columns={columns} />
+            <>
+              <div className="worker-desktop-table">
+                <DataTable rows={filteredRows} columns={columns} />
+              </div>
+
+              <div className="worker-mobile-cards">
+                <WorkerMobileCardList
+                  rows={filteredRows}
+                  onView={openViewModal}
+                  onEdit={openEditModal}
+                  onDelete={requestDelete}
+                />
+              </div>
+            </>
           )}
         </div>
+
       </section>
 
       <WorkerModal
