@@ -1,0 +1,92 @@
+const getStatusClassName = (status) =>
+  `report-status report-status-${String(status)
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
+
+function ReportPreviewTable({
+  title,
+  rows,
+  loading = false,
+  error = '',
+  onRetry,
+}) {
+  const hasRows = rows.length > 0;
+
+  return (
+    <article className="report-panel report-preview-panel">
+      <div className="report-section-header">
+        <div>
+          <p className="report-eyebrow">Preview</p>
+          <h3>{title}</h3>
+          <p className="report-panel-copy">
+            This preview shows how the report page can summarize operational
+            data before export.
+          </p>
+        </div>
+
+        <span className="report-pill">{loading ? 'Loading' : `${rows.length} rows`}</span>
+      </div>
+
+      {error ? (
+        <div className="report-state-card report-state-card--error">
+          <strong>Report failed to load</strong>
+          <p>{error}</p>
+          {onRetry && (
+            <button type="button" onClick={onRetry}>
+              Try again
+            </button>
+          )}
+        </div>
+      ) : !loading && !hasRows ? (
+        <div className="report-state-card">
+          <strong>No report data found</strong>
+          <p>Try another report type or date range.</p>
+        </div>
+      ) : (
+        <div className="report-table">
+          <div className="report-table-row report-table-head">
+            <span>Code</span>
+            <span>Item</span>
+            <span>Category</span>
+            <span>Owner</span>
+            <span>Metric</span>
+            <span>Status</span>
+            <span>Updated</span>
+          </div>
+
+          {loading && !hasRows
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div className="report-table-row report-table-row--loading" key={index}>
+                  <span>Loading</span>
+                  <strong>Report data</strong>
+                  <span>—</span>
+                  <span>—</span>
+                  <span>—</span>
+                  <span>
+                    <span className="report-status report-status-notice">Loading</span>
+                  </span>
+                  <span>—</span>
+                </div>
+              ))
+            : rows.map((row) => (
+                <div className="report-table-row" key={row.id}>
+                  <span>{row.id}</span>
+                  <strong>{row.name}</strong>
+                  <span>{row.category}</span>
+                  <span>{row.owner}</span>
+                  <span>{row.metric}</span>
+                  <span>
+                    <span className={getStatusClassName(row.status)}>
+                      {row.status}
+                    </span>
+                  </span>
+                  <span>{row.updated}</span>
+                </div>
+              ))}
+        </div>
+      )}
+    </article>
+  );
+}
+
+export default ReportPreviewTable;

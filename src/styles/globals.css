@@ -5,16 +5,29 @@
   --fourth-color: #010f1c;
   --background: #f4f1ea;
   --text: #5C6574;
-  --radius : 9px;
+  --radius: 9px;
+
+  --bp-lg: 1200px;
+  --bp-md: 900px;
+  --bp-sm: 768px;
+  --bp-xs: 480px;
+
+
+
 }
-html, body, #root {
+
+html,
+body,
+#root {
   height: 100%;
 }
+
 a {
   text-decoration: none;
   color: var(--primary-color);
 }
-.input{
+
+.input {
   border-radius: var(--radius);
   padding: 10px 20px;
 }
