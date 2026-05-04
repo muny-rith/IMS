@@ -8,7 +8,12 @@ function ReportHero({
   loading = false,
   onDateRangeChange,
   onExportFormatChange,
+  onGenerateReport,
 }) {
+
+  const usesDateRange = selectedReport.usesDateRange !== false;
+  const reportScopeLabel = usesDateRange ? dateRange : "Live report";
+  const reportCountLabel = loading ? "Loading" : `${reportCount} rows`;
   return (
     <section className="report-hero">
       <div>
@@ -31,7 +36,7 @@ function ReportHero({
             <span>Date range</span>
             <select
               value={dateRange}
-              disabled={!selectedReport.usesDateRange}
+              disabled={!usesDateRange}
               onChange={(event) => onDateRangeChange(event.target.value)}
             >
               {dateRangeOptions.map((option) => (
@@ -56,12 +61,13 @@ function ReportHero({
                 <option key={format}>{format}</option>
               ))}
             </select>
-
-
-
-
           </label>
-          <button type="button" className="report-primary-button" style={{ alignSelf: "center" }}>
+          <button
+            type="button"
+            className="report-primary-button"
+            onClick={onGenerateReport}
+            style={{ alignSelf: "center" }}
+          >
             Generate {exportFormat}
           </button>
         </div>
@@ -72,12 +78,8 @@ function ReportHero({
         <strong>{selectedReport.title}</strong>
         <p>{selectedReport.description}</p>
         <div>
-          <small>
-            {selectedReport.usesDateRange ? dateRange : "Live report"}
-          </small>
-          <small>
-            {loading ? "Loading..." : `${reportCount} rows`}
-          </small>
+          <small>{reportScopeLabel}</small>
+          <small>{reportCountLabel}</small>
 
         </div>
       </aside>

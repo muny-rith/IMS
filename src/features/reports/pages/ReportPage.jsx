@@ -14,6 +14,11 @@ import {
   summaryMetrics,
 } from "../data/reportPageData";
 import useReports from "../hooks/useReports";
+import {
+  downloadCsvReport,
+  downloadExcelReport,
+  printPdfReport,
+} from "../utils/exportReport";
 import "./reportPage.css";
 
 function ReportPage() {
@@ -40,6 +45,51 @@ function ReportPage() {
   const visibleSummaryMetrics =
     realSummaryMetrics.length > 0 ? realSummaryMetrics : summaryMetrics;
 
+  const handleGenerateReport = () => {
+    if (loading) {
+      return;
+    }
+
+    const exportDateRange =
+      activeReport === "stock" ? "Current snapshot" : dateRange;
+
+    if (!rows.length) {
+      window.alert("No report rows to export.");
+      return;
+    }
+
+    if (exportFormat === "PDF") {
+      const didOpen = printPdfReport({
+        rows,
+        reportTitle: selectedReport.title,
+        dateRange: exportDateRange,
+        summaryMetrics: visibleSummaryMetrics,
+      });
+
+      if (!didOpen) {
+        window.alert("Please allow popups to generate the PDF report.");
+      }
+
+      return;
+    }
+
+    if (exportFormat === "Excel") {
+      downloadExcelReport({
+        rows,
+        reportTitle: selectedReport.title,
+        dateRange: exportDateRange,
+      });
+
+      return;
+    }
+
+    downloadCsvReport({
+      rows,
+      reportTitle: selectedReport.title,
+      dateRange: exportDateRange,
+    });
+  };
+
   return (
     <div className="report-page">
       <ReportHero
@@ -52,12 +102,10 @@ function ReportPage() {
         loading={loading}
         onDateRangeChange={setDateRange}
         onExportFormatChange={setExportFormat}
+        onGenerateReport={handleGenerateReport}
       />
 
-      <ReportSummaryGrid
-        items={visibleSummaryMetrics}
-        loading={loading}
-      />
+      <ReportSummaryGrid items={visibleSummaryMetrics} loading={loading} />
 
       <section className="report-workspace">
         <div className="report-main-stack">
