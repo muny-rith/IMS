@@ -225,12 +225,10 @@
   /* flex: 1 1 320px; */
   display: flex;
   width: 100%;
-
-  * {
+}
+ .stock-toolbar__search > * {
     width: 100%;
   }
-}
-
 
 
 .stock-panel__header {

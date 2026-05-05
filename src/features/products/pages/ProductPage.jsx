@@ -373,7 +373,6 @@ const ProductPage = () => {
 
           <div className="product-toolbar__controls">
             <Button value="Add Product" onClick={openCreateModal} />
-
             <div className="product-toolbar__search">
               <Input
                 leftIcon={<i className="fa-solid fa-magnifying-glass" />}
