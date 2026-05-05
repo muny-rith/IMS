@@ -70,11 +70,13 @@
   gap: 20px;
   flex-wrap: wrap;
 }
+
 .report-control {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 /* .report-control {
   display: grid;
   gap: 7px;
@@ -94,6 +96,7 @@
     linear-gradient(45deg, transparent 50%, #cbd5e1 50%) calc(100% - 18px) 52% / 7px 7px no-repeat,
     #f8fafc;
 }
+
 .report-control--disabled .report-control-hint {
   cursor: not-allowed;
   color: #ec0000;
@@ -508,6 +511,7 @@
   font-size: 13px;
   line-height: 1.45;
 }
+
 .report-aside-stack {
   display: grid;
   grid-template-rows: auto 1fr;
@@ -612,6 +616,7 @@
   .report-workspace {
     grid-template-columns: 1fr;
   }
+
   .report-brand-card {
     display: none;
   }
@@ -671,4 +676,170 @@
   .report-type-grid {
     grid-template-columns: 1fr;
   }
+}
+
+
+.report-usage-table {
+  overflow-x: auto;
+  border: 1px solid #eef2f7;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  padding: 8px;
+}
+
+
+.report-usage-grid {
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+}
+
+
+
+.report-usage-grid th,
+.report-usage-grid td {
+  border: 0;
+  padding: 8px 7px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.report-usage-grid th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  color: #8b98ad;
+  background: #fbfdff;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.report-usage-grid td {
+  background: #ffffff;
+  /* border-top: 1px solid #eef2f7; */
+  border-bottom: 1px solid #eef2f7;
+  border-right: 1px solid #eef2f7;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.report-usage-grid tbody tr:hover td {
+  background: #fff7ed;
+}
+
+.report-usage-grid th:nth-child(1),
+.report-usage-grid td:nth-child(1) {
+  width: 46px;
+}
+
+.report-usage-grid th:nth-child(3),
+.report-usage-grid td:nth-child(3) {
+  min-width: 190px;
+  text-align: left;
+}
+
+
+.report-usage-grid th:nth-child(2),
+.report-usage-grid td:nth-child(2) {
+  width: 76px;
+}
+
+.report-usage-grid th:nth-child(3) {
+  z-index: 4;
+}
+
+.report-usage-grid th:nth-child(3),
+.report-usage-grid td:nth-child(3) {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  text-align: left;
+  box-shadow: 10px 0 18px rgba(15, 23, 42, 0.04);
+}
+
+.report-usage-grid td:nth-child(3) {
+  background: #ffffff;
+}
+
+.report-usage-grid th:nth-child(4),
+.report-usage-grid td:nth-child(4) {
+  width: 74px;
+}
+
+.report-usage-grid th:nth-child(5),
+.report-usage-grid th:nth-child(6),
+.report-usage-grid td:nth-child(5),
+.report-usage-grid td:nth-child(6) {
+  width: 75px;
+  background: #f8fafc;
+  font-weight: 800;
+}
+
+.report-usage-grid th:nth-last-child(1),
+.report-usage-grid th:nth-last-child(2),
+.report-usage-grid td:nth-last-child(1),
+.report-usage-grid td:nth-last-child(2) {
+  width: 96px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-weight: 900;
+}
+
+.report-usage-grid th:nth-child(n + 7):not(:nth-last-child(1)):not(:nth-last-child(2)),
+.report-usage-grid td:nth-child(n + 7):not(:nth-last-child(1)):not(:nth-last-child(2)) {
+  width: 37px;
+  min-width: 37px;
+  max-width: 37px;
+  padding-inline: 3px;
+}
+
+.report-usage-grid td:nth-child(3) strong,
+.report-usage-grid td:nth-child(3) span {
+  display: block;
+}
+
+.report-usage-grid td:nth-child(3) strong {
+  color: var(--report-text);
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-usage-grid td:nth-child(3) span {
+  margin-top: 3px;
+  color: var(--report-soft);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-usage-image,
+.report-usage-image-placeholder {
+  width: 42px;
+  height: 34px;
+  border-radius: 9px;
+}
+
+.report-usage-image {
+  object-fit: cover;
+}
+
+.report-usage-image-placeholder {
+  display: inline-grid;
+  place-items: center;
+  color: #ef1744;
+  background: #fff1f2;
+  font-size: 12px;
+  font-weight: 900;
 }

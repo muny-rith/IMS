@@ -12,7 +12,13 @@ function ReportHero({
 }) {
 
   const usesDateRange = selectedReport.usesDateRange !== false;
-  const reportScopeLabel = usesDateRange ? dateRange : "Live report";
+
+  const reportScopeLabel =
+    selectedReport.scopeLabel || (usesDateRange ? dateRange : "Live report");
+  const dateRangeValue = usesDateRange ? dateRange : reportScopeLabel;
+  const dateRangeSelectOptions = usesDateRange
+    ? dateRangeOptions
+    : [reportScopeLabel];
   const reportCountLabel = loading ? "Loading" : `${reportCount} rows`;
   return (
     <section className="report-hero">
@@ -20,9 +26,9 @@ function ReportHero({
         <p className="report-eyebrow">Reports</p>
         <h2 className="report-title">Turn inventory activity into decisions.</h2>
         <p className="report-copy">
-          Centralize stock, movement, loan, and worker summaries in one formal
-          reporting workspace. Daily pages stay operational; this page is for
-          review, export, and management follow-up.
+          Centralize stock, movement, loan, and monthly usage summaries in one
+          formal reporting workspace. Daily pages stay operational; this page
+          is for review, export, and management follow-up.
         </p>
 
         <div className="report-controls">
@@ -35,11 +41,11 @@ function ReportHero({
           >
             <span>Date range</span>
             <select
-              value={dateRange}
+              value={dateRangeValue}
               disabled={!usesDateRange}
               onChange={(event) => onDateRangeChange(event.target.value)}
             >
-              {dateRangeOptions.map((option) => (
+              {dateRangeSelectOptions.map((option) => (
                 <option key={option}>{option}</option>
               ))}
             </select>

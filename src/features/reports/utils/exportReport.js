@@ -1,4 +1,4 @@
-const REPORT_COLUMNS = [
+const BASE_REPORT_COLUMNS = [
   { label: 'Code', key: 'id' },
   { label: 'Item', key: 'name' },
   { label: 'Category', key: 'category' },
@@ -7,6 +7,35 @@ const REPORT_COLUMNS = [
   { label: 'Status', key: 'status' },
   { label: 'Updated', key: 'updated' },
 ];
+
+const getMonthlyUsageColumns = (rows) => {
+  const daysInMonth = rows[0]?.daysInMonth ?? 31;
+  const dayColumns = Array.from({ length: daysInMonth }, (_, index) => ({
+    label: String(index + 1),
+    getValue: (row) => row.dailyUsage?.[index] || '',
+  }));
+
+  return [
+    { label: 'No', getValue: (_row, index) => index + 1 },
+    { label: 'Code', key: 'id' },
+    { label: 'Product', key: 'name' },
+    { label: 'Old', key: 'oldStock' },
+    { label: 'New', key: 'newStock' },
+    ...dayColumns,
+    { label: 'Total Used', key: 'totalUsed' },
+    { label: 'Balance', key: 'balance' },
+  ];
+};
+
+const isMonthlyUsageRows = (rows) => rows[0]?.reportType === 'monthlyUsage';
+
+const getReportColumns = (rows) =>
+  isMonthlyUsageRows(rows) ? getMonthlyUsageColumns(rows) : BASE_REPORT_COLUMNS;
+
+const getColumnValue = (row, column, index) => {
+  const value = column.getValue ? column.getValue(row, index) : row[column.key];
+  return value === null || value === undefined ? '' : value;
+};
 
 const escapeCsvValue = (value) => {
   if (value === null || value === undefined) return '';
@@ -39,9 +68,10 @@ const slugify = (value) => {
 };
 
 const buildCsvContent = (rows) => {
-  const headerRow = REPORT_COLUMNS.map((column) => column.label);
-  const bodyRows = rows.map((row) =>
-    REPORT_COLUMNS.map((column) => row[column.key])
+  const columns = getReportColumns(rows);
+  const headerRow = columns.map((column) => column.label);
+  const bodyRows = rows.map((row, index) =>
+    columns.map((column) => getColumnValue(row, column, index))
   );
 
   return [headerRow, ...bodyRows]
@@ -79,6 +109,8 @@ const buildExcelTable = ({
   reportTitle,
   dateRange,
 }) => {
+  const columns = getReportColumns(rows);
+  const monthlyUsageReport = isMonthlyUsageRows(rows);
   const generatedAt = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -122,29 +154,64 @@ const buildExcelTable = ({
             color: #475569;
             font-weight: 700;
           }
+
+          .monthly-usage th,
+          .monthly-usage td {
+            padding: 4px;
+            text-align: center;
+            white-space: nowrap;
+          }
+
+          .monthly-usage th:nth-child(1),
+          .monthly-usage td:nth-child(1) {
+            width: 32px;
+          }
+
+          .monthly-usage th:nth-child(2),
+          .monthly-usage td:nth-child(2) {
+            width: 54px;
+          }
+
+          .monthly-usage th:nth-child(3),
+          .monthly-usage td:nth-child(3) {
+            width: 130px;
+            text-align: left;
+          }
+
+          .monthly-usage th:nth-child(4),
+          .monthly-usage th:nth-child(5),
+          .monthly-usage td:nth-child(4),
+          .monthly-usage td:nth-child(5) {
+            width: 58px;
+          }
+
+          .monthly-usage th:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)),
+          .monthly-usage td:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)) {
+            width: 30px;
+          }
         </style>
       </head>
       <body>
-        <table>
+        <table class="${monthlyUsageReport ? 'monthly-usage' : ''}">
           <tr>
-            <td class="report-title" colspan="${REPORT_COLUMNS.length}">
+            <td class="report-title" colspan="${columns.length}">
               ${escapeHtml(reportTitle)}
             </td>
           </tr>
           <tr>
-            <td class="report-meta" colspan="${REPORT_COLUMNS.length}">
+            <td class="report-meta" colspan="${columns.length}">
               Date range: ${escapeHtml(dateRange)} | Generated: ${escapeHtml(generatedAt)}
             </td>
           </tr>
           <tr>
-            ${REPORT_COLUMNS.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}
+            ${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}
           </tr>
           ${rows
             .map(
-              (row) => `
+              (row, rowIndex) => `
                 <tr>
-                  ${REPORT_COLUMNS.map(
-                    (column) => `<td>${escapeHtml(row[column.key])}</td>`
+                  ${columns.map(
+                    (column) => `<td>${escapeHtml(getColumnValue(row, column, rowIndex))}</td>`
                   ).join('')}
                 </tr>
               `
@@ -188,13 +255,13 @@ export const downloadExcelReport = ({
 const getStatusClassName = (status) =>
   `status-${slugify(status || 'default')}`;
 
-const buildPdfRows = (rows) =>
+const buildPdfRows = (rows, columns) =>
   rows
     .map(
-      (row) => `
+      (row, rowIndex) => `
         <tr>
-          ${REPORT_COLUMNS.map((column) => {
-            const value = row[column.key];
+          ${columns.map((column) => {
+            const value = getColumnValue(row, column, rowIndex);
             const isStatusColumn = column.key === 'status';
             const content = isStatusColumn
               ? `<span class="status-pill ${getStatusClassName(value)}">${escapeHtml(value)}</span>`
@@ -233,6 +300,8 @@ export const printPdfReport = ({
   dateRange = 'current',
   summaryMetrics = [],
 }) => {
+  const columns = getReportColumns(rows);
+  const monthlyUsageReport = isMonthlyUsageRows(rows);
   const printWindow = window.open('', '_blank', 'width=1120,height=760');
 
   if (!printWindow) {
@@ -262,6 +331,7 @@ export const printPdfReport = ({
 
           body {
             margin: 0;
+            padding: 15px 20px;
             color: #0f172a;
             background: #ffffff;
             font-family: "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
@@ -445,6 +515,61 @@ export const printPdfReport = ({
             text-align: right;
           }
 
+          .report-paper-usage table {
+            table-layout: fixed;
+            font-size: 7px;
+          }
+
+          .report-paper-usage th,
+          .report-paper-usage td {
+            padding: 3px 2px;
+            white-space: nowrap;
+          }
+
+          .report-paper-usage th:nth-child(1),
+          .report-paper-usage td:nth-child(1) {
+            width: 20px;
+            max-width: 20px;
+            text-align: center;
+          }
+
+          .report-paper-usage th:nth-child(2),
+          .report-paper-usage td:nth-child(2) {
+            width: 40px;
+            max-width: 40px;
+            text-align: center;
+          }
+
+          .report-paper-usage th:nth-child(3),
+          .report-paper-usage td:nth-child(3) {
+            width: 146px;
+            max-width: 146px;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .report-paper-usage th:nth-child(4),
+          .report-paper-usage th:nth-child(5),
+          .report-paper-usage td:nth-child(4),
+          .report-paper-usage td:nth-child(5) {
+            width: 42px;
+            max-width: 42px;
+            text-align: center;
+          }
+
+          .report-paper-usage th:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)),
+          .report-paper-usage td:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)) {
+            width: 20px;
+            min-width: 1px;
+            max-width: 20x;
+            text-align: center;
+          }
+
+          .report-paper-usage .summary-grid {
+            display: none;
+          }
+
           @media print {
             body {
               print-color-adjust: exact;
@@ -454,7 +579,7 @@ export const printPdfReport = ({
         </style>
       </head>
       <body>
-        <main class="report-paper">
+        <main class="report-paper${monthlyUsageReport ? ' report-paper-usage' : ''}">
           <header class="report-header">
             <div class="brand">
               <div class="brand-mark">MOON</div>
@@ -482,11 +607,11 @@ export const printPdfReport = ({
             <table>
               <thead>
                 <tr>
-                  ${REPORT_COLUMNS.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}
+                  ${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}
                 </tr>
               </thead>
               <tbody>
-                ${buildPdfRows(rows)}
+                ${buildPdfRows(rows, columns)}
               </tbody>
             </table>
           </section>

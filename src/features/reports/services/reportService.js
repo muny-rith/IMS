@@ -21,6 +21,13 @@ const formatMovementType = (value = '') =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
+// const USAGE_MOVEMENT_TYPES = ['ADJUSTMENT_IN', 'ADJUSTMENT_OUT'];
+const STOCK_IN_MOVEMENT_TYPES = ['OPENING', 'ADJUSTMENT_IN'];
+const STOCK_OUT_MOVEMENT_TYPES = ['ADJUSTMENT_OUT'];
+const USAGE_MOVEMENT_TYPES = [
+  ...STOCK_IN_MOVEMENT_TYPES,
+  ...STOCK_OUT_MOVEMENT_TYPES,
+];
 const getDateRangeBounds = (dateRange) => {
   const now = new Date();
   const from = new Date(now);
@@ -47,6 +54,30 @@ const getDateRangeBounds = (dateRange) => {
   return {
     from: from.toISOString(),
     to: now.toISOString(),
+  };
+};
+
+const getCurrentMonthBounds = () => {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
+
+  return {
+    monthStart,
+    monthEnd,
+    daysInMonth: monthEnd.getDate(),
+    monthLabel: new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      year: 'numeric',
+    }).format(monthStart),
   };
 };
 
@@ -190,6 +221,86 @@ const normalizeWorkerHistoryRows = (rows) => {
   }));
 };
 
+const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel }) => {
+  const category = asObject(product.categories);
+
+  return {
+    reportType: 'monthlyUsage',
+    productId: product.product_id,
+    id: product.product_code || `PR-${product.product_id}`,
+    name: product.product_name || 'Unnamed product',
+    category: category?.category_name || '-',
+    image: null,
+    oldStock: 0,
+    newStock: 0,
+    dailyUsage: Array.from({ length: daysInMonth }, () => 0),
+    totalUsed: 0,
+    balance: 0,
+    daysInMonth,
+    monthLabel,
+    raw: product,
+  };
+};
+
+const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
+  const productMap = new Map();
+
+  (products ?? []).forEach((product) => {
+    productMap.set(
+      String(product.product_id),
+      createMonthlyUsageRow({
+        product,
+        daysInMonth: bounds.daysInMonth,
+        monthLabel: bounds.monthLabel,
+      })
+    );
+  });
+
+  (movements ?? []).forEach((movement) => {
+    const row = productMap.get(String(movement.product_id));
+    const movementType = movement.movement_type;
+
+    if (!row || !USAGE_MOVEMENT_TYPES.includes(movementType)) {
+      return;
+    }
+
+    const qty = Number(movement.qty ?? 0);
+    const movementDate = new Date(movement.created_at);
+
+    if (Number.isNaN(movementDate.getTime()) || qty <= 0) {
+      return;
+    }
+
+    if (movementDate < bounds.monthStart) {
+      // row.oldStock += movementType === 'ADJUSTMENT_IN' ? qty : -qty;
+      row.oldStock += STOCK_IN_MOVEMENT_TYPES.includes(movementType)
+        ? qty
+        : -qty;
+      return;
+    }
+
+    if (movementDate > bounds.monthEnd) {
+      return;
+    }
+
+    // if (movementType === 'ADJUSTMENT_IN') {
+    if (STOCK_IN_MOVEMENT_TYPES.includes(movementType)) {
+      row.newStock += qty;
+      return;
+    }
+
+    const dayIndex = movementDate.getDate() - 1;
+    row.dailyUsage[dayIndex] += qty;
+    row.totalUsed += qty;
+  });
+
+  return Array.from(productMap.values()).map((row) => ({
+    ...row,
+    oldStock: Math.max(row.oldStock, 0),
+    balance: Math.max(row.oldStock, 0) + row.newStock - row.totalUsed,
+  }));
+};
+
 export const fetchCurrentStockReport = async () => {
   const { data, error } = await supabase
     .from('stock_balances')
@@ -318,14 +429,59 @@ export const fetchWorkerLoanHistoryReport = async (dateRange) => {
   return normalizeWorkerHistoryRows(data ?? []);
 };
 
+export const fetchMonthlyInventoryUsageReport = async () => {
+  const bounds = getCurrentMonthBounds();
+
+  const [productsResult, movementsResult] = await Promise.all([
+    supabase
+      .from('products')
+      .select(`
+        product_id,
+        product_code,
+        product_name,
+        categories (
+          category_id,
+          category_name
+        )
+      `)
+      .order('product_name', { ascending: true }),
+    supabase
+      .from('stock_movements')
+      .select(`
+        movement_id,
+        product_id,
+        movement_type,
+        qty,
+        created_at
+      `)
+      .in('movement_type', USAGE_MOVEMENT_TYPES)
+      .lte('created_at', bounds.monthEnd.toISOString())
+      .order('created_at', { ascending: true }),
+  ]);
+
+  if (productsResult.error) {
+    throw new Error(productsResult.error.message);
+  }
+
+  if (movementsResult.error) {
+    throw new Error(movementsResult.error.message);
+  }
+
+  return normalizeMonthlyUsageRows({
+    products: productsResult.data ?? [],
+    movements: movementsResult.data ?? [],
+    bounds,
+  });
+};
+
 export const fetchReportRows = async ({ reportId, dateRange }) => {
   switch (reportId) {
     case 'movement':
       return fetchStockMovementReport(dateRange);
     case 'loan':
       return fetchOutstandingLoanReport(dateRange);
-    case 'worker':
-      return fetchWorkerLoanHistoryReport(dateRange);
+    case 'usage':
+      return fetchMonthlyInventoryUsageReport();
     case 'stock':
     default:
       return fetchCurrentStockReport();

@@ -7,7 +7,6 @@ export const reportTypes = [
     metric: "1,284 SKUs",
     tone: "amber",
     usesDateRange: false,
-    dateHint: "Current stock is live and does not use date range.",
   },
   {
     id: "movement",
@@ -17,7 +16,6 @@ export const reportTypes = [
     metric: "342 records",
     tone: "blue",
     usesDateRange: true,
-    dateHint: "Filters stock movement history by created date.",
   },
   {
     id: "loan",
@@ -27,17 +25,16 @@ export const reportTypes = [
     metric: "29 open",
     tone: "rose",
     usesDateRange: true,
-    dateHint: "Filters loan records by loan date.",
   },
   {
-    id: "worker",
-    eyebrow: "Worker",
-    title: "Worker Loan History",
-    description: "Audit who borrowed what, return behavior, and outstanding responsibilities.",
-    metric: "18 workers",
+    id: "usage",
+    eyebrow: "Usage",
+    title: "Monthly Inventory Usage Report",
+    description: "Track old stock, new stock, daily adjustment-out usage, total used, and balance.",
+    metric: "This month",
     tone: "green",
-    usesDateRange: true,
-    dateHint: "Filters worker loan history by loan date.",
+    usesDateRange: false,
+    scopeLabel: "This month",
   },
 ];
 
@@ -102,6 +99,11 @@ export const savedReports = [
     title: "Outstanding Loan Report",
     detail: "Find active and overdue borrowed items.",
     cadence: "Loan",
+  },
+  {
+    title: "Monthly Usage Report",
+    detail: "Review daily adjustment-out usage by product.",
+    cadence: "Usage",
   },
 ];
 

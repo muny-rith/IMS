@@ -51,7 +51,11 @@ function ReportPage() {
     }
 
     const exportDateRange =
-      activeReport === "stock" ? "Current snapshot" : dateRange;
+      activeReport === "stock"
+        ? "Current snapshot"
+        : activeReport === "usage"
+          ? selectedReport.scopeLabel || "This month"
+          : dateRange;
 
     if (!rows.length) {
       window.alert("No report rows to export.");

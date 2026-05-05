@@ -1,7 +1,71 @@
 const getStatusClassName = (status) =>
   `report-status report-status-${String(status)
     .toLowerCase()
-    .replace(/\s+/g, "-")}`;
+    .replace(/\s+/g, '-')}`;
+
+const formatQty = (value) => {
+  const qty = Number(value ?? 0);
+  return qty > 0 ? qty.toLocaleString('en-US') : '';
+};
+
+const MonthlyUsagePreviewTable = ({ rows }) => {
+  const daysInMonth = rows[0]?.daysInMonth ?? 31;
+  const days = Array.from({ length: daysInMonth }, (_, index) => index + 1);
+
+  return (
+    <div className="report-usage-table">
+      <table className="report-usage-grid">
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Code</th>
+            <th>Product</th>
+            <th>Image</th>
+            <th>Old Stock</th>
+            <th>New Stock</th>
+            {days.map((day) => (
+              <th key={day}>{day}</th>
+            ))}
+            <th>Total Used</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={row.productId ?? row.id}>
+              <td>{index + 1}</td>
+              <td>{row.id}</td>
+              <td>
+                <strong>{row.name}</strong>
+              </td>
+              <td>
+                {row.image ? (
+                  <img
+                    className="report-usage-image"
+                    src={row.image}
+                    alt={row.name}
+                  />
+                ) : (
+                  <span className="report-usage-image-placeholder">
+                    {row.name?.[0]?.toUpperCase() || '?'}
+                  </span>
+                )}
+              </td>
+              <td>{formatQty(row.oldStock)}</td>
+              <td>{formatQty(row.newStock)}</td>
+              {days.map((day) => (
+                <td key={day}>{formatQty(row.dailyUsage?.[day - 1])}</td>
+              ))}
+              <td>{formatQty(row.totalUsed)}</td>
+              <td>{Number(row.balance ?? 0).toLocaleString('en-US')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 function ReportPreviewTable({
   title,
@@ -11,6 +75,7 @@ function ReportPreviewTable({
   onRetry,
 }) {
   const hasRows = rows.length > 0;
+  const isMonthlyUsageReport = rows[0]?.reportType === 'monthlyUsage';
 
   return (
     <article className="report-panel report-preview-panel">
@@ -24,7 +89,9 @@ function ReportPreviewTable({
           </p>
         </div>
 
-        <span className="report-pill">{loading ? 'Loading' : `${rows.length} rows`}</span>
+        <span className="report-pill">
+          {loading ? 'Loading' : `${rows.length} rows`}
+        </span>
       </div>
 
       {error ? (
@@ -42,6 +109,8 @@ function ReportPreviewTable({
           <strong>No report data found</strong>
           <p>Try another report type or date range.</p>
         </div>
+      ) : isMonthlyUsageReport ? (
+        <MonthlyUsagePreviewTable rows={rows} />
       ) : (
         <div className="report-table">
           <div className="report-table-row report-table-head">
@@ -56,16 +125,21 @@ function ReportPreviewTable({
 
           {loading && !hasRows
             ? Array.from({ length: 4 }).map((_, index) => (
-                <div className="report-table-row report-table-row--loading" key={index}>
+                <div
+                  className="report-table-row report-table-row--loading"
+                  key={index}
+                >
                   <span>Loading</span>
                   <strong>Report data</strong>
-                  <span>—</span>
-                  <span>—</span>
-                  <span>—</span>
+                  <span>-</span>
+                  <span>-</span>
+                  <span>-</span>
                   <span>
-                    <span className="report-status report-status-notice">Loading</span>
+                    <span className="report-status report-status-notice">
+                      Loading
+                    </span>
                   </span>
-                  <span>—</span>
+                  <span>-</span>
                 </div>
               ))
             : rows.map((row) => (
