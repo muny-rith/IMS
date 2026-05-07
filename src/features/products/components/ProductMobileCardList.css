@@ -1,0 +1,9 @@
+.mobile-card__avatar {
+  overflow: hidden;
+}
+
+.mobile-card__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -15,10 +15,18 @@ import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import StockBalanceTable from '../components/StockBalanceTable';
 import StockHistoryDrawer from '../components/StockHistoryDrawer';
 import StockMobileCardList from '../components/StockMobileCardList'
-
+import PurchaseRequestPanel from '../components/PurchaseRequestPanel';
 
 import { useStock } from '../hooks/useStock';
 import { fetchStockMovementsByProduct } from '../services/stockService';
+
+
+const STOCK_TABS = [
+  { id: 'balances', label: 'Stock Balances' },
+  { id: 'requests', label: 'Purchase Requests' },
+];
+
+
 
 const LOW_STOCK_THRESHOLD = 5;
 
@@ -78,6 +86,8 @@ const EmptyState = ({ title, description }) => (
 );
 
 const StockAdjustmentPage = () => {
+
+  const [activeTab, setActiveTab] = useState('balances');
   const { balances, loading, submitting, error, handleAdjust, reload } = useStock();
 
   const [search, setSearch] = useState('');
@@ -209,6 +219,7 @@ const StockAdjustmentPage = () => {
     }
   };
 
+
   return (
     <div className="stock-page">
       <section className="stock-page__hero">
@@ -267,100 +278,132 @@ const StockAdjustmentPage = () => {
 
 
 
+
       <section className="stock-panel">
+        <div className="stock-tabs">
+          {STOCK_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className={`stock-tab${activeTab === tab.id ? ' stock-tab--active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-        <section className="stock-toolbar">
+        {activeTab === 'balances' && (
+          // balance
           <div>
-            <h6 className="stock-panel__title">Current Stock Balances</h6>
-            <p className="stock-panel__subtitle">
-              Track availability, identify low stock, and open adjustment or
-              history actions per product.
-            </p>
-          </div>
-
-          <div className="stock-toolbar__controls">
-            <Button value="Refresh" onClick={handleRefresh} />
-            <div className="stock-toolbar__search">
-              <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by code, product, category..."
-              />
-            </div>
-          </div>
-        </section>
-
-        <div className="stock-panel__header">
-          <div style={{ display: "flex", alignItems: 'center', gap: '9px' }}>
-            <p className="stock-panel__eyebrow">Live balances</p>
-            <div className="stock-panel__badge">
-              {filteredBalances.length} visible
-            </div>
-          </div>
-          <div className="stock-panel__header-side">
-            <div className="stock-panel__filters">
-              {FILTERS.map((item) => (
-                <Chip
-                  key={item}
-                  label={getFilterLabel(item)}
-                  clickable
-                  variant="outlined"
-                  className={`stock-filter-chip${filter === item ? ' stock-filter-chip--active' : ''
-                    }`}
-                  onClick={() => setFilter(item)}
-                />
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-        <div className="stock-panel__body">
-          {loading ? (
-            <div className="stock-page__loading">
-              <CircularProgress size={30} />
-            </div>
-          ) : balances.length === 0 ? (
-            <EmptyState
-              title="No stock balances yet"
-              description="Create products with opening stock or use stock adjustment to begin tracking inventory."
-            />
-          ) : filteredBalances.length === 0 ? (
-            <EmptyState
-              title="No matching products"
-              description="Try a different search or switch filters to view more stock items."
-            />
-          ) : (
-            <>
-              <div className="stock-desktop-table">
-                <StockBalanceTable
-                  rows={filteredBalances}
-                  onAdjust={(row) =>
-                    setModal({
-                      open: true,
-                      balance: row,
-                    })
-                  }
-                  onViewHistory={loadHistory}
-                />
+            <section className="stock-toolbar">
+              <div>
+                <h6 className="stock-panel__title">Current Stock Balances</h6>
+                <p className="stock-panel__subtitle">
+                  Track availability, identify low stock, and open adjustment or
+                  history actions per product.
+                </p>
               </div>
 
-              <div className="stock-mobile-cards">
-                <StockMobileCardList
-                  rows={filteredBalances}
-                  onAdjust={(row) =>
-                    setModal({
-                      open: true,
-                      balance: row,
-                    })
-                  }
-                  onViewHistory={loadHistory}
-                />
+              <div className="stock-toolbar__controls">
+                <Button value="Refresh" onClick={handleRefresh} />
+                <div className="stock-toolbar__search">
+                  <Input
+                    leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search by code, product, category..."
+                  />
+                </div>
               </div>
-            </>
-          )}
-        </div>
+            </section>
+
+            <div className="stock-panel__header">
+              <div style={{ display: "flex", alignItems: 'center', gap: '9px' }}>
+                <p className="stock-panel__eyebrow">Live balances</p>
+                <div className="stock-panel__badge">
+                  {filteredBalances.length} visible
+                </div>
+              </div>
+              <div className="stock-panel__header-side">
+                <div className="stock-panel__filters">
+                  {FILTERS.map((item) => (
+                    <Chip
+                      key={item}
+                      label={getFilterLabel(item)}
+                      clickable
+                      variant="outlined"
+                      className={`stock-filter-chip${filter === item ? ' stock-filter-chip--active' : ''
+                        }`}
+                      onClick={() => setFilter(item)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            <div className="stock-panel__body">
+
+
+              <>
+                {loading ? (
+                  <div className="stock-page__loading">
+                    <CircularProgress size={30} />
+                  </div>
+                ) : balances.length === 0 ? (
+                  <EmptyState
+                    title="No stock balances yet"
+                    description="Create products with opening stock or use stock adjustment to begin tracking inventory."
+                  />
+                ) : filteredBalances.length === 0 ? (
+                  <EmptyState
+                    title="No matching products"
+                    description="Try a different search or switch filters to view more stock items."
+                  />
+                ) : (
+                  <>
+                    <div className="stock-desktop-table">
+                      <StockBalanceTable
+                        rows={filteredBalances}
+                        onAdjust={(row) =>
+                          setModal({
+                            open: true,
+                            balance: row,
+                          })
+                        }
+                        onViewHistory={loadHistory}
+                      />
+                    </div>
+
+                    <div className="stock-mobile-cards">
+                      <StockMobileCardList
+                        rows={filteredBalances}
+                        onAdjust={(row) =>
+                          setModal({
+                            open: true,
+                            balance: row,
+                          })
+                        }
+                        onViewHistory={loadHistory}
+                      />
+                    </div>
+
+
+                  </>
+                )}
+              </>
+            </div>
+
+          </div>
+        )}
+          
+        {activeTab === 'requests' && (
+          // request
+          <PurchaseRequestPanel />
+        )}
+
+
 
 
       </section>

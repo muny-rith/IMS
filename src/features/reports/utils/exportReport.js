@@ -10,20 +10,30 @@ const BASE_REPORT_COLUMNS = [
 
 const getMonthlyUsageColumns = (rows) => {
   const daysInMonth = rows[0]?.daysInMonth ?? 31;
+
   const dayColumns = Array.from({ length: daysInMonth }, (_, index) => ({
     label: String(index + 1),
     getValue: (row) => row.dailyUsage?.[index] || '',
   }));
 
   return [
-    { label: 'No', getValue: (_row, index) => index + 1 },
-    { label: 'Code', key: 'id' },
-    { label: 'Product', key: 'name' },
-    { label: 'Old', key: 'oldStock' },
-    { label: 'New', key: 'newStock' },
+    { label: 'ល.រ', getValue: (_row, index) => index + 1 },
+    { label: 'ឈ្មោះសម្ភារៈ', key: 'name' },
+    { label: 'ស្តុកថ្មី', key: 'newStock' },
+    { label: 'ស្តុកចាស់', key: 'oldStock' },
     ...dayColumns,
-    { label: 'Total Used', key: 'totalUsed' },
-    { label: 'Balance', key: 'balance' },
+    { label: 'ចំនួនបើក', key: 'totalUsed' },
+    { label: 'ចំនួនសល់', key: 'balance' },
+  ];
+};
+
+const getMonthlyUsagePdfColumns = (rows) => {
+  const columns = getMonthlyUsageColumns(rows);
+
+  return [
+    ...columns.slice(0, 2),
+    { label: 'រូបភាព', key: 'image', isImage: true },
+    ...columns.slice(2),
   ];
 };
 
@@ -31,6 +41,9 @@ const isMonthlyUsageRows = (rows) => rows[0]?.reportType === 'monthlyUsage';
 
 const getReportColumns = (rows) =>
   isMonthlyUsageRows(rows) ? getMonthlyUsageColumns(rows) : BASE_REPORT_COLUMNS;
+
+const getPdfReportColumns = (rows) =>
+  isMonthlyUsageRows(rows) ? getMonthlyUsagePdfColumns(rows) : BASE_REPORT_COLUMNS;
 
 const getColumnValue = (row, column, index) => {
   const value = column.getValue ? column.getValue(row, index) : row[column.key];
@@ -111,6 +124,7 @@ const buildExcelTable = ({
 }) => {
   const columns = getReportColumns(rows);
   const monthlyUsageReport = isMonthlyUsageRows(rows);
+
   const generatedAt = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -169,24 +183,19 @@ const buildExcelTable = ({
 
           .monthly-usage th:nth-child(2),
           .monthly-usage td:nth-child(2) {
-            width: 54px;
-          }
-
-          .monthly-usage th:nth-child(3),
-          .monthly-usage td:nth-child(3) {
-            width: 130px;
+            width: 146px;
             text-align: left;
           }
 
+          .monthly-usage th:nth-child(3),
           .monthly-usage th:nth-child(4),
-          .monthly-usage th:nth-child(5),
-          .monthly-usage td:nth-child(4),
-          .monthly-usage td:nth-child(5) {
+          .monthly-usage td:nth-child(3),
+          .monthly-usage td:nth-child(4) {
             width: 58px;
           }
 
-          .monthly-usage th:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)),
-          .monthly-usage td:nth-child(n + 6):not(:nth-last-child(1)):not(:nth-last-child(2)) {
+          .monthly-usage th:nth-child(n + 5):not(:nth-last-child(1)):not(:nth-last-child(2)),
+          .monthly-usage td:nth-child(n + 5):not(:nth-last-child(1)):not(:nth-last-child(2)) {
             width: 30px;
           }
         </style>
@@ -207,16 +216,19 @@ const buildExcelTable = ({
             ${columns.map((column) => `<th>${escapeHtml(column.label)}</th>`).join('')}
           </tr>
           ${rows
-            .map(
-              (row, rowIndex) => `
+      .map(
+        (row, rowIndex) => `
                 <tr>
-                  ${columns.map(
-                    (column) => `<td>${escapeHtml(getColumnValue(row, column, rowIndex))}</td>`
-                  ).join('')}
-                </tr>
-              `
+                  ${columns
+            .map(
+              (column) =>
+                `<td>${escapeHtml(getColumnValue(row, column, rowIndex))}</td>`
             )
             .join('')}
+                </tr>
+              `
+      )
+      .join('')}
         </table>
       </body>
     </html>
@@ -255,20 +267,33 @@ export const downloadExcelReport = ({
 const getStatusClassName = (status) =>
   `status-${slugify(status || 'default')}`;
 
+const renderPdfCellContent = ({ row, column, rowIndex }) => {
+  const value = getColumnValue(row, column, rowIndex);
+
+  if (column.isImage) {
+    return value
+      ? `<img src="${escapeHtml(value)}" alt="" class="export-image" />`
+      : '';
+  }
+
+  if (column.key === 'status') {
+    return `<span class="status-pill ${getStatusClassName(value)}">${escapeHtml(value)}</span>`;
+  }
+
+  return escapeHtml(value);
+};
+
 const buildPdfRows = (rows, columns) =>
   rows
     .map(
       (row, rowIndex) => `
         <tr>
-          ${columns.map((column) => {
-            const value = getColumnValue(row, column, rowIndex);
-            const isStatusColumn = column.key === 'status';
-            const content = isStatusColumn
-              ? `<span class="status-pill ${getStatusClassName(value)}">${escapeHtml(value)}</span>`
-              : escapeHtml(value);
-
-            return `<td>${content}</td>`;
-          }).join('')}
+          ${columns
+          .map(
+            (column) =>
+              `<td>${renderPdfCellContent({ row, column, rowIndex })}</td>`
+          )
+          .join('')}
         </tr>
       `
     )
@@ -280,16 +305,16 @@ const buildSummaryCards = (summaryMetrics = []) => {
   return `
     <section class="summary-grid">
       ${summaryMetrics
-        .map(
-          (item) => `
+      .map(
+        (item) => `
             <article class="summary-card">
               <span>${escapeHtml(item.label)}</span>
               <strong>${escapeHtml(item.value)}</strong>
               <p>${escapeHtml(item.detail)}</p>
             </article>
           `
-        )
-        .join('')}
+      )
+      .join('')}
     </section>
   `;
 };
@@ -300,7 +325,7 @@ export const printPdfReport = ({
   dateRange = 'current',
   summaryMetrics = [],
 }) => {
-  const columns = getReportColumns(rows);
+  const columns = getPdfReportColumns(rows);
   const monthlyUsageReport = isMonthlyUsageRows(rows);
   const printWindow = window.open('', '_blank', 'width=1120,height=760');
 
@@ -308,10 +333,28 @@ export const printPdfReport = ({
     return false;
   }
 
+
   const generatedAt = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date());
+  const khmerMonths = [
+    'មករា',
+    'កុម្ភៈ',
+    'មីនា',
+    'មេសា',
+    'ឧសភា',
+    'មិថុនា',
+    'កក្កដា',
+    'សីហា',
+    'កញ្ញា',
+    'តុលា',
+    'វិច្ឆិកា',
+    'ធ្នូ',
+  ];
+
+  const now = new Date();
+  const title = `តារាងបើកសម្ភារៈប្រចាំខែ ${khmerMonths[now.getMonth()]}`;
 
   printWindow.document.write(`
     <!doctype html>
@@ -320,6 +363,7 @@ export const printPdfReport = ({
         <meta charset="utf-8" />
         <title>${escapeHtml(reportTitle)}</title>
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Epilogue:ital,wght@0,100..900;1,100..900&display=swap');
           @page {
             size: A4 landscape;
             margin: 12mm;
@@ -331,10 +375,10 @@ export const printPdfReport = ({
 
           body {
             margin: 0;
-            padding: 15px 20px;
             color: #0f172a;
             background: #ffffff;
-            font-family: "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Segoe UI", Arial, sans-serif;
+
           }
 
           .report-paper {
@@ -428,13 +472,13 @@ export const printPdfReport = ({
           }
 
           .table-section {
-            margin-top: 18px;
+            // margin-top: 18px;
           }
 
           .table-title {
             display: flex;
-            justify-content: space-between;
-            align-items: end;
+            justify-content: center;
+            align-items: center;
             gap: 16px;
             margin-bottom: 10px;
           }
@@ -458,15 +502,14 @@ export const printPdfReport = ({
 
           th,
           td {
-            border: 1px solid #e5e7eb;
+            border: 1px solid #000000;
             padding: 8px;
             text-align: left;
             vertical-align: top;
           }
 
           th {
-            color: #475569;
-            background: #f8fafc;
+            color: #313131;
             font-size: 10px;
             font-weight: 900;
             letter-spacing: 0.04em;
@@ -474,7 +517,7 @@ export const printPdfReport = ({
           }
 
           td {
-            color: #111827;
+            color: #000000;
           }
 
           .status-pill {
@@ -508,11 +551,12 @@ export const printPdfReport = ({
             color: #15803d;
           }
 
-          .report-footer {
-            margin-top: 18px;
-            color: #94a3b8;
-            font-size: 10px;
-            text-align: right;
+          .export-image {
+            display: block;
+            width: 36px;
+            height: 20px;
+            object-fit: contain;
+            margin: 0 auto;
           }
 
           .report-paper-usage table {
@@ -522,31 +566,37 @@ export const printPdfReport = ({
 
           .report-paper-usage th,
           .report-paper-usage td {
-            padding: 3px 2px;
+            height: 24px;
+            padding: 2px;
             white-space: nowrap;
+            vertical-align: middle;
           }
 
           .report-paper-usage th:nth-child(1),
           .report-paper-usage td:nth-child(1) {
-            width: 20px;
-            max-width: 20px;
+            width: 24px;
+            max-width: 24px;
             text-align: center;
           }
 
-          .report-paper-usage th:nth-child(2),
-          .report-paper-usage td:nth-child(2) {
-            width: 40px;
-            max-width: 40px;
+          .report-paper-usage th:nth-child(2) {          
+            width: 132px;
+            max-width: 132px;
             text-align: center;
+          }
+          .report-paper-usage td:nth-child(2) {
+            width: 146px;
+            max-width: 146px;
+            text-align: left;
           }
 
           .report-paper-usage th:nth-child(3),
           .report-paper-usage td:nth-child(3) {
-            width: 146px;
-            max-width: 146px;
-            text-align: left;
+            width: 50px;
+            max-width: 50px;
             overflow: hidden;
             text-overflow: ellipsis;
+            text-align: center;
           }
 
           .report-paper-usage th:nth-child(4),
@@ -580,29 +630,11 @@ export const printPdfReport = ({
       </head>
       <body>
         <main class="report-paper${monthlyUsageReport ? ' report-paper-usage' : ''}">
-          <header class="report-header">
-            <div class="brand">
-              <div class="brand-mark">MOON</div>
-              <div>
-                <h1>${escapeHtml(reportTitle)}</h1>
-                <p>Moon IMS operational report</p>
-              </div>
-            </div>
-
-            <div class="report-meta">
-              <strong>Report Export</strong>
-              <p>Date range: ${escapeHtml(dateRange)}</p>
-              <p>Generated: ${escapeHtml(generatedAt)}</p>
-            </div>
-          </header>
-
-          ${buildSummaryCards(summaryMetrics)}
-
           <section class="table-section">
             <div class="table-title">
-              <h2>Report rows</h2>
-              <span>${rows.length} rows</span>
+              <h2>${monthlyUsageReport ? title : escapeHtml(reportTitle)}</h2>
             </div>
+
 
             <table>
               <thead>
@@ -616,9 +648,6 @@ export const printPdfReport = ({
             </table>
           </section>
 
-          <footer class="report-footer">
-            Prepared by Moon IMS
-          </footer>
         </main>
 
         <script>
@@ -632,6 +661,8 @@ export const printPdfReport = ({
       </body>
     </html>
   `);
+
+
 
   printWindow.document.close();
 

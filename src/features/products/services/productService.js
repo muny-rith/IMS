@@ -21,11 +21,14 @@ const normalizeProductRow = (row) => {
     qty: onHandQty,
     reservedQty,
     availableQty: onHandQty - reservedQty,
+    image: row.image_url ?? '',
+    imageUrl: row.image_url ?? '',
     isActive: row.is_active,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 };
+
 
 const buildProductPayload = (data) => ({
   product_code: data.code.trim(),
@@ -33,6 +36,8 @@ const buildProductPayload = (data) => ({
   category_id: Number(data.categoryId),
   department: data.department?.trim() || null,
   unit_price: Number(data.price ?? 0),
+  image_url: data.imageUrl ?? null,
+
 });
 
 export const fetchProducts = async () => {
@@ -45,6 +50,7 @@ export const fetchProducts = async () => {
       category_id,
       department,
       unit_price,
+      image_url,
       is_active,
       created_at,
       updated_at,
@@ -97,6 +103,24 @@ export const addProduct = async (data) => {
 
   const productId = productRow.product_id;
 
+  if (data.imageFile) {
+    const imageUrl = await uploadProductImage({
+      productId,
+      file: data.imageFile,
+    });
+
+    const { error: imageUpdateError } = await supabase
+      .from('products')
+      .update({
+        image_url: imageUrl,
+      })
+      .eq('product_id', productId);
+
+    if (imageUpdateError) {
+      throw new Error(imageUpdateError.message);
+    }
+  }
+
   const { error: balanceError } = await supabase
     .from('stock_balances')
     .insert([
@@ -134,11 +158,22 @@ export const addProduct = async (data) => {
   return productId;
 };
 
+
 export const updateProduct = async (id, data) => {
+  let imageUrl = data.imageUrl ?? data.image ?? null;
+
+  if (data.imageFile) {
+    imageUrl = await uploadProductImage({
+      productId: id,
+      file: data.imageFile,
+    });
+  }
+
   const { error } = await supabase
     .from('products')
     .update({
       ...buildProductPayload(data),
+      image_url: imageUrl,
       updated_at: new Date().toISOString(),
     })
     .eq('product_id', id);
@@ -146,7 +181,10 @@ export const updateProduct = async (id, data) => {
   if (error) {
     throw new Error(error.message);
   }
+
+  return id;
 };
+
 
 // Professional default: archive instead of hard delete
 export const deleteProduct = async (id) => {
@@ -158,4 +196,55 @@ export const deleteProduct = async (id) => {
   if (error) {
     throw new Error(error.message);
   }
+};
+
+
+//talk about prod image
+const PRODUCT_IMAGE_BUCKET = 'product-images';
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+const getFileExtension = (fileName = '') => {
+  const parts = fileName.split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : 'jpg';
+};
+
+const createProductImagePath = ({ productId, file }) => {
+  const extension = getFileExtension(file.name);
+  const timestamp = Date.now();
+
+  return `products/${productId}/${timestamp}.${extension}`;
+};
+
+export const uploadProductImage = async ({ productId, file }) => {
+  if (!file) return null;
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    throw new Error('Only JPG, PNG, or WEBP images are allowed.');
+  }
+
+  const maxSize = 5 * 1024 * 1024;
+
+  if (file.size > maxSize) {
+    throw new Error('Product image must be 5MB or smaller.');
+  }
+
+  const filePath = createProductImagePath({ productId, file });
+
+  const { error: uploadError } = await supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const { data } = supabase.storage
+    .from(PRODUCT_IMAGE_BUCKET)
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
 };

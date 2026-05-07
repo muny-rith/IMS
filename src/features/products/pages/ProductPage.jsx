@@ -224,16 +224,7 @@ const ProductPage = () => {
         field: 'name',
         headerName: 'Name',
         flex: 1.35,
-        renderCell: (params) => (
-          <Box className="product-name-cell">
-            <span className="product-name-cell__title">
-              {params.row.name || '—'}
-            </span>
-            <span className="product-name-cell__meta">
-              {params.row.code ? `SKU ${params.row.code}` : 'No code'}
-            </span>
-          </Box>
-        ),
+        renderCell: (params) =>  params.row.name || '—'
       },
       { field: 'code', headerName: 'Code', flex: 0.9 },
       {

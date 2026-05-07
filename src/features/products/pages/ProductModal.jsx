@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import './ProductModal.css';
@@ -40,6 +40,7 @@ const EMPTY_FORM = {
   price: '',
   openingQty: '',
   openingNote: '',
+  imageUrl: '',
 };
 
 const normalizeFormValues = (defaultValues, mode) => {
@@ -58,6 +59,7 @@ const normalizeFormValues = (defaultValues, mode) => {
     price: defaultValues.price ?? '',
     openingQty: '',
     openingNote: '',
+    imageUrl: defaultValues.imageUrl ?? defaultValues.image ?? '',
   };
 };
 
@@ -73,6 +75,9 @@ const ProductModal = ({
   const isCreate = mode === 'create';
   const isEdit = mode === 'edit';
   const isView = mode === 'view';
+
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   const formValues = useMemo(
     () => normalizeFormValues(defaultValues, mode),
@@ -92,15 +97,45 @@ const ProductModal = ({
   useEffect(() => {
     if (open) {
       reset(formValues);
+      setImageFile(null);
+      setImagePreview(formValues.imageUrl || '');
       return;
     }
 
     reset(EMPTY_FORM);
+    setImageFile(null);
+    setImagePreview('');
   }, [open, formValues, reset]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleClose = () => {
     reset(EMPTY_FORM);
+    setImageFile(null);
+    setImagePreview('');
     onClose();
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+
+    if (imagePreview?.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleFormSubmit = (values) => {
@@ -112,6 +147,8 @@ const ProductModal = ({
       price: Number(values.price),
       openingQty: isCreate && values.openingQty !== '' ? Number(values.openingQty) : 0,
       openingNote: isCreate ? values.openingNote?.trim() || '' : '',
+      imageFile,
+      imageUrl: formValues.imageUrl || '',
     });
   };
 
@@ -132,6 +169,32 @@ const ProductModal = ({
           onSubmit={handleSubmit(handleFormSubmit)}
           sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
         >
+          <Box>
+            <label className="form-label">Product Image</label>
+
+            <div className="product-image-upload">
+              <div className="product-image-preview">
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Product preview" />
+                ) : (
+                  <span>No image</span>
+                )}
+              </div>
+
+              {!isView && (
+                <label className="product-image-button">
+                  Choose image
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    hidden
+                  />
+                </label>
+              )}
+            </div>
+          </Box>
+
           <Box>
             <label className="form-label">Code</label>
             <input

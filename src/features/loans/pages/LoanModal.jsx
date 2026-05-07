@@ -12,6 +12,8 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  Autocomplete,
+  TextField,
 } from '@mui/material';
 
 import Button from '../../../components/ui/Button/Button';
@@ -48,12 +50,12 @@ const normalizeFormValues = (defaultValues, mode) => {
     items:
       defaultValues.items?.length > 0
         ? defaultValues.items.map((item) => ({
-            productId:
-              item.productId !== undefined && item.productId !== null
-                ? String(item.productId)
-                : '',
-            qty: item.qty ?? 1,
-          }))
+          productId:
+            item.productId !== undefined && item.productId !== null
+              ? String(item.productId)
+              : '',
+          qty: item.qty ?? 1,
+        }))
         : [createEmptyItem()],
   };
 };
@@ -275,61 +277,62 @@ const LoanModal = ({
                       <Controller
                         name={`items.${index}.productId`}
                         control={control}
-                        rules={{
-                          required: 'Product is required',
-                          validate: (value) => {
-                            if (!value) return 'Product is required';
+                        rules={{ required: 'Product is required' }}
+                        render={({ field }) => {
+                          const selectedProduct =
+                            products.find((product) => String(product.id) === String(field.value)) ?? null;
 
-                            const duplicated = isSelectedInAnotherRow(value, index);
-                            return !duplicated || 'This product is already selected.';
-                          },
-                        }}
-                        render={({ field: selectField }) => (
-                          <FormControl
-                            fullWidth
-                            size="small"
-                            error={Boolean(errors.items?.[index]?.productId)}
-                          >
-                            <InputLabel id={`loan-product-label-${index}`}>
-                              Product *
-                            </InputLabel>
-                            <Select
-                              {...selectField}
-                              labelId={`loan-product-label-${index}`}
-                              label="Product *"
+                          return (
+                            <Autocomplete
+                              options={products}
+                              value={selectedProduct}
                               disabled={isView}
-                              value={selectField.value ?? ''}
-                              onChange={(event) =>
-                                selectField.onChange(event.target.value)
+                              disablePortal={false}
+                              isOptionEqualToValue={(option, value) =>
+                                String(option.id) === String(value.id)
                               }
-                            >
-                              <MenuItem value="" disabled>
-                                Select product
-                              </MenuItem>
+                              getOptionLabel={(option) => option?.label ?? ''}
+                              onChange={(_, option) =>
+                                field.onChange(option ? String(option.id) : '')
+                              }
+                              // ListboxProps={{
+                              //   style: {
+                              //     maxHeight: 10,
+                              //     overflowY: 'auto',
+                              //   },
+                              // }}
 
-                              {products.map((product) => {
-                                const disabledOption =
-                                  isSelectedInAnotherRow(product.id, index);
-
-                                return (
-                                  <MenuItem
-                                    key={product.id}
-                                    value={String(product.id)}
-                                    disabled={disabledOption}
-                                  >
-                                    {product.label} (Available: {product.availableQty})
-                                  </MenuItem>
-                                );
-                              })}
-                            </Select>
-                          </FormControl>
-                        )}
+                              slotProps={{
+                                popper: {
+                                  modifiers: [
+                                    {
+                                      name: 'flip',
+                                      enabled: false,
+                                    },
+                                  ],
+                                },
+                                listbox: {
+                                  sx: {
+                                    maxHeight: 220,
+                                    overflowY: 'auto',
+                                  },
+                                },
+                              }}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Product *"
+                                  size="small"
+                                  error={Boolean(errors.items?.[index]?.productId)}
+                                  helperText={errors.items?.[index]?.productId?.message}
+                                />
+                              )}
+                            />
+                          );
+                        }}
                       />
-                      {errors.items?.[index]?.productId && (
-                        <span className="error-msg">
-                          {errors.items[index].productId.message}
-                        </span>
-                      )}
+
+
 
                       {selectedProduct && (
                         <Box sx={{ mt: 0.75, fontSize: 12, color: '#9aa4b2' }}>
@@ -365,9 +368,8 @@ const LoanModal = ({
                         type="number"
                         min="1"
                         placeholder="Qty *"
-                        className={`form-field${
-                          errors.items?.[index]?.qty ? ' field-error' : ''
-                        }`}
+                        className={`form-field${errors.items?.[index]?.qty ? ' field-error' : ''
+                          }`}
                       />
                       {errors.items?.[index]?.qty && (
                         <span className="error-msg">

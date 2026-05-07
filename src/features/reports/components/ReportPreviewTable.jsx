@@ -21,8 +21,8 @@ const MonthlyUsagePreviewTable = ({ rows }) => {
             <th>Code</th>
             <th>Product</th>
             <th>Image</th>
-            <th>Old Stock</th>
             <th>New Stock</th>
+            <th>Old Stock</th>
             {days.map((day) => (
               <th key={day}>{day}</th>
             ))}
@@ -52,8 +52,9 @@ const MonthlyUsagePreviewTable = ({ rows }) => {
                   </span>
                 )}
               </td>
-              <td>{formatQty(row.oldStock)}</td>
               <td>{formatQty(row.newStock)}</td>
+              <td>{formatQty(row.oldStock)}</td>
+
               {days.map((day) => (
                 <td key={day}>{formatQty(row.dailyUsage?.[day - 1])}</td>
               ))}
@@ -125,38 +126,38 @@ function ReportPreviewTable({
 
           {loading && !hasRows
             ? Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  className="report-table-row report-table-row--loading"
-                  key={index}
-                >
-                  <span>Loading</span>
-                  <strong>Report data</strong>
-                  <span>-</span>
-                  <span>-</span>
-                  <span>-</span>
-                  <span>
-                    <span className="report-status report-status-notice">
-                      Loading
-                    </span>
+              <div
+                className="report-table-row report-table-row--loading"
+                key={index}
+              >
+                <span>Loading</span>
+                <strong>Report data</strong>
+                <span>-</span>
+                <span>-</span>
+                <span>-</span>
+                <span>
+                  <span className="report-status report-status-notice">
+                    Loading
                   </span>
-                  <span>-</span>
-                </div>
-              ))
+                </span>
+                <span>-</span>
+              </div>
+            ))
             : rows.map((row) => (
-                <div className="report-table-row" key={row.id}>
-                  <span>{row.id}</span>
-                  <strong>{row.name}</strong>
-                  <span>{row.category}</span>
-                  <span>{row.owner}</span>
-                  <span>{row.metric}</span>
-                  <span>
-                    <span className={getStatusClassName(row.status)}>
-                      {row.status}
-                    </span>
+              <div className="report-table-row" key={row.id}>
+                <span>{row.id}</span>
+                <strong>{row.name}</strong>
+                <span>{row.category}</span>
+                <span>{row.owner}</span>
+                <span>{row.metric}</span>
+                <span>
+                  <span className={getStatusClassName(row.status)}>
+                    {row.status}
                   </span>
-                  <span>{row.updated}</span>
-                </div>
-              ))}
+                </span>
+                <span>{row.updated}</span>
+              </div>
+            ))}
         </div>
       )}
     </article>

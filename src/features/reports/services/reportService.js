@@ -28,6 +28,7 @@ const USAGE_MOVEMENT_TYPES = [
   ...STOCK_IN_MOVEMENT_TYPES,
   ...STOCK_OUT_MOVEMENT_TYPES,
 ];
+const INITIAL_OPENING_STOCK_CUTOFF = new Date('2026-05-05T00:00:00');
 const getDateRangeBounds = (dateRange) => {
   const now = new Date();
   const from = new Date(now);
@@ -230,7 +231,7 @@ const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel }) => {
     id: product.product_code || `PR-${product.product_id}`,
     name: product.product_name || 'Unnamed product',
     category: category?.category_name || '-',
-    image: null,
+    image: product.image_url ?? '',
     oldStock: 0,
     newStock: 0,
     dailyUsage: Array.from({ length: daysInMonth }, () => 0),
@@ -271,7 +272,10 @@ const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
       return;
     }
 
-    if (movementDate < bounds.monthStart) {
+    const isInitialOpeningStock =
+      movementType === 'OPENING' && movementDate < INITIAL_OPENING_STOCK_CUTOFF;
+
+    if (movementDate < bounds.monthStart || isInitialOpeningStock) {
       // row.oldStock += movementType === 'ADJUSTMENT_IN' ? qty : -qty;
       row.oldStock += STOCK_IN_MOVEMENT_TYPES.includes(movementType)
         ? qty
@@ -439,6 +443,7 @@ export const fetchMonthlyInventoryUsageReport = async () => {
         product_id,
         product_code,
         product_name,
+        image_url,
         categories (
           category_id,
           category_name

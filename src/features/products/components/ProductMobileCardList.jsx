@@ -33,7 +33,11 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                 const qty = Number(row.qty ?? 0);
                 return (
                     <MobileCard
-                        avatar={getInitial(row.name)}
+                        avatar={row.image ? (
+                            <img src={row.image} alt={row.name} />
+                        ) : (
+                            getInitial(row.name)
+                        )}
                         title={row.name || 'Unnamed product'}
                         subtitle={row.code ? `SKU ${row.code}` : 'No code'}
                         rightContent={
