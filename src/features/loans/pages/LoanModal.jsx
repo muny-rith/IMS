@@ -123,12 +123,12 @@ const LoanModal = ({
   const getProductById = (productId) =>
     products.find((product) => String(product.id) === String(productId));
 
-  const isSelectedInAnotherRow = (productId, currentIndex) =>
-    (watchedItems ?? []).some(
-      (item, index) =>
-        index !== currentIndex &&
-        String(item?.productId || '') === String(productId)
-    );
+  // const isSelectedInAnotherRow = (productId, currentIndex) =>
+  //   (watchedItems ?? []).some(
+  //     (item, index) =>
+  //       index !== currentIndex &&
+  //       String(item?.productId || '') === String(productId)
+  //   );
 
   const handleFormSubmit = (values) => {
     const normalizedItems = (values.items ?? [])

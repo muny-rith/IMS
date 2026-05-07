@@ -299,25 +299,25 @@ const buildPdfRows = (rows, columns) =>
     )
     .join('');
 
-const buildSummaryCards = (summaryMetrics = []) => {
-  if (!summaryMetrics.length) return '';
+// const buildSummaryCards = (summaryMetrics = []) => {
+//   if (!summaryMetrics.length) return '';
 
-  return `
-    <section class="summary-grid">
-      ${summaryMetrics
-      .map(
-        (item) => `
-            <article class="summary-card">
-              <span>${escapeHtml(item.label)}</span>
-              <strong>${escapeHtml(item.value)}</strong>
-              <p>${escapeHtml(item.detail)}</p>
-            </article>
-          `
-      )
-      .join('')}
-    </section>
-  `;
-};
+//   return `
+//     <section class="summary-grid">
+//       ${summaryMetrics
+//       .map(
+//         (item) => `
+//             <article class="summary-card">
+//               <span>${escapeHtml(item.label)}</span>
+//               <strong>${escapeHtml(item.value)}</strong>
+//               <p>${escapeHtml(item.detail)}</p>
+//             </article>
+//           `
+//       )
+//       .join('')}
+//     </section>
+//   `;
+// };
 
 export const printPdfReport = ({
   rows,
@@ -334,10 +334,10 @@ export const printPdfReport = ({
   }
 
 
-  const generatedAt = new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date());
+  // const generatedAt = new Intl.DateTimeFormat('en-US', {
+  //   dateStyle: 'medium',
+  //   timeStyle: 'short',
+  // }).format(new Date());
   const khmerMonths = [
     'មករា',
     'កុម្ភៈ',
