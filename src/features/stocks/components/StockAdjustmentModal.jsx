@@ -22,9 +22,12 @@ const ADJUSTMENT_TYPES = [
   { value: 'ADJUSTMENT_OUT', label: 'Adjustment Out' },
 ];
 
+const getToday = () => new Date().toISOString().slice(0, 10);
+
 const createEmptyForm = () => ({
   type: 'ADJUSTMENT_IN',
   qty: 1,
+  adjustmentDate: getToday(),
   notes: '',
 });
 
@@ -62,11 +65,6 @@ const StockAdjustmentModal = ({
   }, [onHandQty, qty, type]);
 
   useEffect(() => {
-    if (open) {
-      reset(createEmptyForm());
-      return;
-    }
-
     reset(createEmptyForm());
   }, [open, reset]);
 
@@ -82,6 +80,7 @@ const StockAdjustmentModal = ({
       productId: selectedBalance.productId,
       type: values.type,
       qty: Number(values.qty),
+      adjustmentDate: values.adjustmentDate,
       notes: values.notes.trim(),
     });
   };
@@ -98,33 +97,49 @@ const StockAdjustmentModal = ({
           sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
         >
           <Box className="stock-adjustment-summary">
-            <div>
-              <strong>Product</strong>
-              <span>
-                {selectedBalance?.productCode} - {selectedBalance?.productName}
-              </span>
+            <div className="stock-adjustment-summary__item item_code">
+              <span className="stock-adjustment-summary__label">Code</span>
+              <strong className="stock-adjustment-summary__value">
+                {selectedBalance?.productCode || '—'}
+              </strong>
             </div>
 
-            <div>
-              <strong>Category</strong>
-              <span>{selectedBalance?.category ?? '—'}</span>
+            <div className="stock-adjustment-summary__item stock-adjustment-summary__item--wide">
+              <span className="stock-adjustment-summary__label">Product</span>
+              <strong className="stock-adjustment-summary__value">
+                {selectedBalance?.productName || '—'}
+              </strong>
             </div>
 
-            <div>
-              <strong>On Hand</strong>
-              <span>{onHandQty}</span>
+            <div className="stock-adjustment-summary__item">
+              <span className="stock-adjustment-summary__label">Category</span>
+              <strong className="stock-adjustment-summary__value">
+                {selectedBalance?.category ?? '—'}
+              </strong>
             </div>
 
-            <div>
-              <strong>Reserved</strong>
-              <span>{reservedQty}</span>
+            <div className="stock-adjustment-summary__item">
+              <span className="stock-adjustment-summary__label">On Hand</span>
+              <strong className="stock-adjustment-summary__value">
+                {onHandQty}
+              </strong>
             </div>
 
-            <div>
-              <strong>Available</strong>
-              <span>{availableQty}</span>
+            <div className="stock-adjustment-summary__item">
+              <span className="stock-adjustment-summary__label">Reserved</span>
+              <strong className="stock-adjustment-summary__value">
+                {reservedQty}
+              </strong>
+            </div>
+
+            <div className="stock-adjustment-summary__item">
+              <span className="stock-adjustment-summary__label">Available</span>
+              <strong className="stock-adjustment-summary__value">
+                {availableQty}
+              </strong>
             </div>
           </Box>
+
 
           <Box>
             <label className="form-label">Adjustment Type</label>
@@ -134,13 +149,13 @@ const StockAdjustmentModal = ({
               rules={{ required: 'Adjustment type is required' }}
               render={({ field }) => (
                 <FormControl fullWidth size="small" error={Boolean(errors.type)}>
-                  <InputLabel id="stock-adjustment-type-label">
+                  {/* <InputLabel id="stock-adjustment-type-label">
                     Adjustment Type *
-                  </InputLabel>
+                  </InputLabel> */}
                   <Select
                     {...field}
                     labelId="stock-adjustment-type-label"
-                    label="Adjustment Type *"
+                    // label="Adjustment Type *"
                     value={field.value ?? ''}
                     onChange={(event) => field.onChange(event.target.value)}
                   >
@@ -155,6 +170,23 @@ const StockAdjustmentModal = ({
             />
             {errors.type && (
               <span className="error-msg">{errors.type.message}</span>
+            )}
+          </Box>
+
+          <Box>
+            <label className="form-label">Adjustment Date</label>
+            <input
+              {...register('adjustmentDate', {
+                required: 'Adjustment date is required',
+              })}
+              type="date"
+              className={`form-field${errors.adjustmentDate ? ' field-error' : ''
+                }`}
+            />
+            {errors.adjustmentDate && (
+              <span className="error-msg">
+                {errors.adjustmentDate.message}
+              </span>
             )}
           </Box>
 
@@ -184,13 +216,16 @@ const StockAdjustmentModal = ({
               placeholder="Adjustment quantity *"
               className={`form-field${errors.qty ? ' field-error' : ''}`}
             />
-            {errors.qty && <span className="error-msg">{errors.qty.message}</span>}
+            {errors.qty && (
+              <span className="error-msg">{errors.qty.message}</span>
+            )}
           </Box>
 
           <Box className="stock-adjustment-preview">
             <strong>Result Preview</strong>
             <span>
-              New on-hand stock: {Number.isNaN(nextOnHandQty) ? onHandQty : nextOnHandQty}
+              {'  '}New on-hand stock:{' '}
+              {Number.isNaN(nextOnHandQty) ? onHandQty : nextOnHandQty}
             </span>
           </Box>
 
@@ -204,9 +239,8 @@ const StockAdjustmentModal = ({
               })}
               rows={4}
               placeholder="Reason for adjustment *"
-              className={`form-field form-textarea${
-                errors.notes ? ' field-error' : ''
-              }`}
+              className={`form-field form-textarea${errors.notes ? ' field-error' : ''
+                }`}
             />
             {errors.notes && (
               <span className="error-msg">{errors.notes.message}</span>

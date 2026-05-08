@@ -271,7 +271,7 @@ export const applyLoanReturn = async ({ loanItemId, productId, qty, notes }) => 
   }
 };
 
-export const applyAdjustment = async ({ productId, qty, type, notes }) => {
+export const applyAdjustment = async ({ productId, qty, type,adjustmentDate, notes }) => {
   const amount = Number(qty);
 
   if (!productId || amount <= 0) {
@@ -285,6 +285,9 @@ export const applyAdjustment = async ({ productId, qty, type, notes }) => {
   if (!notes?.trim()) {
     throw new Error('Notes are required for stock adjustment.');
   }
+  const movementDate = adjustmentDate
+    ? new Date(`${adjustmentDate}T00:00:00`).toISOString()
+    : new Date().toISOString();
 
   const balance = await getStockBalanceByProductId(productId);
 
@@ -304,6 +307,7 @@ export const applyAdjustment = async ({ productId, qty, type, notes }) => {
         movement_type: type,
         qty: amount,
         notes: notes.trim(),
+        created_at: movementDate,
         loan_item_id: null,
         sale_item_id: null,
         stock_issue_item_id: null,
@@ -332,6 +336,7 @@ export const applyAdjustment = async ({ productId, qty, type, notes }) => {
     nextQty,
     qty: amount,
     type,
+    adjustmentDate: movementDate,
   };
 };
 export const fetchStockMovementsByProduct = async (productId, limit = 50) => {

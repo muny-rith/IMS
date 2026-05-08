@@ -1,9 +1,101 @@
-.stock-desktop-table{
-    display: block;
+.stock-adjustment-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  /* background:
+    radial-gradient(circle at top left, rgba(239, 23, 68, 0.08), transparent 32%),
+    linear-gradient(135deg, #ffffff, #f8fafc); */
 }
-.stock-moblie-cards{
-    display: none;
+
+.stock-adjustment-summary__item {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 10px;
 }
+
+.stock-adjustment-summary__item--wide {
+  grid-column: span 3;
+}
+
+.stock-adjustment-summary__label {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stock-adjustment-summary__value {
+  min-width: 0;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .stock-adjustment-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .item_code {
+    grid-column: span 2;
+
+  }
+
+  .stock-adjustment-summary__item--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .stock-adjustment-summary {
+    grid-template-columns: 1fr;
+  }
+  .item_code{
+    grid-column: auto;
+  }
+  .stock-adjustment-summary__item--wide {
+    grid-column: auto;
+  }
+}
+
+.form-field.form-textarea {
+  min-height: 110px;
+  padding-top: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.form-field.form-textarea::placeholder {
+  color: #98a2b3;
+}
+
+.form-field.form-textarea:disabled {
+  resize: none;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+
+.stock-desktop-table {
+  display: block;
+}
+
+.stock-moblie-cards {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .stock-desktop-table {
     display: none;
@@ -13,5 +105,3 @@
     display: grid;
   }
 }
-
-
