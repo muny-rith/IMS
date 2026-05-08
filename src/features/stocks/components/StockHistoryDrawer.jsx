@@ -1,32 +1,13 @@
 import React from 'react';
 import {
   Alert,
-  Box,
-  Chip,
   CircularProgress,
   Drawer,
   IconButton,
 } from '@mui/material';
 
 import CloseIcon from '@mui/icons-material/Close';
-import DataTable from '../../../components/ui/DataTable/DataTable';
-
-const getMovementColor = (type) => {
-  switch (type) {
-    case 'ADJUSTMENT_IN':
-      return 'success';
-    case 'ADJUSTMENT_OUT':
-      return 'error';
-    case 'LOAN_OUT':
-      return 'warning';
-    case 'LOAN_RETURN':
-      return 'info';
-    case 'OPENING':
-      return 'primary';
-    default:
-      return 'default';
-  }
-};
+import './StockHistoryDrawer.css';
 
 const formatDateTime = (value) => {
   if (!value) return '—';
@@ -37,39 +18,37 @@ const formatDateTime = (value) => {
   }).format(new Date(value));
 };
 
-const columns = [
-  {
-    field: 'createdAt',
-    headerName: 'Created At',
-    flex: 1.7,
-    renderCell: (params) => formatDateTime(params.row.createdAt),
-  },
-  {
-    field: 'movementType',
-    headerName: 'Movement Type',
-    flex: 1.4,
-    renderCell: (params) => (
-      <Chip
-        size="small"
-        label={params.row.movementType}
-        color={getMovementColor(params.row.movementType)}
-        variant="outlined"
-      />
-    ),
-  },
-  {
-    field: 'qty',
-    headerName: 'Qty',
-    flex: 0.7,
-    type: 'number',
-  },
-  {
-    field: 'notes',
-    headerName: 'Notes',
-    flex: 1.6,
-    renderCell: (params) => params.row.notes || '—',
-  },
-];
+const formatDate = (value) => {
+  if (!value) return '—';
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
+};
+
+const getMovementLabel = (type) => {
+  switch (type) {
+    case 'ADJUSTMENT_IN':
+      return 'Adjust In';
+    case 'ADJUSTMENT_OUT':
+      return 'Adjust Out';
+    case 'LOAN_OUT':
+      return 'Loan Out';
+    case 'LOAN_RETURN':
+      return 'Loan Return';
+    case 'OPENING':
+      return 'Opening';
+    default:
+      return type || 'Unknown';
+  }
+};
+
+const getMovementClass = (type) =>
+  `stock-history-type stock-history-type--${String(type || 'default')
+    .toLowerCase()
+    .replaceAll('_', '-')}`;
 
 const StockHistoryDrawer = ({
   open,
@@ -80,82 +59,126 @@ const StockHistoryDrawer = ({
   error = null,
 }) => {
   return (
-    <Drawer anchor="right" open={open} onClose={onClose}>
-      <Box
-        sx={{
-          width: { xs: '100vw', sm: 640 },
-          maxWidth: '100vw',
-          p: 2,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'space-between',
-            gap: 2,
-          }}
-        >
-          <Box>
-            <h3 style={{ margin: 0 }}>Product History</h3>
-            <p style={{ margin: '10px 0 0', color: '#667085' }}>
-              code: <span style={{color: '#000', fontWeight: 'bold'}}>{product?.productCode}</span> 
-              <br></br> 
-              name: <span style={{color: '#000', fontWeight: 'bold'}}>{product?.productName}</span> 
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          className: 'stock-history-drawer',
+        },
+      }}
+    >
+      <div className="stock-history">
+        <header className="stock-history__header">
+          <div>
+            <p className="stock-history__eyebrow">Movement audit</p>
+            <h3 className="stock-history__title">Product History</h3>
+            <p className="stock-history__subtitle">
+              Review every stock change recorded for this product.
             </p>
-          </Box>
+          </div>
 
-          <IconButton onClick={onClose}>
+          <IconButton className="stock-history__close" onClick={onClose}>
             <CloseIcon />
           </IconButton>
-        </Box>
+        </header>
 
         {product && (
-          <Box className="stock-history-summary">
-            <div>
-              <strong>Category</strong>
-              <span>{product.category ?? '—'}</span>
-            </div>
-            <div>
-              <strong>On Hand</strong>
-              <span>{product.onHandQty ?? 0}</span>
-            </div>
-            <div>
-              <strong>Reserved</strong>
-              <span>{product.reservedQty ?? 0}</span>
-            </div>
-            <div>
-              <strong>Available</strong>
-              <span>{product.availableQty ?? 0}</span>
-            </div>
-            <div>
-              <strong>Updated At</strong>
-              <span>{formatDateTime(product.updatedAt)}</span>
-            </div>
-          </Box>
+          <>
+            <section className="stock-history-product">
+              <div className="stock-history-product__avatar">
+                {product.productName?.[0]?.toUpperCase() ?? '?'}
+              </div>
+
+              <div className="stock-history-product__main">
+                <strong>{product.productName || 'Unknown product'}</strong>
+                <span>Code: {product.productCode || '—'}</span>
+              </div>
+            </section>
+
+            <section className="stock-history-summary">
+              <div className="stock-history-summary__item">
+                <span>Category</span>
+                <strong>{product.category ?? '—'}</strong>
+              </div>
+
+              <div className="stock-history-summary__item">
+                <span>On Hand</span>
+                <strong>{product.onHandQty ?? 0}</strong>
+              </div>
+
+              <div className="stock-history-summary__item">
+                <span>Reserved</span>
+                <strong>{product.reservedQty ?? 0}</strong>
+              </div>
+
+              <div className="stock-history-summary__item">
+                <span>Available</span>
+                <strong>{product.availableQty ?? 0}</strong>
+              </div>
+
+              <div className="stock-history-summary__item stock-history-summary__item--wide">
+                <span>Updated At</span>
+                <strong>{formatDateTime(product.updatedAt)}</strong>
+              </div>
+            </section>
+          </>
         )}
 
         {error && <Alert severity="error">{error}</Alert>}
 
-        {loading ? (
-          <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress size={28} />
-          </Box>
-        ) : movements.length === 0 ? (
-          <Box className="stock-history-empty">
-            <strong>No stock movements found</strong>
-            <p>
-              Adjustments, loan actions, and returns for this product will appear
-              here.
-            </p>
-          </Box>
-        ) : (
-          <DataTable rows={movements} columns={columns} />
-        )}
-      </Box>
+        <section className="stock-history-table-panel">
+          <div className="stock-history-table-panel__header">
+            <div>
+              <p className="stock-history__eyebrow">Movements</p>
+              <h4>Stock movement records</h4>
+            </div>
+            <span>{movements.length} records</span>
+          </div>
+
+          {loading ? (
+            <div className="stock-history-loading">
+              <CircularProgress size={28} />
+            </div>
+          ) : movements.length === 0 ? (
+            <div className="stock-history-empty">
+              <strong>No stock movements found</strong>
+              <p>
+                Adjustments, loan actions, and returns for this product will
+                appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="stock-history-compact-table-wrap">
+              <table className="stock-history-compact-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Qty</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movements.map((item) => (
+                    <tr key={item.id}>
+                      <td>{formatDate(item.createdAt)}</td>
+                      <td>
+                        <span className={getMovementClass(item.movementType)}>
+                          {getMovementLabel(item.movementType)}
+                        </span>
+                      </td>
+                      <td>{item.qty}</td>
+                      <td>{item.notes || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
     </Drawer>
   );
 };
