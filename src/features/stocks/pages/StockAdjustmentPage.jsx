@@ -28,7 +28,7 @@ const STOCK_TABS = [
 
 
 
-const LOW_STOCK_THRESHOLD = 5;
+const LOW_STOCK_THRESHOLD = 10;
 
 const INITIAL_TOAST = {
   open: false,
