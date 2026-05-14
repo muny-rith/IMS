@@ -15,6 +15,8 @@ import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import StockBalanceTable from '../components/StockBalanceTable';
 import StockHistoryDrawer from '../components/StockHistoryDrawer';
 import StockMobileCardList from '../components/StockMobileCardList'
+
+
 import PurchaseRequestPanel from '../components/PurchaseRequestPanel';
 
 import { useStock } from '../hooks/useStock';

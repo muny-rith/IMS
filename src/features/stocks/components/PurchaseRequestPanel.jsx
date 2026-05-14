@@ -1,8 +1,15 @@
 import React, { useMemo, useState } from 'react';
 
+import DataTable from '../../../components/ui/DataTable/DataTable';
 import { PURCHASE_REQUEST_STATUSES } from '../data/purchaseRequestMock';
 import usePurchaseRequests from '../hooks/usePurchaseRequests';
+import PurchaseRequestMobileCardList from './PurchaseRequestMobileCardList';
 import PurchaseRequestModal from './PurchaseRequestModal';
+import {
+  formatPurchaseRequestDate,
+  getPurchaseRequestItemLabel,
+  getPurchaseRequestStatusClassName,
+} from './purchaseRequestViewUtils';
 import './purchaseRequest.css';
 
 const statusLabel = {
@@ -13,21 +20,78 @@ const statusLabel = {
   RECEIVED: 'Received',
 };
 
-const formatDate = (value) => {
-  if (!value) return '-';
+const columns = [
+  {
+    field: 'requestNo',
+    headerName: 'Request No',
+    minWidth: 140,
+    flex: 1,
+  },
+  {
+    field: 'requestedDate',
+    headerName: 'Date',
+    minWidth: 140,
+    flex: 1,
+    renderCell: ({ row }) => formatPurchaseRequestDate(row.requestedDate),
+  },
+  {
+    field: 'requestedBy',
+    headerName: 'Requested By',
+    minWidth: 160,
+    flex: 1,
+  },
+  {
+    field: 'items',
+    headerName: 'Items',
+    minWidth: 240,
+    flex: 1.4,
+    sortable: false,
+    renderCell: ({ row }) => {
+      const items = row.items ?? [];
 
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-  }).format(new Date(value));
-};
-
-const getItemLabel = (item) => {
-  const productLabel = [item.productCode, item.productName]
-    .filter(Boolean)
-    .join(' - ');
-
-  return `${productLabel || 'Unknown product'} x${item.requestedQty}`;
-};
+      return (
+        <>
+          <strong>{row.totalItems}</strong>
+          <span className="purchase-request-table__muted">
+            {items.map(getPurchaseRequestItemLabel).join(', ')}
+          </span>
+        </>
+      );
+    },
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    minWidth: 130,
+    flex: 0.8,
+    renderCell: ({ row }) => (
+      <span className={getPurchaseRequestStatusClassName(row.status)}>
+        {row.status}
+      </span>
+    ),
+  },
+  {
+    field: 'purpose',
+    headerName: 'Purpose',
+    minWidth: 180,
+    flex: 1,
+    renderCell: ({ row }) => row.purpose || '-',
+  },
+  {
+    field: 'actions',
+    headerName: 'Action',
+    minWidth: 150,
+    flex: 0.8,
+    sortable: false,
+    filterable: false,
+    renderCell: () => (
+      <div className="purchase-request-actions">
+        <button type="button">View</button>
+        <button type="button">Print</button>
+      </div>
+    ),
+  },
+];
 
 const PurchaseRequestPanel = () => {
   const {
@@ -36,7 +100,6 @@ const PurchaseRequestPanel = () => {
     loading,
     submitting,
     error,
-    refetch,
     handleCreate,
   } = usePurchaseRequests();
 
@@ -56,7 +119,7 @@ const PurchaseRequestPanel = () => {
           row.requestedBy,
           row.purpose,
           row.status,
-          ...(row.items ?? []).map(getItemLabel),
+          ...(row.items ?? []).map(getPurchaseRequestItemLabel),
         ]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(q));
@@ -89,22 +152,6 @@ const PurchaseRequestPanel = () => {
         </div>
 
         <div className="purchase-request-toolbar__actions">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search request, requester, item..."
-            className="purchase-request-search"
-          />
-
-          <button
-            type="button"
-            className="purchase-request-secondary-button"
-            onClick={refetch}
-            disabled={loading || submitting}
-          >
-            Refresh
-          </button>
-
           <button
             type="button"
             className="purchase-request-primary-button"
@@ -113,7 +160,25 @@ const PurchaseRequestPanel = () => {
           >
             Create Request
           </button>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search request, requester, item..."
+            className="purchase-request-search"
+          />
+
+          {/* <button
+            type="button"
+            className="purchase-request-secondary-button"
+            onClick={refetch}
+            disabled={loading || submitting}
+          >
+            Refresh
+          </button> */}
+
+
         </div>
+
       </div>
 
       {error && <div className="purchase-request-error">{error}</div>}
@@ -123,9 +188,8 @@ const PurchaseRequestPanel = () => {
           <button
             key={status}
             type="button"
-            className={`purchase-request-filter${
-              filter === status ? ' purchase-request-filter--active' : ''
-            }`}
+            className={`purchase-request-filter${filter === status ? ' purchase-request-filter--active' : ''
+              }`}
             onClick={() => setFilter(status)}
           >
             {statusLabel[status]}
@@ -147,84 +211,12 @@ const PurchaseRequestPanel = () => {
         </div>
       ) : (
         <>
-          <div className="purchase-request-table-wrap">
-            <table className="purchase-request-table">
-              <thead>
-                <tr>
-                  <th>Request No</th>
-                  <th>Date</th>
-                  <th>Requested By</th>
-                  <th>Items</th>
-                  <th>Status</th>
-                  <th>Purpose</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.requestNo}</td>
-                    <td>{formatDate(row.requestedDate)}</td>
-                    <td>{row.requestedBy}</td>
-                    <td>
-                      <strong>{row.totalItems}</strong>
-                      <span className="purchase-request-table__muted">
-                        {row.items.map(getItemLabel).join(', ')}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`purchase-request-status purchase-request-status--${row.status.toLowerCase()}`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td>{row.purpose || '-'}</td>
-                    <td>
-                      <div className="purchase-request-actions">
-                        <button type="button">View</button>
-                        <button type="button">Print</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="purchase-request-desktop-table">
+            <DataTable rows={filteredRows} columns={columns} />
           </div>
 
-          <div className="purchase-request-card-list">
-            {filteredRows.map((row) => (
-              <article className="purchase-request-card" key={row.id}>
-                <div className="purchase-request-card__top">
-                  <div>
-                    <strong>{row.requestNo}</strong>
-                    <span>{formatDate(row.requestedDate)}</span>
-                  </div>
-                  <span
-                    className={`purchase-request-status purchase-request-status--${row.status.toLowerCase()}`}
-                  >
-                    {row.status}
-                  </span>
-                </div>
-
-                <div className="purchase-request-card__meta">
-                  <span>Requested by</span>
-                  <strong>{row.requestedBy}</strong>
-                </div>
-
-                <div className="purchase-request-card__meta">
-                  <span>Items</span>
-                  <strong>{row.items.map(getItemLabel).join(', ')}</strong>
-                </div>
-
-                <p>{row.purpose || 'No purpose provided.'}</p>
-
-                <div className="purchase-request-actions">
-                  <button type="button">View</button>
-                  <button type="button">Print</button>
-                </div>
-              </article>
-            ))}
+          <div className="purchase-request-mobile-cards">
+            <PurchaseRequestMobileCardList rows={filteredRows} />
           </div>
         </>
       )}

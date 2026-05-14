@@ -39,12 +39,8 @@
 }
 
 .stock-page__hero-card {
-  /* display: grid;
+  display: grid;
   gap: 16px;
-  padding: 20px;
-  border: 1px solid #eef2f7;
-  border-radius: 22px;
-  background: #ffffff; */
 }
 
 .stock-page__hero-top {
@@ -178,7 +174,6 @@
   border-radius: 16px;
 }
 
-
 .stock-panel {
   padding: 22px;
   border: 1px solid #eef2f7;
@@ -186,7 +181,6 @@
   background: #ffffff;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
 }
-
 
 .stock-toolbar {
   display: flex;
@@ -222,14 +216,13 @@
 }
 
 .stock-toolbar__search {
-  /* flex: 1 1 320px; */
   display: flex;
   width: 100%;
 }
- .stock-toolbar__search > * {
-    width: 100%;
-  }
 
+.stock-toolbar__search > * {
+  width: 100%;
+}
 
 .stock-panel__header {
   display: flex;
@@ -239,18 +232,12 @@
   margin: 18px 0;
 }
 
-
-
 .stock-panel__eyebrow {
-  /* margin: 0 0 8px; */
   font-size: 12px;
   font-weight: 700;
-  /* letter-spacing: 0.08em; */
   text-transform: uppercase;
   color: #94a3b8;
 }
-
-
 
 .stock-panel__header-side {
   display: flex;
@@ -259,7 +246,6 @@
   gap: 12px;
 }
 
-
 .stock-panel__badge {
   display: inline-flex;
   align-items: center;
@@ -267,7 +253,6 @@
   padding: 8px 14px;
   border: 1px solid #e98a90;
   border-radius: 999px;
-  /* background: #fff1f2; */
   color: #e11d48;
   font-size: 12px;
   font-weight: 700;
@@ -294,7 +279,6 @@
     border-color: transparent;
   }
 }
-
 
 .stock-filter-chip.MuiChip-root:focus {
   outline: none;
@@ -349,98 +333,20 @@
   line-height: 1.6;
 }
 
-@media (max-width: 1080px) {
-
-  .stock-page__hero,
-  .stock-toolbar,
-  .stock-panel__header {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .stock-page__hero-top {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .stock-toolbar__controls {
-    width: 100%;
-  }
-
-  .stock-panel__header-side {
-    align-items: flex-left;
-  }
-
-  .stock-panel__filters {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 768px) {
-  .stock-page__hero-summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stock-toolbar__controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-@media (max-width: 640px) {
-  .stock-page__title {
-    font-size: 26px;
-  }
-
-  .stock-panel,
-  .stock-toolbar,
-  .stock-page__hero {
-    padding: 18px;
-  }
-}
-
-@media (max-width: 576px) {
-  .stock-panel__header {
-    /* display: grid; */
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .stock-panel__header-side {
-    align-items: flex-start;
-  }
-}
-
-
 .stock-desktop-table {
+  display: block;
   height: calc(100vh - 331px);
   min-height: 440px;
 }
+
 .stock-table-shell {
   height: 100%;
   min-height: 440px;
 }
 
-
-.stock-desktop-table {
-  display: block;
-}
-
 .stock-mobile-cards {
   display: none;
 }
-
-@media (max-width: 768px) {
-  .stock-desktop-table {
-    display: none;
-  }
-
-  .stock-mobile-cards {
-    display: block;
-  }
-}
-
 
 .stock-tabs {
   display: inline-flex;
@@ -502,7 +408,48 @@
   font-size: 18px;
 }
 
+@media (max-width: 1080px) {
+  .stock-page__hero {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-toolbar,
+  .stock-panel__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stock-toolbar__controls {
+    width: 100%;
+  }
+
+  .stock-panel__header-side {
+    align-items: flex-start;
+  }
+
+  .stock-panel__filters {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 768px) {
+  .stock-page__hero-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stock-toolbar__controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stock-desktop-table {
+    display: none;
+  }
+
+  .stock-mobile-cards {
+    display: block;
+  }
+
   .stock-tabs {
     width: 100%;
   }
@@ -514,5 +461,28 @@
   .purchase-request-panel__header {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .stock-page__title {
+    font-size: 26px;
+  }
+
+  .stock-panel,
+  .stock-toolbar,
+  .stock-page__hero {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  .stock-page__hero-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stock-panel__header {
+    gap: 10px;
   }
 }
