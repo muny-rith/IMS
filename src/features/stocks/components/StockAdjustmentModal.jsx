@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import {
@@ -50,19 +50,11 @@ const StockAdjustmentModal = ({
   });
 
   const type = watch('type');
-  const qty = Number(watch('qty') || 0);
+
 
   const onHandQty = Number(selectedBalance?.onHandQty ?? 0);
   const reservedQty = Number(selectedBalance?.reservedQty ?? 0);
   const availableQty = Number(selectedBalance?.availableQty ?? 0);
-
-  const nextOnHandQty = useMemo(() => {
-    if (type === 'ADJUSTMENT_OUT') {
-      return onHandQty - qty;
-    }
-
-    return onHandQty + qty;
-  }, [onHandQty, qty, type]);
 
   useEffect(() => {
     reset(createEmptyForm());
