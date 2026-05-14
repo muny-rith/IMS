@@ -221,30 +221,14 @@ const StockAdjustmentModal = ({
             )}
           </Box>
 
-          <Box className="stock-adjustment-preview">
-            <strong>Result Preview</strong>
-            <span>
-              {'  '}New on-hand stock:{' '}
-              {Number.isNaN(nextOnHandQty) ? onHandQty : nextOnHandQty}
-            </span>
-          </Box>
-
           <Box>
             <label className="form-label">Notes</label>
             <textarea
-              {...register('notes', {
-                required: 'Notes are required',
-                validate: (value) =>
-                  value?.trim()?.length > 0 || 'Notes are required',
-              })}
+              {...register('notes')}
               rows={4}
-              placeholder="Reason for adjustment *"
-              className={`form-field form-textarea${errors.notes ? ' field-error' : ''
-                }`}
+              placeholder="Reason for adjustment"
+              className={`form-field form-textarea${errors.notes ? ' field-error' : ''}`}
             />
-            {errors.notes && (
-              <span className="error-msg">{errors.notes.message}</span>
-            )}
           </Box>
         </Box>
       </DialogContent>
