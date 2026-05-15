@@ -282,9 +282,9 @@ export const applyAdjustment = async ({ productId, qty, type,adjustmentDate, not
     throw new Error('Invalid stock adjustment type.');
   }
 
-  if (!notes?.trim()) {
-    throw new Error('Notes are required for stock adjustment.');
-  }
+  // if (!notes?.trim()) {
+  //   throw new Error('Notes are required for stock adjustment.');
+  // }
   const movementDate = adjustmentDate
     ? new Date(`${adjustmentDate}T00:00:00`).toISOString()
     : new Date().toISOString();
