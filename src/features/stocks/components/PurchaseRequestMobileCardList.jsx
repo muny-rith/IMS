@@ -6,7 +6,7 @@ import {
   getPurchaseRequestStatusClassName,
 } from './purchaseRequestViewUtils';
 
-const PurchaseRequestMobileCardList = ({ rows = [] }) => (
+const PurchaseRequestMobileCardList = ({ rows = [], onView, onPrint }) => (
   <>
     {rows.map((row) => {
       const items = row.items ?? [];
@@ -37,8 +37,12 @@ const PurchaseRequestMobileCardList = ({ rows = [] }) => (
           <p>{row.purpose || 'No purpose provided.'}</p>
 
           <div className="purchase-request-actions">
-            <button type="button">View</button>
-            <button type="button">Print</button>
+            <button type="button" onClick={() => onView?.(row)}>
+              View
+            </button>
+            <button type="button" onClick={() => onPrint?.(row)}>
+              Print
+            </button>
           </div>
         </article>
       );

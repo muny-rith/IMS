@@ -90,6 +90,13 @@ const PurchaseRequestPanel = () => {
     });
   }, []);
 
+  const openPrintModal = useCallback((request) => {
+    setPrintModal({
+      open: true,
+      request,
+    });
+  }, []);
+
   const columns = useMemo(
     () => [
       {
@@ -218,10 +225,7 @@ const PurchaseRequestPanel = () => {
   const handleDetailAction = async (action, request) => {
     if (action === 'Print') {
       closeDetail();
-      setPrintModal({
-        open: true,
-        request,
-      });
+      openPrintModal(request);
       return;
     }
 
@@ -342,6 +346,7 @@ const PurchaseRequestPanel = () => {
             <PurchaseRequestMobileCardList
               rows={filteredRows}
               onView={openDetail}
+              onPrint={openPrintModal}
             />
           </div>
         </>
