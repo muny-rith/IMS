@@ -54,12 +54,12 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
         <div className="purchase-print-modal__content">
           <main className="purchase-print-paper">
             <header className="purchase-print-company">
-              <h1>ស៊ីនកៃហ្វូ(ខេមបូឌា)ខូអិលធីឌី 新彩福（柬埔寨）有限公司</h1>
+              <h1>ស៊ុនវ៉េហ្វូ(ខេមបូឌា)ឌីវេលប៉មិនធី 新彩福（柬埔寨）有限公司</h1>
             </header>
 
             <section className="purchase-print-document-title">
-              <h2>ប័ណ្ណស្នើរទិញទំនិញ 采购申请单</h2>
-              {/* <span>{request.requestNo}</span> */}
+              <h2>បណ្ណស្នើសុំទិញ 采购申请单</h2>
+              <span>{request.requestNo}</span>
             </section>
 
             <section className="purchase-print-meta-row">
@@ -79,7 +79,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
                   <th>编号</th>
                   <th>ឈ្មោះសម្ភារៈ 摘要</th>
                   <th>ចំនួន 数量</th>
-                  <th>预估单价</th>
+                  <th>预计单价</th>
                   <th>实际单价</th>
                   <th>总单价</th>
                 </tr>
@@ -90,7 +90,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
                     <td>{row.no}</td>
                     <td>
                       <strong>{row.description}</strong>
-                      {/* {row.reason && <span>{row.reason}</span>} */}
+                      {row.reason && <span>{row.reason}</span>}
                     </td>
                     <td>{row.qty}</td>
                     <td />
@@ -109,7 +109,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
 
             <section className="purchase-print-purpose-lines">
               <div>
-                <span>ប្រើសម្រាប់ 用途：</span>
+                <strong>ប្រើប្រាស់ 用途：</strong>
                 <span>{request.purpose || ''}</span>
               </div>
               <div />
@@ -122,7 +122,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
                 <strong />
               </div>
               <div>
-                <span>អ្នកអនុញ្ញាតិ 批准人</span>
+                <span>អ្នកអនុម័ត 批准人</span>
                 <strong />
               </div>
               <div>

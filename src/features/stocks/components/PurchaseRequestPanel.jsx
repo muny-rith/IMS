@@ -102,27 +102,23 @@ const PurchaseRequestPanel = () => {
       {
         field: 'requestNo',
         headerName: 'Request No',
-        minWidth: 140,
         flex: 1,
       },
       {
         field: 'requestedDate',
         headerName: 'Date',
-        minWidth: 140,
         flex: 1,
         renderCell: ({ row }) => formatPurchaseRequestDate(row.requestedDate),
       },
       {
         field: 'requestedBy',
         headerName: 'Requested By',
-        minWidth: 160,
         flex: 1,
       },
       {
         field: 'items',
         headerName: 'Items',
-        minWidth: 240,
-        flex: 1.4,
+        flex: 0.6,
         sortable: false,
         renderCell: ({ row }) => {
           const items = row.items ?? [];
@@ -140,7 +136,6 @@ const PurchaseRequestPanel = () => {
       {
         field: 'status',
         headerName: 'Status',
-        minWidth: 130,
         flex: 0.8,
         renderCell: ({ row }) => (
           <span className={getPurchaseRequestStatusClassName(row.status)}>
@@ -151,7 +146,6 @@ const PurchaseRequestPanel = () => {
       {
         field: 'purpose',
         headerName: 'Purpose',
-        minWidth: 180,
         flex: 1,
         renderCell: ({ row }) => row.purpose || '-',
       },
@@ -159,7 +153,7 @@ const PurchaseRequestPanel = () => {
         field: 'action',
         headerName: 'Actions',
         flex: 0.6,
-        minWidth: 90,
+        minWidth: 70,
         sortable: false,
         filterable: false,
         align: 'center',

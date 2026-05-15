@@ -90,7 +90,6 @@
   align-items: center;
   justify-content: center;
   min-height: 16mm;
-  /* border-bottom: 1px solid #000000; */
   text-align: center;
 }
 
@@ -114,16 +113,13 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 9mm;
-  /* border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000; */
 }
 
 .purchase-print-meta-row div {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 6px;
+  padding: 10px 6px;
   font-size: 12px;
 }
 
@@ -145,7 +141,7 @@
 
 .purchase-print-table th,
 .purchase-print-table td {
-  border: 1px solid #000000d7;
+  border: 1px solid #000000cb;
   padding: 4px 6px;
   color: #000000;
   vertical-align: middle;
@@ -210,18 +206,9 @@
   text-align: center;
 }
 
-.purchase-print-purpose-lines {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  /* border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000; */
-}
-
 .purchase-print-purpose-lines div {
-  /* min-height: 12mm; */
+  margin-top: 10px;
   padding: 4px 6px;
-  /* border-bottom: 1px dashed #000000; */
   font-size: 12px;
 }
 
@@ -240,9 +227,6 @@
 .purchase-print-signatures {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  /* border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000; */
 }
 
 .purchase-print-signatures div {
@@ -250,7 +234,6 @@
   grid-template-rows: auto 18mm;
   min-height: 28mm;
   text-align: center;
-  /* border-right: 1px solid #d1d5db; */
 }
 
 .purchase-print-signatures div:last-child {
@@ -267,7 +250,7 @@
   align-self: end;
   justify-self: center;
   width: 72%;
-  border-bottom: 1px solid #424242c5;
+  border-bottom: 1px solid #000000a4;
 }
 
 .purchase-print-modal__actions {
@@ -293,7 +276,22 @@
 
 @media (max-width: 768px) {
   .purchase-print-modal {
-    padding: 10px;
+    place-items: end center;
+    padding: 8px;
+  }
+
+  .purchase-print-modal__shell {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    border-radius: 18px 18px 12px 12px;
+  }
+
+  .purchase-print-modal__title {
+    padding: 12px 14px;
+  }
+
+  .purchase-print-modal__title h3 {
+    font-size: 16px;
   }
 
   .purchase-print-modal__content {
@@ -301,7 +299,186 @@
   }
 
   .purchase-print-paper {
-    width: 210mm;
+    width: 100%;
+    min-height: auto;
+    padding: 10px;
+    box-shadow: none;
+  }
+
+  .purchase-print-company {
+    min-height: auto;
+    padding: 8px 4px;
+  }
+
+  .purchase-print-company h1 {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .purchase-print-document-title {
+    display: grid;
+    gap: 4px;
+    min-height: auto;
+    padding: 9px 4px;
+  }
+
+  .purchase-print-document-title h2 {
+    font-size: 15px;
+  }
+
+  .purchase-print-document-title span {
+    position: static;
+    font-size: 9px;
+  }
+
+  .purchase-print-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .purchase-print-meta-row div {
+    min-height: 34px;
+    font-size: 11px;
+  }
+
+  .purchase-print-meta-row div:first-child {
+    border-right: 0;
+    border-bottom: 1px solid #000000;
+  }
+
+  .purchase-print-meta-row strong {
+    font-size: 11px;
+  }
+
+  .purchase-print-table {
+    font-size: 9px;
+  }
+
+  .purchase-print-table th,
+  .purchase-print-table td {
+    padding: 3px 3px;
+  }
+
+  .purchase-print-table th {
+    height: auto;
+    font-size: 9px;
+    line-height: 1.3;
+  }
+
+  .purchase-print-table td {
+    height: 10mm;
+  }
+
+  .purchase-print-table th:nth-child(1),
+  .purchase-print-table td:nth-child(1) {
+    width: 9%;
+  }
+
+  .purchase-print-table th:nth-child(2),
+  .purchase-print-table td:nth-child(2) {
+    width: 35%;
+  }
+
+  .purchase-print-table th:nth-child(3),
+  .purchase-print-table td:nth-child(3) {
+    width: 12%;
+  }
+
+  .purchase-print-table th:nth-child(4),
+  .purchase-print-table th:nth-child(5),
+  .purchase-print-table th:nth-child(6),
+  .purchase-print-table td:nth-child(4),
+  .purchase-print-table td:nth-child(5),
+  .purchase-print-table td:nth-child(6) {
+    width: 14.66%;
+  }
+
+  .purchase-print-table td strong {
+    font-size: 9px;
+  }
+
+  .purchase-print-table td span {
+    font-size: 8px;
+  }
+
+  .purchase-print-table tfoot td {
+    height: 9mm;
+    font-size: 10px;
+  }
+
+  .purchase-print-purpose-lines div {
+    min-height: 10mm;
+    font-size: 10px;
+  }
+
+  .purchase-print-signatures span {
+    font-size: 10px;
+  }
+
+  .purchase-print-signatures div {
+    grid-template-rows: auto 14mm;
+    min-height: 24mm;
+  }
+
+  .purchase-print-modal__actions {
+    position: sticky;
+    bottom: 0;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #ffffff;
+  }
+
+  .purchase-print-btn {
+    flex: 1;
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .purchase-print-modal {
+    padding: 0;
+  }
+
+  .purchase-print-modal__shell {
+    max-height: 100dvh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .purchase-print-modal__content {
+    padding: 8px;
+  }
+
+  .purchase-print-paper {
+    padding: 8px;
+  }
+
+  .purchase-print-company h1 {
+    font-size: 12px;
+  }
+
+  .purchase-print-document-title h2 {
+    font-size: 14px;
+  }
+
+  .purchase-print-table {
+    font-size: 8px;
+  }
+
+  .purchase-print-table th,
+  .purchase-print-table td {
+    padding: 2px;
+  }
+
+  .purchase-print-table td strong {
+    font-size: 8px;
+  }
+
+  .purchase-print-table td span {
+    display: none;
+  }
+
+  .purchase-print-purpose-lines div {
+    font-size: 9px;
   }
 }
 

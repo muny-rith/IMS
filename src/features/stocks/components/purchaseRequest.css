@@ -1,5 +1,6 @@
 .purchase-request-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
@@ -267,30 +268,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 5px 9px;
+  /* border-radius: 999px; */
+  /* padding: 5px 9px; */
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
 }
 
 .purchase-request-status--pending {
-  background: #fef3c7;
+  /* background: #fef3c7; */
   color: #b45309;
 }
 
 .purchase-request-status--approved {
-  background: #dcfce7;
+  /* background: #dcfce7; */
   color: #15803d;
 }
 
 .purchase-request-status--rejected {
-  background: #fee2e2;
+  /* background: #fee2e2; */
   color: #b91c1c;
 }
 
 .purchase-request-status--cancelled {
-  background: #f1f5f9;
+  /* background: #f1f5f9; */
   color: #64748b;
 }
 
@@ -553,8 +554,7 @@
     transform: translateY(-1px);
   }
 }
-
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
   .purchase-request-toolbar {
     align-items: stretch;
     flex-direction: column;
@@ -564,6 +564,9 @@
     align-items: stretch;
     flex-direction: column;
   }
+}
+@media (max-width: 900px) {
+
 
   .purchase-request-search {
     min-width: 0;

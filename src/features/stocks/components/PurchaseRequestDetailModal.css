@@ -261,13 +261,36 @@
 
 @media (max-width: 768px) {
   .purchase-request-detail-modal {
-    padding: 10px;
+    align-items: end;
+    padding: 8px;
   }
 
   .purchase-request-detail-modal__paper {
-    max-height: 94vh;
-    border-radius: 18px;
-    padding: 16px;
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    gap: 12px;
+    border-radius: 18px 18px 12px 12px;
+    padding: 14px;
+  }
+
+  .purchase-request-detail-modal__header {
+    gap: 12px;
+  }
+
+  .purchase-request-detail-modal__header h3 {
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  .purchase-request-detail-modal__header span {
+    font-size: 12px;
+  }
+
+  .purchase-request-detail-status-row {
+    align-items: flex-start;
+    flex-direction: column;
+    border-radius: 14px;
+    padding: 10px;
   }
 
   .purchase-request-detail-grid,
@@ -275,17 +298,112 @@
     grid-template-columns: 1fr;
   }
 
+  .purchase-request-detail-card,
+  .purchase-request-detail-section {
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .purchase-request-detail-section__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .purchase-request-detail-section__header h4 {
+    font-size: 16px;
+  }
+
+  .purchase-request-detail-table-wrap {
+    border-radius: 12px;
+    overflow-x: hidden;
+  }
+
+  .purchase-request-detail-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .purchase-request-detail-table th,
+  .purchase-request-detail-table td {
+    padding: 9px 7px;
+    font-size: 12px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .purchase-request-detail-table th {
+    font-size: 10px;
+  }
+
+  .purchase-request-detail-table th:nth-child(1),
+  .purchase-request-detail-table td:nth-child(1) {
+    width: 42px;
+  }
+
+  .purchase-request-detail-table th:nth-child(3),
+  .purchase-request-detail-table td:nth-child(3) {
+    width: 54px;
+  }
+
+  .purchase-request-detail-purpose,
+  .purchase-request-timeline span {
+    font-size: 13px;
+  }
+
   .purchase-request-detail-actions {
+    position: sticky;
+    bottom: -14px;
+    z-index: 2;
     align-items: stretch;
     flex-direction: column-reverse;
+    margin: 0 -14px -14px;
+    background: #ffffff;
+    padding: 12px 14px 14px;
   }
 
   .purchase-request-detail-actions > div {
-    justify-content: stretch;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: initial;
   }
 
   .purchase-request-action-button,
   .purchase-request-detail-actions .purchase-request-secondary-button {
-    flex: 1;
+    width: 100%;
+    min-height: 42px;
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .purchase-request-detail-modal {
+    padding: 0;
+  }
+
+  .purchase-request-detail-modal__paper {
+    max-height: 100dvh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .purchase-request-detail-modal__header h3 {
+    font-size: 18px;
+  }
+
+  .purchase-request-detail-table th,
+  .purchase-request-detail-table td {
+    padding: 8px 5px;
+    font-size: 11px;
+  }
+
+  .purchase-request-detail-table th:nth-child(1),
+  .purchase-request-detail-table td:nth-child(1) {
+    width: 34px;
+  }
+
+  .purchase-request-detail-table th:nth-child(3),
+  .purchase-request-detail-table td:nth-child(3) {
+    width: 46px;
   }
 }
