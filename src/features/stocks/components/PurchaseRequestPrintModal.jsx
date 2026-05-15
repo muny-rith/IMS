@@ -112,8 +112,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
                 <strong>ប្រើប្រាស់ 用途：</strong>
                 <span>{request.purpose || ''}</span>
               </div>
-              <div />
-              <div />
+
             </section>
 
             <footer className="purchase-print-signatures">

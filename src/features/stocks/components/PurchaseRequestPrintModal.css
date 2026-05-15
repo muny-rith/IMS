@@ -208,8 +208,9 @@
 
 .purchase-print-purpose-lines div {
   margin-top: 10px;
-  padding: 4px 6px;
+  margin-bottom: 20px;
   font-size: 12px;
+
 }
 
 .purchase-print-purpose-lines div:last-child {
@@ -332,7 +333,7 @@
   }
 
   .purchase-print-meta-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .purchase-print-meta-row div {
@@ -342,7 +343,7 @@
 
   .purchase-print-meta-row div:first-child {
     border-right: 0;
-    border-bottom: 1px solid #000000;
+    /* border-bottom: 1px solid #000000; */
   }
 
   .purchase-print-meta-row strong {
@@ -406,8 +407,9 @@
   }
 
   .purchase-print-purpose-lines div {
-    min-height: 10mm;
+    /* min-height: 10mm; */
     font-size: 10px;
+    padding-bottom: 20x;
   }
 
   .purchase-print-signatures span {
