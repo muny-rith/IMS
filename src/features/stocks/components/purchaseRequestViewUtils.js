@@ -8,12 +8,16 @@ export const formatPurchaseRequestDate = (value) => {
   return dateFormatter.format(new Date(value));
 };
 
-export const getPurchaseRequestItemLabel = (item) => {
+export const getPurchaseRequestItemName = (item) => {
   const productLabel = [item.productCode, item.productName]
     .filter(Boolean)
     .join(' - ');
 
-  return `${productLabel || 'Unknown product'} x${item.requestedQty}`;
+  return productLabel || item.customItemName || 'Unknown item';
+};
+
+export const getPurchaseRequestItemLabel = (item) => {
+  return `${getPurchaseRequestItemName(item)} x${item.requestedQty ?? item.qty ?? 0}`;
 };
 
 export const getPurchaseRequestStatusClassName = (status) =>

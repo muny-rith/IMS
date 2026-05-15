@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import {
+  approvePurchaseRequest,
+  cancelPurchaseRequest,
   createPurchaseRequest,
   fetchProductsForPurchaseRequest,
   fetchPurchaseRequests,
+  rejectPurchaseRequest,
+  updatePurchaseRequest,
 } from '../services/purchaseRequestService';
 
 const toResult = (callback) =>
@@ -47,18 +51,33 @@ const usePurchaseRequests = () => {
     load();
   }, [load]);
 
-  const handleCreate = async (data) => {
+  const runMutation = async (callback) => {
     setSubmitting(true);
 
     const result = await toResult(async () => {
-      const requestId = await createPurchaseRequest(data);
+      const mutationResult = await callback();
       await load();
-      return requestId;
+      return mutationResult;
     });
 
     setSubmitting(false);
     return result;
   };
+
+  const handleCreate = (data) =>
+    runMutation(() => createPurchaseRequest(data));
+
+  const handleUpdate = (id, data) =>
+    runMutation(() => updatePurchaseRequest(id, data));
+
+  const handleApprove = (id, actor) =>
+    runMutation(() => approvePurchaseRequest(id, actor));
+
+  const handleReject = (id, actor) =>
+    runMutation(() => rejectPurchaseRequest(id, actor));
+
+  const handleCancel = (id, actor) =>
+    runMutation(() => cancelPurchaseRequest(id, actor));
 
   return {
     rows,
@@ -68,6 +87,10 @@ const usePurchaseRequests = () => {
     error,
     refetch: load,
     handleCreate,
+    handleUpdate,
+    handleApprove,
+    handleReject,
+    handleCancel,
   };
 };
 

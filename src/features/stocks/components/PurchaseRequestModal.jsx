@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Autocomplete, TextField } from '@mui/material';
-// import "./PurchaseRequest.css"
 
 const EMPTY_ITEM = {
+  itemType: 'product',
   productId: '',
+  customItemName: '',
   qty: 1,
   reason: '',
 };
@@ -15,20 +16,52 @@ const createEmptyForm = () => ({
   items: [{ ...EMPTY_ITEM }],
 });
 
+const normalizeFormValues = (defaultValues, mode) => {
+  if (!defaultValues || mode === 'create') {
+    return createEmptyForm();
+  }
+
+  return {
+    requestedBy: defaultValues.requestedBy ?? '',
+    requestedDate:
+      defaultValues.requestedDate ?? new Date().toISOString().slice(0, 10),
+    purpose: defaultValues.purpose ?? '',
+    items: defaultValues.items?.length
+      ? defaultValues.items.map((item) => ({
+          itemType: item.productId ? 'product' : 'custom',
+          productId:
+            item.productId !== undefined && item.productId !== null
+              ? String(item.productId)
+              : '',
+          customItemName: item.customItemName ?? '',
+          qty: item.requestedQty ?? item.qty ?? 1,
+          reason: item.reason ?? '',
+        }))
+      : [{ ...EMPTY_ITEM }],
+  };
+};
+
 const PurchaseRequestModal = ({
   open,
   onClose,
   onSubmit,
   products = [],
   submitting = false,
+  mode = 'create',
+  defaultValues = null,
 }) => {
   const [form, setForm] = useState(createEmptyForm);
+  const isEdit = mode === 'edit';
+  const formValues = useMemo(
+    () => normalizeFormValues(defaultValues, mode),
+    [defaultValues, mode]
+  );
 
   useEffect(() => {
     if (open) {
-      setForm(createEmptyForm());
+      setForm(formValues);
     }
-  }, [open]);
+  }, [formValues, open]);
 
   if (!open) return null;
 
@@ -47,6 +80,23 @@ const PurchaseRequestModal = ({
       ...current,
       items: current.items.map((item, itemIndex) =>
         itemIndex === index ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const updateItemType = (index, itemType) => {
+    setForm((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              itemType,
+              productId: itemType === 'product' ? item.productId : '',
+              customItemName:
+                itemType === 'custom' ? item.customItemName : '',
+            }
+          : item
       ),
     }));
   };
@@ -72,12 +122,20 @@ const PurchaseRequestModal = ({
     event.preventDefault();
 
     const items = form.items
-      .map((item) => ({
-        productId: Number(item.productId),
-        requestedQty: Number(item.qty),
-        reason: item.reason.trim(),
-      }))
-      .filter((item) => item.productId && item.requestedQty > 0);
+      .map((item) => {
+        const isCustom = item.itemType === 'custom';
+
+        return {
+          productId: isCustom ? null : Number(item.productId),
+          customItemName: isCustom ? item.customItemName.trim() : '',
+          requestedQty: Number(item.qty),
+          reason: item.reason.trim(),
+        };
+      })
+      .filter(
+        (item) =>
+          item.requestedQty > 0 && (item.productId || item.customItemName)
+      );
 
     if (!form.requestedBy.trim() || !form.requestedDate || !items.length) {
       return;
@@ -91,6 +149,12 @@ const PurchaseRequestModal = ({
     });
   };
 
+  let submitLabel = isEdit ? 'Save Changes' : 'Create Request';
+
+  if (submitting) {
+    submitLabel = isEdit ? 'Saving...' : 'Creating...';
+  }
+
   return (
     <div className="purchase-request-modal" role="dialog" aria-modal="true">
       <div className="purchase-request-modal__backdrop" onClick={onClose} />
@@ -98,7 +162,9 @@ const PurchaseRequestModal = ({
       <form className="purchase-request-modal__paper" onSubmit={handleSubmit}>
         <div className="purchase-request-modal__header">
           <div>
-            <p className="purchase-request-eyebrow">Material request</p>
+            <p className="purchase-request-eyebrow">
+              {isEdit ? 'Edit request' : 'Material request'}
+            </p>
             <h3>បណ្ណស្នើរទិញសម្ភារៈ</h3>
           </div>
 
@@ -166,45 +232,65 @@ const PurchaseRequestModal = ({
           {form.items.map((item, index) => (
             <div className="purchase-request-item-row" key={index}>
               <label className="purchase-request-field">
-                <span>Product *</span>
-                <Autocomplete
-                  options={products}
-                  value={getSelectedProduct(item.productId)}
+                <span>Item Type *</span>
+                <select
+                  value={item.itemType}
+                  onChange={(event) => updateItemType(index, event.target.value)}
                   disabled={submitting}
-                  disablePortal={false}
-                  isOptionEqualToValue={(option, value) =>
-                    String(option.id) === String(value.id)
-                  }
-                  getOptionLabel={(option) => option?.label ?? ''}
-                  onChange={(_event, option) =>
-                    updateItem(index, 'productId', option ? String(option.id) : '')
-                  }
-                  slotProps={{
-                    popper: {
-                      modifiers: [
-                        {
-                          name: 'flip',
-                          enabled: false,
-                        },
-                      ],
-                    },
-                    listbox: {
-                      sx: {
-                        maxHeight: 220,
-                        overflowY: 'auto',
+                >
+                  <option value="product">Product</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+
+              <label className="purchase-request-field">
+                <span>{item.itemType === 'custom' ? 'Custom Item *' : 'Product *'}</span>
+                {item.itemType === 'custom' ? (
+                  <input
+                    value={item.customItemName}
+                    onChange={(event) =>
+                      updateItem(index, 'customItemName', event.target.value)
+                    }
+                    placeholder="Example: Pen"
+                    disabled={submitting}
+                    required
+                  />
+                ) : (
+                  <Autocomplete
+                    options={products}
+                    value={getSelectedProduct(item.productId)}
+                    disabled={submitting}
+                    disablePortal={false}
+                    isOptionEqualToValue={(option, value) =>
+                      String(option.id) === String(value.id)
+                    }
+                    getOptionLabel={(option) => option?.label ?? ''}
+                    onChange={(_event, option) =>
+                      updateItem(index, 'productId', option ? String(option.id) : '')
+                    }
+                    componentsProps={{
+                      popper: {
+                        className: 'purchase-request-product-popper',
+                        modifiers: [{ name: 'flip', enabled: false }],
                       },
-                    },
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      required
-                      size="small"
-                      placeholder="Search product..."
-                      className="purchase-request-product-input"
-                    />
-                  )}
-                />
+                      paper: {
+                        className: 'purchase-request-product-paper',
+                      },
+                    }}
+                    ListboxProps={{
+                      className: 'purchase-request-product-listbox',
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        size="small"
+                        placeholder="Search product..."
+                        className="purchase-request-product-input"
+                      />
+                    )}
+                  />
+                )}
               </label>
 
               <label className="purchase-request-field">
@@ -257,7 +343,7 @@ const PurchaseRequestModal = ({
             className="purchase-request-primary-button"
             disabled={submitting}
           >
-            {submitting ? 'Creating...' : 'Create Request'}
+            {submitLabel}
           </button>
         </div>
       </form>

@@ -1,10 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import { PURCHASE_REQUEST_STATUSES } from '../data/purchaseRequestMock';
 import usePurchaseRequests from '../hooks/usePurchaseRequests';
+import PurchaseRequestDetailModal from './PurchaseRequestDetailModal';
 import PurchaseRequestMobileCardList from './PurchaseRequestMobileCardList';
 import PurchaseRequestModal from './PurchaseRequestModal';
+import PurchaseRequestPrintModal from './PurchaseRequestPrintModal';
+
+import { Box, IconButton, Tooltip } from '@mui/material';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+
 import {
   formatPurchaseRequestDate,
   getPurchaseRequestItemLabel,
@@ -17,81 +23,24 @@ const statusLabel = {
   PENDING: 'Pending',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
-  RECEIVED: 'Received',
+  CANCELLED: 'Cancelled',
 };
 
-const columns = [
-  {
-    field: 'requestNo',
-    headerName: 'Request No',
-    minWidth: 140,
-    flex: 1,
-  },
-  {
-    field: 'requestedDate',
-    headerName: 'Date',
-    minWidth: 140,
-    flex: 1,
-    renderCell: ({ row }) => formatPurchaseRequestDate(row.requestedDate),
-  },
-  {
-    field: 'requestedBy',
-    headerName: 'Requested By',
-    minWidth: 160,
-    flex: 1,
-  },
-  {
-    field: 'items',
-    headerName: 'Items',
-    minWidth: 240,
-    flex: 1.4,
-    sortable: false,
-    renderCell: ({ row }) => {
-      const items = row.items ?? [];
+const EMPTY_CREATE_MODAL = {
+  open: false,
+  mode: 'create',
+  request: null,
+};
 
-      return (
-        <>
-          <strong>{row.totalItems}</strong>
-          <span className="purchase-request-table__muted">
-            {items.map(getPurchaseRequestItemLabel).join(', ')}
-          </span>
-        </>
-      );
-    },
-  },
-  {
-    field: 'status',
-    headerName: 'Status',
-    minWidth: 130,
-    flex: 0.8,
-    renderCell: ({ row }) => (
-      <span className={getPurchaseRequestStatusClassName(row.status)}>
-        {row.status}
-      </span>
-    ),
-  },
-  {
-    field: 'purpose',
-    headerName: 'Purpose',
-    minWidth: 180,
-    flex: 1,
-    renderCell: ({ row }) => row.purpose || '-',
-  },
-  {
-    field: 'actions',
-    headerName: 'Action',
-    minWidth: 150,
-    flex: 0.8,
-    sortable: false,
-    filterable: false,
-    renderCell: () => (
-      <div className="purchase-request-actions">
-        <button type="button">View</button>
-        <button type="button">Print</button>
-      </div>
-    ),
-  },
-];
+const EMPTY_DETAIL_MODAL = {
+  open: false,
+  request: null,
+};
+
+const EMPTY_PRINT_MODAL = {
+  open: false,
+  request: null,
+};
 
 const PurchaseRequestPanel = () => {
   const {
@@ -100,12 +49,131 @@ const PurchaseRequestPanel = () => {
     loading,
     submitting,
     error,
+    refetch,
     handleCreate,
+    handleUpdate,
+    handleApprove,
+    handleReject,
+    handleCancel,
   } = usePurchaseRequests();
 
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
+  const [createModal, setCreateModal] = useState(EMPTY_CREATE_MODAL);
+  const [detailModal, setDetailModal] = useState(EMPTY_DETAIL_MODAL);
+  const [printModal, setPrintModal] = useState(EMPTY_PRINT_MODAL);
+
+  const openDetail = useCallback((request) => {
+    setDetailModal({
+      open: true,
+      request,
+    });
+  }, []);
+
+  const closeDetail = useCallback(() => {
+    setDetailModal(EMPTY_DETAIL_MODAL);
+  }, []);
+
+  const openCreateModal = useCallback(() => {
+    setCreateModal({
+      open: true,
+      mode: 'create',
+      request: null,
+    });
+  }, []);
+
+  const openEditModal = useCallback((request) => {
+    setCreateModal({
+      open: true,
+      mode: 'edit',
+      request,
+    });
+  }, []);
+
+  const columns = useMemo(
+    () => [
+      {
+        field: 'requestNo',
+        headerName: 'Request No',
+        minWidth: 140,
+        flex: 1,
+      },
+      {
+        field: 'requestedDate',
+        headerName: 'Date',
+        minWidth: 140,
+        flex: 1,
+        renderCell: ({ row }) => formatPurchaseRequestDate(row.requestedDate),
+      },
+      {
+        field: 'requestedBy',
+        headerName: 'Requested By',
+        minWidth: 160,
+        flex: 1,
+      },
+      {
+        field: 'items',
+        headerName: 'Items',
+        minWidth: 240,
+        flex: 1.4,
+        sortable: false,
+        renderCell: ({ row }) => {
+          const items = row.items ?? [];
+
+          return (
+            <>
+              <strong>{row.totalItems}</strong>
+              <span className="purchase-request-table__muted">
+                {items.map(getPurchaseRequestItemLabel).join(', ')}
+              </span>
+            </>
+          );
+        },
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        minWidth: 130,
+        flex: 0.8,
+        renderCell: ({ row }) => (
+          <span className={getPurchaseRequestStatusClassName(row.status)}>
+            {row.status}
+          </span>
+        ),
+      },
+      {
+        field: 'purpose',
+        headerName: 'Purpose',
+        minWidth: 180,
+        flex: 1,
+        renderCell: ({ row }) => row.purpose || '-',
+      },
+      {
+        field: 'action',
+        headerName: 'Actions',
+        flex: 0.6,
+        minWidth: 90,
+        sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Box className="purchase-request-action-cell">
+            <Tooltip title="View detail">
+              <IconButton
+                size="small"
+                className="purchase-request-icon-action purchase-request-icon-action--view"
+                onClick={() => openDetail(params.row)}
+              >
+                <MoreHorizIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        ),
+      },
+    ],
+    [openDetail]
+  );
 
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -128,15 +196,71 @@ const PurchaseRequestPanel = () => {
     });
   }, [rows, filter, search]);
 
-  const handleCreateSubmit = async (data) => {
-    const result = await handleCreate(data);
+  const handleFormSubmit = async (data) => {
+    const isEdit = createModal.mode === 'edit' && createModal.request?.id;
+    const result = isEdit
+      ? await handleUpdate(createModal.request.id, data)
+      : await handleCreate(data);
 
     if (result.success) {
-      setModalOpen(false);
+      setCreateModal(EMPTY_CREATE_MODAL);
       return;
     }
 
-    window.alert(result.message || 'Failed to create purchase request.');
+    window.alert(
+      result.message ||
+        (isEdit
+          ? 'Failed to update purchase request.'
+          : 'Failed to create purchase request.')
+    );
+  };
+
+  const handleDetailAction = async (action, request) => {
+    if (action === 'Print') {
+      closeDetail();
+      setPrintModal({
+        open: true,
+        request,
+      });
+      return;
+    }
+
+    if (action === 'Edit') {
+      if (request.status !== 'PENDING') {
+        window.alert('Only pending purchase requests can be edited.');
+        return;
+      }
+
+      closeDetail();
+      openEditModal(request);
+      return;
+    }
+
+    const actor = 'Admin';
+    let result = null;
+
+    if (action === 'Approve') {
+      result = await handleApprove(request.id, actor);
+    }
+
+    if (action === 'Reject') {
+      result = await handleReject(request.id, actor);
+    }
+
+    if (action === 'Cancel') {
+      result = await handleCancel(request.id, actor);
+    }
+
+    if (!result) {
+      return;
+    }
+
+    if (!result.success) {
+      window.alert(result.message || `Failed to ${action.toLowerCase()} request.`);
+      return;
+    }
+
+    closeDetail();
   };
 
   return (
@@ -152,14 +276,6 @@ const PurchaseRequestPanel = () => {
         </div>
 
         <div className="purchase-request-toolbar__actions">
-          <button
-            type="button"
-            className="purchase-request-primary-button"
-            onClick={() => setModalOpen(true)}
-            disabled={loading || submitting}
-          >
-            Create Request
-          </button>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -167,18 +283,24 @@ const PurchaseRequestPanel = () => {
             className="purchase-request-search"
           />
 
-          {/* <button
+          <button
             type="button"
             className="purchase-request-secondary-button"
             onClick={refetch}
             disabled={loading || submitting}
           >
             Refresh
-          </button> */}
+          </button>
 
-
+          <button
+            type="button"
+            className="purchase-request-primary-button"
+            onClick={openCreateModal}
+            disabled={loading || submitting}
+          >
+            Create Request
+          </button>
         </div>
-
       </div>
 
       {error && <div className="purchase-request-error">{error}</div>}
@@ -188,8 +310,9 @@ const PurchaseRequestPanel = () => {
           <button
             key={status}
             type="button"
-            className={`purchase-request-filter${filter === status ? ' purchase-request-filter--active' : ''
-              }`}
+            className={`purchase-request-filter${
+              filter === status ? ' purchase-request-filter--active' : ''
+            }`}
             onClick={() => setFilter(status)}
           >
             {statusLabel[status]}
@@ -216,17 +339,35 @@ const PurchaseRequestPanel = () => {
           </div>
 
           <div className="purchase-request-mobile-cards">
-            <PurchaseRequestMobileCardList rows={filteredRows} />
+            <PurchaseRequestMobileCardList
+              rows={filteredRows}
+              onView={openDetail}
+            />
           </div>
         </>
       )}
 
       <PurchaseRequestModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleCreateSubmit}
+        open={createModal.open}
+        onClose={() => setCreateModal(EMPTY_CREATE_MODAL)}
+        onSubmit={handleFormSubmit}
         products={products}
         submitting={submitting}
+        mode={createModal.mode}
+        defaultValues={createModal.request}
+      />
+
+      <PurchaseRequestDetailModal
+        open={detailModal.open}
+        request={detailModal.request}
+        onClose={closeDetail}
+        onAction={handleDetailAction}
+      />
+
+      <PurchaseRequestPrintModal
+        open={printModal.open}
+        request={printModal.request}
+        onClose={() => setPrintModal(EMPTY_PRINT_MODAL)}
       />
     </section>
   );
