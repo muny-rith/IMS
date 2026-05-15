@@ -90,7 +90,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
                     <td>{row.no}</td>
                     <td>
                       <strong>{row.description}</strong>
-                      {row.reason && <span>{row.reason}</span>}
+                      {/* {row.reason && <span>{row.reason}</span>} */}
                     </td>
                     <td>{row.qty}</td>
                     <td />
