@@ -59,7 +59,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
 
             <section className="purchase-print-document-title">
               <h2>បណ្ណស្នើសុំទិញ 采购申请单</h2>
-              <span>{request.requestNo}</span>
+              {/* <span>{request.requestNo}</span> */}
             </section>
 
             <section className="purchase-print-meta-row">
@@ -109,8 +109,7 @@ const PurchaseRequestPrintModal = ({ open, request, onClose }) => {
 
             <section className="purchase-print-purpose-lines">
               <div>
-                <strong>ប្រើប្រាស់ 用途：</strong>
-                <span>{request.purpose || ''}</span>
+                <strong>ប្រើប្រាស់ 用途：{request.purpose || ''}</strong>
               </div>
 
             </section>

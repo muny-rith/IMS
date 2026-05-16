@@ -3,10 +3,13 @@ import { useMemo, useState } from "react";
 import ReportHero from "../components/ReportHero";
 import ReportPreviewTable from "../components/ReportPreviewTable";
 import ReportTypeGrid from "../components/ReportTypeGrid";
+import logo from "../../../assets/images/logo.png";
+import SavedReportsPanel from "../components/SavedReportsPanel";
 import {
   dateRangeOptions,
   exportFormats,
   reportTypes,
+  savedReports,
   summaryMetrics,
 } from "../data/reportPageData";
 import useReports from "../hooks/useReports";
@@ -102,13 +105,12 @@ function ReportPage() {
       <ReportHero
         selectedReport={selectedReport}
         dateRange={dateRange}
-        summaryMetrics={visibleSummaryMetrics}
         reportCount={rows.length}
         loading={loading}
       />
 
-      <section className="report-main-stack">
-        <div className="report-builder-row">
+      <section className="report-workspace">
+        <div className="report-main-stack">
           <ReportTypeGrid
             items={reportTypes}
             activeReport={activeReport}
@@ -116,47 +118,45 @@ function ReportPage() {
           />
 
           <div className="report-controls report-controls--workspace">
-            <div className="report-controls-option">
-              <label
-                className={
-                  usesDateRange
-                    ? "report-control"
-                    : "report-control report-control--disabled"
-                }
+            <label
+              className={
+                usesDateRange
+                  ? "report-control"
+                  : "report-control report-control--disabled"
+              }
+            >
+              <span>Date range</span>
+              <select
+                value={dateRangeValue}
+                disabled={!usesDateRange}
+                onChange={(event) => setDateRange(event.target.value)}
               >
-                <span>Date range</span>
-                <select
-                  value={dateRangeValue}
-                  disabled={!usesDateRange}
-                  onChange={(event) => setDateRange(event.target.value)}
-                >
-                  {dateRangeSelectOptions.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-                <small className="report-control-hint">
-                  {selectedReport.dateHint ||
-                    (usesDateRange
-                      ? "Filter report rows by selected period."
-                      : reportScopeLabel)}
-                </small>
-              </label>
+                {dateRangeSelectOptions.map((option) => (
+                  <option key={option}>{option}</option>
+                ))}
+              </select>
+              <small className="report-control-hint">
+                {selectedReport.dateHint ||
+                  (usesDateRange
+                    ? "Filter report rows by selected period."
+                    : reportScopeLabel)}
+              </small>
+            </label>
 
-              <label className="report-control">
-                <span>Export</span>
-                <select
-                  value={exportFormat}
-                  onChange={(event) => setExportFormat(event.target.value)}
-                >
-                  {exportFormats.map((format) => (
-                    <option key={format}>{format}</option>
-                  ))}
-                </select>
-                <small className="report-control-hint">
-                  PDF for print, Excel/CSV for data.
-                </small>
-              </label>
-            </div>
+            <label className="report-control">
+              <span>Export</span>
+              <select
+                value={exportFormat}
+                onChange={(event) => setExportFormat(event.target.value)}
+              >
+                {exportFormats.map((format) => (
+                  <option key={format}>{format}</option>
+                ))}
+              </select>
+              <small className="report-control-hint">
+                PDF for print, Excel/CSV for data.
+              </small>
+            </label>
 
             <button
               type="button"
@@ -167,15 +167,35 @@ function ReportPage() {
               {loading ? "Preparing..." : `Generate ${exportFormat}`}
             </button>
           </div>
+
+          <ReportPreviewTable
+            title={selectedReport.title}
+            rows={rows}
+            loading={loading}
+            error={error}
+            onRetry={refetch}
+          />
         </div>
 
-        <ReportPreviewTable
-          title={selectedReport.title}
-          rows={rows}
-          loading={loading}
-          error={error}
-          onRetry={refetch}
-        />
+        <aside className="report-aside-stack">
+          <SavedReportsPanel items={savedReports} />
+
+          <div className="report-brand-card">
+            <div className="report-brand-mark">
+              <img src={logo} alt="Moon IMS logo" />
+            </div>
+
+            <strong>Moon IMS Reports</strong>
+
+            <p>Clean data, calm decisions.</p>
+
+            <div className="report-brand-formats">
+              <span>PDF</span>
+              <span>Excel</span>
+              <span>CSV</span>
+            </div>
+          </div>
+        </aside>
       </section>
     </div>
   );

@@ -1,11 +1,30 @@
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-  dateStyle: 'medium',
-});
+
 
 export const formatPurchaseRequestDate = (value) => {
   if (!value) return '-';
 
-  return dateFormatter.format(new Date(value));
+  const khmerMonths = [
+    'មករា',
+    'កុម្ភៈ',
+    'មីនា',
+    'មេសា',
+    'ឧសភា',
+    'មិថុនា',
+    'កក្កដា',
+    'សីហា',
+    'កញ្ញា',
+    'តុលា',
+    'វិច្ឆិកា',
+    'ធ្នូ',
+  ];
+
+  const date = new Date(value);
+
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = khmerMonths[date.getMonth()];
+  const year = date.getFullYear();
+
+  return `${day}_${month}_${year}`;
 };
 
 export const getPurchaseRequestItemName = (item) => {

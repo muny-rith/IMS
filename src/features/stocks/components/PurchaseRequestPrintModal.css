@@ -486,8 +486,8 @@
 
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 0;
+    size: A5 portrait;
+    margin: 0px;
   }
 
   body * {
@@ -522,9 +522,10 @@
   .purchase-print-paper {
     position: fixed;
     inset: 0;
-    width: 210mm;
-    min-height: 297mm;
-    margin: 0;
+    width: 148mm;
+    min-height: 210mm;
+    margin: 0px;
+    padding: 40px;
     box-shadow: none;
   }
 }

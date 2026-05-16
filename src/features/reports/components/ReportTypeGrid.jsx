@@ -23,8 +23,6 @@ function ReportTypeGrid({ items, activeReport, onSelect }) {
           >
             <span>{item.eyebrow}</span>
             <strong>{item.title}</strong>
-            <p>{item.description}</p>
-            <small>{item.metric}</small>
           </button>
         ))}
       </div>
