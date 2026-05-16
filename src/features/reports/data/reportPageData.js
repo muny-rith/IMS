@@ -3,6 +3,8 @@ export const reportTypes = [
     id: "stock",
     eyebrow: "Stock",
     title: "Current Stock Report",
+    description: "Review on-hand, reserved, available, low-stock, and out-of-stock items.",
+    metric: "1,284 SKUs",
     tone: "amber",
     usesDateRange: false,
   },
@@ -10,6 +12,8 @@ export const reportTypes = [
     id: "movement",
     eyebrow: "Movement",
     title: "Stock Movement Report",
+    description: "Track adjustment in/out, loan out, returns, issue, and sale activity by date.",
+    metric: "342 records",
     tone: "blue",
     usesDateRange: true,
   },
@@ -17,6 +21,8 @@ export const reportTypes = [
     id: "loan",
     eyebrow: "Loan",
     title: "Outstanding Loan Report",
+    description: "See active borrowing, overdue returns, partial returns, and worker ownership.",
+    metric: "29 open",
     tone: "rose",
     usesDateRange: true,
   },
@@ -24,6 +30,8 @@ export const reportTypes = [
     id: "usage",
     eyebrow: "Usage",
     title: "Monthly Inventory Usage Report",
+    description: "Track old stock, new stock, daily adjustment-out usage, total used, and balance.",
+    metric: "This month",
     tone: "green",
     usesDateRange: false,
     scopeLabel: "This month",
@@ -31,10 +39,50 @@ export const reportTypes = [
 ];
 
 export const summaryMetrics = [
-
+  { label: "Total Stock Value", value: "$18,420", detail: "+6.8% this month" },
+  { label: "Low Stock Items", value: "42", detail: "12 need urgent reorder" },
+  { label: "Open Loans", value: "29", detail: "6 overdue today" },
+  { label: "Movements Today", value: "86", detail: "38 loan related" },
 ];
 
-
+export const reportRows = [
+  {
+    id: "STK-001",
+    name: "Barcode Scanner",
+    category: "Equipment",
+    owner: "Main Store",
+    metric: "4 available",
+    status: "Critical",
+    updated: "Today",
+  },
+  {
+    id: "STK-002",
+    name: "Office Chair",
+    category: "Furniture",
+    owner: "Admin Team",
+    metric: "2 overdue",
+    status: "Watch",
+    updated: "Today",
+  },
+  {
+    id: "STK-003",
+    name: "Packing Tape",
+    category: "Packaging",
+    owner: "Warehouse",
+    metric: "18 available",
+    status: "Notice",
+    updated: "Yesterday",
+  },
+  {
+    id: "STK-004",
+    name: "Receipt Printer",
+    category: "Equipment",
+    owner: "POS Counter",
+    metric: "7 available",
+    status: "Healthy",
+    updated: "May 1",
+  },
+];
 
 export const savedReports = [
   {
@@ -62,3 +110,48 @@ export const savedReports = [
 export const dateRangeOptions = ["Today", "Last 7 days", "Last 30 days", "This month"];
 
 export const exportFormats = ["PDF", "Excel", "CSV"];
+
+export const reportFilterOptions = {
+  stock: [
+    {
+      id: "stockStatus",
+      label: "Stock status",
+      hint: "Filter by inventory health.",
+      options: [
+        { value: "ALL", label: "All stock" },
+        { value: "LOW_STOCK", label: "Low Stock" },
+        { value: "OUT_OF_STOCK", label: "Out of Stock" },
+        { value: "HEALTHY", label: "Healthy" },
+      ],
+    },
+  ],
+  movement: [
+    {
+      id: "movementType",
+      label: "Movement type",
+      hint: "Focus on one movement action.",
+      options: [
+        { value: "ALL", label: "All movements" },
+        { value: "OPENING", label: "Opening" },
+        { value: "ADJUSTMENT_IN", label: "Adjustment In" },
+        { value: "ADJUSTMENT_OUT", label: "Adjustment Out" },
+        { value: "LOAN_OUT", label: "Loan Out" },
+        { value: "LOAN_RETURN", label: "Loan Return" },
+      ],
+    },
+  ],
+  loan: [
+    {
+      id: "loanStatus",
+      label: "Loan status",
+      hint: "Review active loan risk.",
+      options: [
+        { value: "ALL", label: "All loans" },
+        { value: "ACTIVE", label: "Active" },
+        { value: "OVERDUE", label: "Overdue" },
+        { value: "PARTIAL_RETURN", label: "Partial Return" },
+      ],
+    },
+  ],
+  usage: [],
+};

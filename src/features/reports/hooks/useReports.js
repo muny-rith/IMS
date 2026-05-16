@@ -8,6 +8,7 @@ import {
 export const useReports = ({
   reportId = 'stock',
   dateRange = 'Last 30 days',
+  filters = {},
 } = {}) => {
   const [rows, setRows] = useState([]);
   const [summaryMetrics, setSummaryMetrics] = useState([]);
@@ -20,7 +21,7 @@ export const useReports = ({
 
     try {
       const [nextRows, nextSummaryMetrics] = await Promise.all([
-        fetchReportRows({ reportId, dateRange }),
+        fetchReportRows({ reportId, dateRange, filters }),
         fetchReportSummary(),
       ]);
 
@@ -33,7 +34,7 @@ export const useReports = ({
     } finally {
       setLoading(false);
     }
-  }, [reportId, dateRange]);
+  }, [reportId, dateRange, filters]);
 
   useEffect(() => {
     let ignore = false;
@@ -44,7 +45,7 @@ export const useReports = ({
 
       try {
         const [nextRows, nextSummaryMetrics] = await Promise.all([
-          fetchReportRows({ reportId, dateRange }),
+          fetchReportRows({ reportId, dateRange, filters }),
           fetchReportSummary(),
         ]);
 
@@ -70,7 +71,7 @@ export const useReports = ({
     return () => {
       ignore = true;
     };
-  }, [reportId, dateRange]);
+  }, [reportId, dateRange, filters]);
 
   return {
     rows,

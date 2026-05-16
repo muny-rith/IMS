@@ -68,12 +68,49 @@ const MonthlyUsagePreviewTable = ({ rows }) => {
   );
 };
 
+const ReportPreviewFilters = ({
+  filterOptions = [],
+  getFilterValue,
+  onFilterChange,
+}) => {
+  if (!filterOptions.length) {
+    return null;
+  }
+
+  return (
+    <div className="report-preview-filters">
+      {filterOptions.map((filter) => (
+        <label className="report-preview-filter" key={filter.id}>
+          <span >{filter.label}</span>
+          <select
+            value={
+              getFilterValue
+                ? getFilterValue(filter)
+                : filter.options[0]?.value ?? 'ALL'
+            }
+            onChange={(event) => onFilterChange?.(filter.id, event.target.value)}
+          >
+            {filter.options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+    </div>
+  );
+};
+
 function ReportPreviewTable({
   title,
   rows,
   loading = false,
   error = '',
   onRetry,
+  filterOptions = [],
+  getFilterValue,
+  onFilterChange,
 }) {
   const hasRows = rows.length > 0;
   const isMonthlyUsageReport = rows[0]?.reportType === 'monthlyUsage';
@@ -81,7 +118,7 @@ function ReportPreviewTable({
   return (
     <article className="report-panel report-preview-panel">
       <div className="report-section-header">
-        <div>
+        <div className="left">
           <p className="report-eyebrow">Preview</p>
           <h3>{title}</h3>
           <p className="report-panel-copy">
@@ -90,10 +127,20 @@ function ReportPreviewTable({
           </p>
         </div>
 
-        <span className="report-pill">
-          {loading ? 'Loading' : `${rows.length} rows`}
-        </span>
+        <div className="right">
+          <span className="report-pill">
+            {loading ? 'Loading' : `${rows.length} rows`}
+          </span>
+          <ReportPreviewFilters
+            filterOptions={filterOptions}
+            getFilterValue={getFilterValue}
+            onFilterChange={onFilterChange}
+          />
+        </div>
+
       </div>
+
+
 
       {error ? (
         <div className="report-state-card report-state-card--error">

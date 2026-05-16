@@ -6,6 +6,7 @@ import ReportTypeGrid from "../components/ReportTypeGrid";
 import {
   dateRangeOptions,
   exportFormats,
+  reportFilterOptions,
   reportTypes,
   summaryMetrics,
 } from "../data/reportPageData";
@@ -21,11 +22,17 @@ function ReportPage() {
   const [activeReport, setActiveReport] = useState("stock");
   const [dateRange, setDateRange] = useState("Last 30 days");
   const [exportFormat, setExportFormat] = useState("PDF");
+  const [reportFilters, setReportFilters] = useState({});
 
   const selectedReport = useMemo(
     () => reportTypes.find((item) => item.id === activeReport) ?? reportTypes[0],
     [activeReport]
   );
+  const activeReportFilters = useMemo(
+    () => reportFilters[activeReport] ?? {},
+    [activeReport, reportFilters]
+  );
+  const activeReportFilterOptions = reportFilterOptions[activeReport] ?? [];
 
   const {
     rows,
@@ -36,6 +43,7 @@ function ReportPage() {
   } = useReports({
     reportId: activeReport,
     dateRange,
+    filters: activeReportFilters,
   });
 
   const visibleSummaryMetrics =
@@ -47,6 +55,18 @@ function ReportPage() {
   const dateRangeSelectOptions = usesDateRange
     ? dateRangeOptions
     : [reportScopeLabel];
+  const getReportFilterValue = (filter) =>
+    activeReportFilters[filter.id] ?? filter.options[0]?.value ?? "ALL";
+
+  const handleReportFilterChange = (filterId, value) => {
+    setReportFilters((current) => ({
+      ...current,
+      [activeReport]: {
+        ...(current[activeReport] ?? {}),
+        [filterId]: value,
+      },
+    }));
+  };
 
   const handleGenerateReport = () => {
     if (loading) {
@@ -175,6 +195,9 @@ function ReportPage() {
           loading={loading}
           error={error}
           onRetry={refetch}
+          filterOptions={activeReportFilterOptions}
+          getFilterValue={getReportFilterValue}
+          onFilterChange={handleReportFilterChange}
         />
       </section>
     </div>

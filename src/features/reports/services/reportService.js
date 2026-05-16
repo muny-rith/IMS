@@ -3,10 +3,10 @@ import supabase from '../../../lib/supabaseClient';
 const asObject = (value) => (Array.isArray(value) ? value[0] : value);
 
 const formatDate = (value) => {
-  if (!value) return '—';
+  if (!value) return '-';
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return '-';
 
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -21,7 +21,6 @@ const formatMovementType = (value = '') =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 
-// const USAGE_MOVEMENT_TYPES = ['ADJUSTMENT_IN', 'ADJUSTMENT_OUT'];
 const STOCK_IN_MOVEMENT_TYPES = ['OPENING', 'ADJUSTMENT_IN'];
 const STOCK_OUT_MOVEMENT_TYPES = ['ADJUSTMENT_OUT'];
 const USAGE_MOVEMENT_TYPES = [
@@ -29,6 +28,7 @@ const USAGE_MOVEMENT_TYPES = [
   ...STOCK_OUT_MOVEMENT_TYPES,
 ];
 const INITIAL_OPENING_STOCK_CUTOFF = new Date('2026-05-05T00:00:00');
+
 const getDateRangeBounds = (dateRange) => {
   const now = new Date();
   const from = new Date(now);
@@ -111,6 +111,45 @@ const getLoanStatus = ({ status, dueDate, remainingQty }) => {
   return 'Healthy';
 };
 
+const getLoanReportFilterStatus = (row) => {
+  const items = row.loan_items ?? [];
+  const remainingQty = items.reduce((sum, item) => {
+    const qty = Number(item.qty ?? 0);
+    const returnedQty = Number(item.returned_qty ?? 0);
+    return sum + Math.max(qty - returnedQty, 0);
+  }, 0);
+  const due = row.due_date ? new Date(row.due_date) : null;
+  const isOverdue =
+    due && !Number.isNaN(due.getTime()) && due < new Date() && remainingQty > 0;
+
+  if (isOverdue) return 'OVERDUE';
+  if (row.loan_status === 'PARTIAL') return 'PARTIAL_RETURN';
+  if (remainingQty > 0) return 'ACTIVE';
+  return 'CLOSED';
+};
+
+const applyStockReportFilter = (rows, filters = {}) => {
+  switch (filters.stockStatus) {
+    case 'LOW_STOCK':
+      return rows.filter((row) => row.status === 'Watch' || row.status === 'Notice');
+    case 'OUT_OF_STOCK':
+      return rows.filter((row) => row.status === 'Critical');
+    case 'HEALTHY':
+      return rows.filter((row) => row.status === 'Healthy');
+    case 'ALL':
+    default:
+      return rows;
+  }
+};
+
+const applyLoanReportFilter = (rows, filters = {}) => {
+  if (!filters.loanStatus || filters.loanStatus === 'ALL') {
+    return rows;
+  }
+
+  return rows.filter((row) => getLoanReportFilterStatus(row.raw) === filters.loanStatus);
+};
+
 const normalizeStockRow = (row) => {
   const product = asObject(row.products);
   const category = asObject(product?.categories);
@@ -121,7 +160,7 @@ const normalizeStockRow = (row) => {
   return {
     id: product?.product_code || `STK-${row.stock_balance_id}`,
     name: product?.product_name || 'Unnamed product',
-    category: category?.category_name || '—',
+    category: category?.category_name || '-',
     owner: 'Inventory',
     metric: `${availableQty} available`,
     status: getStockStatus(availableQty),
@@ -133,13 +172,31 @@ const normalizeStockRow = (row) => {
 const normalizeMovementRow = (row) => {
   const product = asObject(row.products);
   const movementType = row.movement_type || 'MOVEMENT';
+  const qty = Number(row.qty ?? 0);
+  const unitPrice = Number(product?.unit_price ?? 0);
+  const image =
+    product?.image_url ??
+    product?.product_image_url ??
+    product?.image_path ??
+    product?.image ??
+    null;
 
   return {
+    reportType: 'stockMovement',
     id: `MV-${row.movement_id}`,
+    productCode: product?.product_code || '',
+    movementId: row.movement_id,
+    movementType,
     name: product?.product_name || 'Unnamed product',
     category: formatMovementType(movementType),
     owner: movementType.includes('LOAN') ? 'Loan' : 'Stock',
-    metric: `${Number(row.qty ?? 0)} units`,
+    metric: `${qty} units`,
+    qty,
+    unit: '',
+    image,
+    unitPrice,
+    totalPrice: qty * unitPrice,
+    movementDate: row.created_at,
     status: getMovementStatus(movementType),
     updated: formatDate(row.created_at),
     raw: row,
@@ -159,7 +216,7 @@ const normalizeLoanRow = (row) => {
     id: row.loan_code || `LN-${row.loan_id}`,
     name: worker?.worker_name || 'Unknown worker',
     category: row.loan_status || 'OPEN',
-    owner: worker?.worker_code || '—',
+    owner: worker?.worker_code || '-',
     metric: `${remainingQty} remaining`,
     status: getLoanStatus({
       status: row.loan_status,
@@ -180,7 +237,7 @@ const normalizeWorkerHistoryRows = (rows) => {
     const current = workers.get(workerId) ?? {
       id: worker?.worker_code || `WK-${workerId}`,
       name: worker?.worker_name || 'Unknown worker',
-      category: worker?.department || '—',
+      category: worker?.department || '-',
       owner: worker?.position_title || 'Worker',
       totalLoans: 0,
       openLoans: 0,
@@ -231,7 +288,12 @@ const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel }) => {
     id: product.product_code || `PR-${product.product_id}`,
     name: product.product_name || 'Unnamed product',
     category: category?.category_name || '-',
-    image: product.image_url ?? '',
+    image:
+      product.image_url ??
+      product.product_image_url ??
+      product.image_path ??
+      product.image ??
+      '',
     oldStock: 0,
     newStock: 0,
     dailyUsage: Array.from({ length: daysInMonth }, () => 0),
@@ -276,7 +338,6 @@ const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
       movementType === 'OPENING' && movementDate < INITIAL_OPENING_STOCK_CUTOFF;
 
     if (movementDate < bounds.monthStart || isInitialOpeningStock) {
-      // row.oldStock += movementType === 'ADJUSTMENT_IN' ? qty : -qty;
       row.oldStock += STOCK_IN_MOVEMENT_TYPES.includes(movementType)
         ? qty
         : -qty;
@@ -287,7 +348,6 @@ const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
       return;
     }
 
-    // if (movementType === 'ADJUSTMENT_IN') {
     if (STOCK_IN_MOVEMENT_TYPES.includes(movementType)) {
       row.newStock += qty;
       return;
@@ -305,7 +365,7 @@ const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
   }));
 };
 
-export const fetchCurrentStockReport = async () => {
+export const fetchCurrentStockReport = async (filters = {}) => {
   const { data, error } = await supabase
     .from('stock_balances')
     .select(`
@@ -330,13 +390,12 @@ export const fetchCurrentStockReport = async () => {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(normalizeStockRow);
+  return applyStockReportFilter((data ?? []).map(normalizeStockRow), filters);
 };
 
-export const fetchStockMovementReport = async (dateRange) => {
+export const fetchStockMovementReport = async (dateRange, filters = {}) => {
   const { from, to } = getDateRangeBounds(dateRange);
-
-  const { data, error } = await supabase
+  let query = supabase
     .from('stock_movements')
     .select(`
       movement_id,
@@ -345,14 +404,16 @@ export const fetchStockMovementReport = async (dateRange) => {
       qty,
       notes,
       created_at,
-      products (
-        product_id,
-        product_code,
-        product_name
-      )
+      products (*)
     `)
     .gte('created_at', from)
-    .lte('created_at', to)
+    .lte('created_at', to);
+
+  if (filters.movementType && filters.movementType !== 'ALL') {
+    query = query.eq('movement_type', filters.movementType);
+  }
+
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(100);
 
@@ -363,7 +424,7 @@ export const fetchStockMovementReport = async (dateRange) => {
   return (data ?? []).map(normalizeMovementRow);
 };
 
-export const fetchOutstandingLoanReport = async (dateRange) => {
+export const fetchOutstandingLoanReport = async (dateRange, filters = {}) => {
   const { from, to } = getDateRangeBounds(dateRange);
 
   const { data, error } = await supabase
@@ -396,7 +457,7 @@ export const fetchOutstandingLoanReport = async (dateRange) => {
     throw new Error(error.message);
   }
 
-  return (data ?? []).map(normalizeLoanRow);
+  return applyLoanReportFilter((data ?? []).map(normalizeLoanRow), filters);
 };
 
 export const fetchWorkerLoanHistoryReport = async (dateRange) => {
@@ -479,17 +540,17 @@ export const fetchMonthlyInventoryUsageReport = async () => {
   });
 };
 
-export const fetchReportRows = async ({ reportId, dateRange }) => {
+export const fetchReportRows = async ({ reportId, dateRange, filters = {} }) => {
   switch (reportId) {
     case 'movement':
-      return fetchStockMovementReport(dateRange);
+      return fetchStockMovementReport(dateRange, filters);
     case 'loan':
-      return fetchOutstandingLoanReport(dateRange);
+      return fetchOutstandingLoanReport(dateRange, filters);
     case 'usage':
       return fetchMonthlyInventoryUsageReport();
     case 'stock':
     default:
-      return fetchCurrentStockReport();
+      return fetchCurrentStockReport(filters);
   }
 };
 
