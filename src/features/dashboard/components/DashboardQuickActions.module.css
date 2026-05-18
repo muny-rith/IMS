@@ -1,0 +1,35 @@
+.actionList {
+  display: grid;
+  gap: 10px;
+}
+
+.actionButton {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #111827;
+  background: #ffffff;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.actionButton strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.actionButton span {
+  color: #667085;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
+  border-color: #fb7185;
+  box-shadow: 0 8px 18px rgba(244, 63, 94, 0.08);
+}

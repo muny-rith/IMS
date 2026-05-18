@@ -1,0 +1,78 @@
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 98px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+  padding: 18px;
+}
+
+.statIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.statIcon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.statBody {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.statTitle {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.statValue {
+  color: #111827;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.statDetail {
+  color: #98a2b3;
+  font-size: 12px;
+}
+
+.statCardAmber .statIcon,
+.statIconAmber {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.statCardWarning .statIcon,
+.statIconWarning {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+.statCardViolet .statIcon,
+.statIconViolet {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.statCardSky .statIcon,
+.statIconSky {
+  background: #ecfeff;
+  color: #0e7490;
+}
+
+@media (max-width: 640px) {
+  .statCard {
+    padding: 14px;
+  }
+}

@@ -1,4 +1,4 @@
-import styles from "../dashboard.module.css";
+import styles from "./DashboardSectionHeader.module.css";
 
 function DashboardSectionHeader({ eyebrow, title, description, rightContent = null }) {
   return (

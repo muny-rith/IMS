@@ -1,0 +1,270 @@
+.trendChart {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 12px;
+  flex: 1;
+}
+
+.trendSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.trendMetric {
+  padding: 12px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.trendMetric span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+}
+
+.trendMetric strong {
+  display: block;
+  margin-top: 4px;
+  color: #111827;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.trendLegend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.trendLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.trendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.trendSwatchIn {
+  background: #22c55e;
+}
+
+.trendSwatchOut {
+  background: #f97316;
+}
+
+.trendCanvas {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+  min-height: 420px;
+  padding: 10px 8px 0;
+  border-radius: 8px;
+  background:
+    linear-gradient(to top, #eef2f7 1px, transparent 1px),
+    #ffffff;
+  background-size: 100% 25%;
+}
+
+.trendColumn {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.trendBars {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 340px;
+}
+
+.trendBar {
+  position: relative;
+  width: 40px;
+  min-height: 0;
+  border: 0;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  padding: 0;
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.trendBar:hover,
+.trendBar:focus-visible {
+  filter: brightness(1.04);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.trendBar:focus-visible {
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.16);
+}
+
+.trendBarIn {
+  background: linear-gradient(180deg, #86efac 0%, #22c55e 100%);
+}
+
+.trendBarOut {
+  background: linear-gradient(180deg, #fdba74 0%, #f97316 100%);
+}
+
+.trendLabel {
+  justify-self: center;
+  color: #667085;
+  font-size: 12px;
+}
+
+.trendTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #111827;
+  border-radius: 8px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: left;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(4px);
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.trendTooltip strong {
+  color: #ffffff;
+}
+
+.trendTooltip span {
+  color: #d1d5db;
+  white-space: nowrap;
+}
+
+.trendBar:hover .trendTooltip,
+.trendBar:focus-visible .trendTooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.trendSelectedDetail {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.trendSelectedDetail span {
+  color: #667085;
+  font-size: 12px;
+}
+
+.trendSelectedDetail strong {
+  color: #111827;
+  font-size: 13px;
+}
+
+.trendEmpty {
+  display: grid;
+  gap: 6px;
+  align-content: center;
+  min-height: 280px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 22px;
+  text-align: center;
+}
+
+.trendEmpty strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+.trendEmpty span {
+  color: #667085;
+  font-size: 13px;
+}
+
+@media (max-width: 1440px) {
+  .trendBars {
+    gap: 4px;
+  }
+
+  .trendBar {
+    width: 32px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .trendCanvas {
+    min-height: 300px;
+  }
+
+  .trendBars {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .trendBar {
+    width: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .trendSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .trendCanvas {
+    gap: 8px;
+    min-height: 220px;
+  }
+
+  .trendBars {
+    min-height: 180px;
+    gap: 2px;
+  }
+
+  .trendBar {
+    width: 24px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .trendTooltip {
+    display: none;
+  }
+
+  .trendSelectedDetail {
+    display: flex;
+  }
+}
+
+@media (max-width: 576px) {
+  .trendBars {
+    gap: 1px;
+  }
+
+  .trendBar {
+    width: 18px;
+  }
+}

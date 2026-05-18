@@ -1,11 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  fetchDashboardAlerts,
-  fetchDashboardHero,
-  fetchDashboardLoanTrend,
-  fetchDashboardQuickActions,
-  fetchDashboardStats,
-} from "../services/dashboardService";
+import { fetchDashboardData } from "../services/dashboardService";
 
 const INITIAL_STATE = {
   hero: null,
@@ -21,22 +15,7 @@ export const useDashboard = () => {
   const [error, setError] = useState(null);
 
   const loadDashboard = useCallback(async () => {
-    const [hero, stats, alerts, quickActions, chartData] = await Promise.all([
-      fetchDashboardHero(),
-      fetchDashboardStats(),
-      fetchDashboardAlerts(),
-      fetchDashboardQuickActions(),
-      fetchDashboardLoanTrend(),
-    ]);
-
-    const nextState = {
-      hero,
-      stats,
-      alerts,
-      quickActions,
-      chartData,
-    };
-
+    const nextState = await fetchDashboardData();
     setData(nextState);
     return nextState;
   }, []);
@@ -49,25 +28,13 @@ export const useDashboard = () => {
         setLoading(true);
         setError(null);
 
-        const [hero, stats, alerts, quickActions, chartData] = await Promise.all([
-          fetchDashboardHero(),
-          fetchDashboardStats(),
-          fetchDashboardAlerts(),
-          fetchDashboardQuickActions(),
-          fetchDashboardLoanTrend(),
-        ]);
+        const nextState = await fetchDashboardData();
 
         if (!active) {
           return;
         }
 
-        setData({
-          hero,
-          stats,
-          alerts,
-          quickActions,
-          chartData,
-        });
+        setData(nextState);
       } catch (err) {
         if (!active) {
           return;

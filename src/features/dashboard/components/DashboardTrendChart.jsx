@@ -1,93 +1,111 @@
 import { useState } from "react";
-import styles from "../dashboard.module.css";
+import styles from "./DashboardTrendChart.module.css";
 
-function DashboardTrendChart({ data }) {
+function DashboardTrendChart({ data = [] }) {
   const [selectedBar, setSelectedBar] = useState(null);
+
+  const normalizedData = data.map((item) => ({
+    ...item,
+    stockIn: Number(item.stockIn ?? item.loanOut ?? 0),
+    stockOut: Number(item.stockOut ?? item.returned ?? 0),
+  }));
 
   const maxValue = Math.max(
     1,
-    ...data.flatMap((item) => [item.loanOut, item.returned])
+    ...normalizedData.flatMap((item) => [item.stockIn, item.stockOut])
   );
 
-  const totals = data.reduce(
+  const totals = normalizedData.reduce(
     (sum, item) => ({
-      loanOut: sum.loanOut + item.loanOut,
-      returned: sum.returned + item.returned,
+      stockIn: sum.stockIn + item.stockIn,
+      stockOut: sum.stockOut + item.stockOut,
     }),
-    { loanOut: 0, returned: 0 }
+    { stockIn: 0, stockOut: 0 }
   );
 
   const getBarId = (label, type) => `${label}-${type}`;
+
+  const getBarHeight = (value) =>
+    `${Math.max((value / maxValue) * 340, value > 0 ? 8 : 0)}px`;
 
   const handleSelectBar = (bar) => {
     setSelectedBar((current) => (current?.id === bar.id ? null : bar));
   };
 
+  if (!normalizedData.length) {
+    return (
+      <div className={styles.trendEmpty}>
+        <strong>No stock movement yet</strong>
+        <span>Stock in and stock out activity will appear here once recorded.</span>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.trendChart}>
       <div className={styles.trendSummary}>
         <div className={styles.trendMetric}>
-          <span>Total loan-outs</span>
-          <strong>{totals.loanOut}</strong>
+          <span>Total stock in</span>
+          <strong>{totals.stockIn}</strong>
         </div>
         <div className={styles.trendMetric}>
-          <span>Total returns</span>
-          <strong>{totals.returned}</strong>
+          <span>Total stock out</span>
+          <strong>{totals.stockOut}</strong>
         </div>
       </div>
 
       <div className={styles.trendLegend}>
         <div className={styles.trendLegendItem}>
-          <span className={`${styles.trendSwatch} ${styles.trendSwatchLoan}`} />
-          <span>Loan out</span>
+          <span className={`${styles.trendSwatch} ${styles.trendSwatchIn}`} />
+          <span>Stock in</span>
         </div>
         <div className={styles.trendLegendItem}>
-          <span className={`${styles.trendSwatch} ${styles.trendSwatchReturn}`} />
-          <span>Returned</span>
+          <span className={`${styles.trendSwatch} ${styles.trendSwatchOut}`} />
+          <span>Stock out</span>
         </div>
       </div>
 
       <div className={styles.trendCanvas}>
-        {data.map((item) => (
+        {normalizedData.map((item) => (
           <div className={styles.trendColumn} key={item.label}>
             <div className={styles.trendBars}>
               <button
                 type="button"
-                className={`${styles.trendBar} ${styles.trendBarLoan}`}
-                style={{ height: `${(item.loanOut / maxValue) * 340}px` }}
-                aria-label={`${item.label}: ${item.loanOut} loan-outs`}
+                className={`${styles.trendBar} ${styles.trendBarIn}`}
+                style={{ height: getBarHeight(item.stockIn) }}
+                aria-label={`${item.label}: ${item.stockIn} stock in`}
                 onClick={() =>
                   handleSelectBar({
-                    id: getBarId(item.label, "loanOut"),
+                    id: getBarId(item.label, "stockIn"),
                     label: item.label,
-                    type: "Loan out",
-                    value: item.loanOut,
+                    type: "Stock in",
+                    value: item.stockIn,
                   })
                 }
               >
                 <span className={styles.trendTooltip}>
                   <strong>{item.label}</strong>
-                  <span>Loan out: {item.loanOut}</span>
+                  <span>Stock in: {item.stockIn}</span>
                 </span>
               </button>
 
               <button
                 type="button"
-                className={`${styles.trendBar} ${styles.trendBarReturn}`}
-                style={{ height: `${(item.returned / maxValue) * 340}px` }}
-                aria-label={`${item.label}: ${item.returned} returns`}
+                className={`${styles.trendBar} ${styles.trendBarOut}`}
+                style={{ height: getBarHeight(item.stockOut) }}
+                aria-label={`${item.label}: ${item.stockOut} stock out`}
                 onClick={() =>
                   handleSelectBar({
-                    id: getBarId(item.label, "returned"),
+                    id: getBarId(item.label, "stockOut"),
                     label: item.label,
-                    type: "Returned",
-                    value: item.returned,
+                    type: "Stock out",
+                    value: item.stockOut,
                   })
                 }
               >
                 <span className={styles.trendTooltip}>
                   <strong>{item.label}</strong>
-                  <span>Returned: {item.returned}</span>
+                  <span>Stock out: {item.stockOut}</span>
                 </span>
               </button>
             </div>

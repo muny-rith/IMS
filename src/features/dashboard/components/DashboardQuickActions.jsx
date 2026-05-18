@@ -1,4 +1,4 @@
-import styles from "../dashboard.module.css";
+import styles from "./DashboardQuickActions.module.css";
 
 function DashboardQuickActions({ items, onAction }) {
   return (

@@ -5,7 +5,7 @@ import DashboardSectionHeader from "../components/DashboardSectionHeader";
 import DashboardStatCard from "../components/DashboardStatCard";
 import DashboardTrendChart from "../components/DashboardTrendChart";
 import { useDashboard } from "../hooks/useDashboard";
-import styles from "../dashboard.module.css";
+import styles from "./DashboardPage.module.css";
 
 function DashboardPage() {
   const navigate = useNavigate();
@@ -47,13 +47,16 @@ function DashboardPage() {
           </div>
 
           <div>
-            <p className={styles.heroPanelMeta}>Mock-backed dashboard module</p>
+            <p className={styles.heroPanelMeta}>
+              {hero?.metaLabel || "Dashboard module"}
+            </p>
             <button
               type="button"
               className={styles.heroPanelButton}
               onClick={reload}
+              disabled={loading}
             >
-              Refresh view
+              {loading ? "Refreshing..." : "Refresh view"}
             </button>
           </div>
         </aside>
@@ -62,7 +65,7 @@ function DashboardPage() {
       {loading ? (
         <section className={styles.statePanel}>
           <h3 className={styles.stateTitle}>Loading dashboard</h3>
-          <p>Collecting summary cards, alerts, and loan activity.</p>
+          <p>Collecting summary cards, alerts, and stock activity.</p>
         </section>
       ) : error ? (
         <section className={`${styles.statePanel} ${styles.statePanelError}`}>
@@ -83,9 +86,9 @@ function DashboardPage() {
           <section className={styles.mainGrid}>
             <article className={`${styles.panel} ${styles.chartPanel}`}>
               <DashboardSectionHeader
-                eyebrow="Loan activity"
-                title="Loan-out trend"
-                description="A simple operational view of outgoing loans versus returned items over the last seven days."
+                eyebrow="Stock activity"
+                title="Stock in / out trend"
+                description="Live stock movement view of incoming quantity versus outgoing quantity over the last seven days."
                 rightContent={<span className={styles.pill}>Last 7 days</span>}
               />
               <DashboardTrendChart data={chartData} />

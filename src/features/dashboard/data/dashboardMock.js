@@ -4,11 +4,11 @@ export const dashboardHeroMock = {
   eyebrow: "Operations overview",
   title: "See what needs attention before stock becomes a problem.",
   description:
-    "Track loan pressure, product health, and operational hotspots from one inventory-focused view.",
+    "Track stock pressure, product health, and operational hotspots from one inventory-focused view.",
   pulseLabel: "Ops pulse",
-  pulseValue: "87% of scheduled returns are on track",
+  pulseValue: "Stock movement is active today",
   pulseDetail:
-    "Main pressure is coming from barcode scanners, packaging materials, and overdue office equipment loans.",
+    "Main pressure is coming from material usage, low stock, and open borrowing follow-up.",
 };
 
 export const dashboardStatsMock = [
@@ -62,9 +62,9 @@ export const dashboardAlertsMock = [
 
 export const dashboardQuickActionsMock = [
   {
-    label: "Review products",
-    hint: "Check item master data and current catalog health.",
-    path: ROUTE_PATHS.products,
+    label: "Review stock",
+    hint: "Check live stock balances and adjustment history.",
+    path: ROUTE_PATHS.stocks,
   },
   {
     label: "Open loans",
@@ -83,12 +83,14 @@ export const dashboardQuickActionsMock = [
   },
 ];
 
-export const dashboardLoanTrendMock = [
-  { label: "Mon", loanOut: 12, returned: 7 },
-  { label: "Tue", loanOut: 9, returned: 5 },
-  { label: "Wed", loanOut: 16, returned: 8 },
-  { label: "Thu", loanOut: 11, returned: 9 },
-  { label: "Fri", loanOut: 14, returned: 10 },
-  { label: "Sat", loanOut: 8, returned: 6 },
-  { label: "Sun", loanOut: 6, returned: 4 },
+export const dashboardStockTrendMock = [
+  { label: "Mon", stockIn: 120, stockOut: 74 },
+  { label: "Tue", stockIn: 90, stockOut: 52 },
+  { label: "Wed", stockIn: 160, stockOut: 88 },
+  { label: "Thu", stockIn: 110, stockOut: 93 },
+  { label: "Fri", stockIn: 140, stockOut: 105 },
+  { label: "Sat", stockIn: 80, stockOut: 62 },
+  { label: "Sun", stockIn: 60, stockOut: 42 },
 ];
+
+export const dashboardLoanTrendMock = dashboardStockTrendMock;

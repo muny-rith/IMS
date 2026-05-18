@@ -1,0 +1,63 @@
+.alertList {
+  display: grid;
+  gap: 10px;
+}
+
+.alertItem {
+  display: grid;
+  gap: 6px;
+  padding: 13px;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.alertTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alertTop strong {
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.alertLevel {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.alertLevelCritical {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.alertLevelWatch {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.alertLevelNotice {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.alertDetail {
+  margin: 0;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .alertTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
