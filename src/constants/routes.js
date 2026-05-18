@@ -1,4 +1,5 @@
 export const ROUTE_SEGMENTS = Object.freeze({
+  login: "login",
   dashboard: "dashboard",
   products: "products",
   categories: "categories",
@@ -9,6 +10,7 @@ export const ROUTE_SEGMENTS = Object.freeze({
 });
 
 export const ROUTE_PATHS = Object.freeze({
+  login: `/${ROUTE_SEGMENTS.login}`,
   dashboard: `/${ROUTE_SEGMENTS.dashboard}`,
   products: `/${ROUTE_SEGMENTS.products}`,
   categories: `/${ROUTE_SEGMENTS.categories}`,
