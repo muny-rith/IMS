@@ -44,9 +44,20 @@ const KHMER_MONTHS = [
   'ធ្នូ',
 ];
 
-const getMonthlyUsagePrintTitle = () => {
+const getMonthlyUsagePrintTitle = (rows = [], dateRange = '') => {
+  const reportMonth = rows[0]?.reportMonth;
+  const [year, month] = String(reportMonth || '').split('-').map(Number);
+
+  if (year && month && KHMER_MONTHS[month - 1]) {
+    return `តារាងបើកសម្ភារៈប្រចាំខែ ${KHMER_MONTHS[month - 1]} ${year}`;
+  }
+
+  if (dateRange) {
+    return `តារាងបើកសម្ភារៈប្រចាំខែ ${dateRange}`;
+  }
+
   const now = new Date();
-  return `តារាងបើកសម្ភារៈប្រចាំខែ ${KHMER_MONTHS[now.getMonth()]}`;
+  return `តារាងបើកសម្ភារៈប្រចាំខែ ${KHMER_MONTHS[now.getMonth()]} ${now.getFullYear()}`;
 };
 
 const getMovementTemplateMeta = (rows = []) => {
@@ -805,6 +816,7 @@ const printStockMovementPdfReport = ({
 const printMonthlyUsagePdfReport = ({
   rows,
   reportTitle,
+  dateRange,
 }) => {
   const columns = getPdfReportColumns(rows);
   const printWindow = window.open('', '_blank', 'width=1120,height=760');
@@ -949,7 +961,7 @@ const printMonthlyUsagePdfReport = ({
         <main class="report-paper-usage">
           <section class="table-section">
             <div class="table-title">
-              <h2>${escapeHtml(getMonthlyUsagePrintTitle())}</h2>
+              <h2>${escapeHtml(getMonthlyUsagePrintTitle(rows, dateRange))}</h2>
             </div>
 
             <table>

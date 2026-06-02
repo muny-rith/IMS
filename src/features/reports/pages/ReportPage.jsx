@@ -18,9 +18,48 @@ import {
 } from "../utils/exportReport";
 import "./reportPage.css";
 
+const toMonthValue = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+const getPreviousMonthValue = () => {
+  const date = new Date();
+  date.setDate(1);
+  date.setMonth(date.getMonth() - 1);
+  return toMonthValue(date);
+};
+
+const formatReportMonthLabel = (monthValue) => {
+  const [year, month] = String(monthValue).split("-").map(Number);
+
+  if (!year || !month) {
+    return "Selected month";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month - 1, 1));
+};
+
+const buildReportMonthOptions = (count = 13) => {
+  const start = new Date();
+  start.setDate(1);
+
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(start.getFullYear(), start.getMonth() - index, 1);
+    const value = toMonthValue(date);
+
+    return {
+      value,
+      label: formatReportMonthLabel(value),
+    };
+  });
+};
+
 function ReportPage() {
   const [activeReport, setActiveReport] = useState("stock");
   const [dateRange, setDateRange] = useState("Last 30 days");
+  const [reportMonth, setReportMonth] = useState(getPreviousMonthValue);
   const [exportFormat, setExportFormat] = useState("PDF");
   const [reportFilters, setReportFilters] = useState({});
 
@@ -33,6 +72,23 @@ function ReportPage() {
     [activeReport, reportFilters]
   );
   const activeReportFilterOptions = reportFilterOptions[activeReport] ?? [];
+  const reportMonthOptions = useMemo(() => buildReportMonthOptions(), []);
+  const isMonthlyUsageReport = activeReport === "usage";
+  const reportMonthLabel = useMemo(
+    () => formatReportMonthLabel(reportMonth),
+    [reportMonth]
+  );
+  const displayedReport = useMemo(
+    () =>
+      isMonthlyUsageReport
+        ? {
+            ...selectedReport,
+            metric: reportMonthLabel,
+            scopeLabel: reportMonthLabel,
+          }
+        : selectedReport,
+    [isMonthlyUsageReport, reportMonthLabel, selectedReport]
+  );
 
   const {
     rows,
@@ -44,13 +100,15 @@ function ReportPage() {
     reportId: activeReport,
     dateRange,
     filters: activeReportFilters,
+    reportMonth,
   });
 
   const visibleSummaryMetrics =
     realSummaryMetrics.length > 0 ? realSummaryMetrics : summaryMetrics;
-  const usesDateRange = selectedReport.usesDateRange !== false;
+  const usesDateRange =
+    !isMonthlyUsageReport && selectedReport.usesDateRange !== false;
   const reportScopeLabel =
-    selectedReport.scopeLabel || (usesDateRange ? dateRange : "Live report");
+    displayedReport.scopeLabel || (usesDateRange ? dateRange : "Live report");
   const dateRangeValue = usesDateRange ? dateRange : reportScopeLabel;
   const dateRangeSelectOptions = usesDateRange
     ? dateRangeOptions
@@ -77,7 +135,7 @@ function ReportPage() {
       activeReport === "stock"
         ? "Current snapshot"
         : activeReport === "usage"
-          ? selectedReport.scopeLabel || "This month"
+          ? reportMonthLabel
           : dateRange;
 
     if (!rows.length) {
@@ -87,11 +145,11 @@ function ReportPage() {
 
     if (exportFormat === "PDF") {
       const didOpen = printPdfReport({
-        rows,
-        reportTitle: selectedReport.title,
-        dateRange: exportDateRange,
-        summaryMetrics: visibleSummaryMetrics,
-      });
+          rows,
+          reportTitle: displayedReport.title,
+          dateRange: exportDateRange,
+          summaryMetrics: visibleSummaryMetrics,
+        });
 
       if (!didOpen) {
         window.alert("Please allow popups to generate the PDF report.");
@@ -103,7 +161,7 @@ function ReportPage() {
     if (exportFormat === "Excel") {
       downloadExcelReport({
         rows,
-        reportTitle: selectedReport.title,
+        reportTitle: displayedReport.title,
         dateRange: exportDateRange,
       });
 
@@ -112,7 +170,7 @@ function ReportPage() {
 
     downloadCsvReport({
       rows,
-      reportTitle: selectedReport.title,
+      reportTitle: displayedReport.title,
       dateRange: exportDateRange,
     });
   };
@@ -120,8 +178,8 @@ function ReportPage() {
   return (
     <div className="report-page">
       <ReportHero
-        selectedReport={selectedReport}
-        dateRange={dateRange}
+        selectedReport={displayedReport}
+        dateRange={isMonthlyUsageReport ? reportMonthLabel : dateRange}
         summaryMetrics={visibleSummaryMetrics}
         reportCount={rows.length}
         loading={loading}
@@ -137,30 +195,49 @@ function ReportPage() {
 
           <div className="report-controls report-controls--workspace">
             <div className="report-controls-option">
-              <label
-                className={
-                  usesDateRange
-                    ? "report-control"
-                    : "report-control report-control--disabled"
-                }
-              >
-                <span>Date range</span>
-                <select
-                  value={dateRangeValue}
-                  disabled={!usesDateRange}
-                  onChange={(event) => setDateRange(event.target.value)}
+              {isMonthlyUsageReport ? (
+                <label className="report-control">
+                  <span>Report month</span>
+                  <select
+                    value={reportMonth}
+                    onChange={(event) => setReportMonth(event.target.value)}
+                  >
+                    {reportMonthOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {/* <small className="report-control-hint">
+                    Choose the closed month to print, for example May on June 5.
+                  </small> */}
+                </label>
+              ) : (
+                <label
+                  className={
+                    usesDateRange
+                      ? "report-control"
+                      : "report-control report-control--disabled"
+                  }
                 >
-                  {dateRangeSelectOptions.map((option) => (
-                    <option key={option}>{option}</option>
-                  ))}
-                </select>
-                <small className="report-control-hint">
-                  {selectedReport.dateHint ||
-                    (usesDateRange
-                      ? "Filter report rows by selected period."
-                      : reportScopeLabel)}
-                </small>
-              </label>
+                  <span>Date range</span>
+                  <select
+                    value={dateRangeValue}
+                    disabled={!usesDateRange}
+                    onChange={(event) => setDateRange(event.target.value)}
+                  >
+                    {dateRangeSelectOptions.map((option) => (
+                      <option key={option}>{option}</option>
+                    ))}
+                  </select>
+                  {/* <small className="report-control-hint">
+                    {displayedReport.dateHint ||
+                      (usesDateRange
+                        ? "Filter report rows by selected period."
+                        : reportScopeLabel)}
+                  </small> */}
+                </label>
+              )}
 
               <label className="report-control">
                 <span>Export</span>
@@ -172,9 +249,9 @@ function ReportPage() {
                     <option key={format}>{format}</option>
                   ))}
                 </select>
-                <small className="report-control-hint">
+                {/* <small className="report-control-hint">
                   PDF for print, Excel/CSV for data.
-                </small>
+                </small> */}
               </label>
             </div>
 
@@ -190,7 +267,7 @@ function ReportPage() {
         </div>
 
         <ReportPreviewTable
-          title={selectedReport.title}
+          title={displayedReport.title}
           rows={rows}
           loading={loading}
           error={error}

@@ -58,12 +58,39 @@ const getDateRangeBounds = (dateRange) => {
   };
 };
 
-const getCurrentMonthBounds = () => {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+const toMonthValue = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+const getPreviousMonthValue = () => {
+  const date = new Date();
+  date.setDate(1);
+  date.setMonth(date.getMonth() - 1);
+
+  return toMonthValue(date);
+};
+
+const parseReportMonth = (reportMonth) => {
+  const [year, month] = String(reportMonth || getPreviousMonthValue())
+    .split('-')
+    .map(Number);
+
+  if (!year || !month || month < 1 || month > 12) {
+    return parseReportMonth(getPreviousMonthValue());
+  }
+
+  return new Date(year, month - 1, 1);
+};
+
+const getMonthBounds = (reportMonth) => {
+  const selectedMonth = parseReportMonth(reportMonth);
+  const monthStart = new Date(
+    selectedMonth.getFullYear(),
+    selectedMonth.getMonth(),
+    1
+  );
   const monthEnd = new Date(
-    now.getFullYear(),
-    now.getMonth() + 1,
+    selectedMonth.getFullYear(),
+    selectedMonth.getMonth() + 1,
     0,
     23,
     59,
@@ -75,6 +102,7 @@ const getCurrentMonthBounds = () => {
     monthStart,
     monthEnd,
     daysInMonth: monthEnd.getDate(),
+    reportMonth: toMonthValue(monthStart),
     monthLabel: new Intl.DateTimeFormat('en-US', {
       month: 'long',
       year: 'numeric',
@@ -279,7 +307,7 @@ const normalizeWorkerHistoryRows = (rows) => {
   }));
 };
 
-const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel }) => {
+const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel, reportMonth }) => {
   const category = asObject(product.categories);
 
   return {
@@ -301,6 +329,7 @@ const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel }) => {
     balance: 0,
     daysInMonth,
     monthLabel,
+    reportMonth,
     raw: product,
   };
 };
@@ -315,6 +344,7 @@ const normalizeMonthlyUsageRows = ({ products, movements, bounds }) => {
         product,
         daysInMonth: bounds.daysInMonth,
         monthLabel: bounds.monthLabel,
+        reportMonth: bounds.reportMonth,
       })
     );
   });
@@ -494,8 +524,8 @@ export const fetchWorkerLoanHistoryReport = async (dateRange) => {
   return normalizeWorkerHistoryRows(data ?? []);
 };
 
-export const fetchMonthlyInventoryUsageReport = async () => {
-  const bounds = getCurrentMonthBounds();
+export const fetchMonthlyInventoryUsageReport = async ({ reportMonth } = {}) => {
+  const bounds = getMonthBounds(reportMonth);
 
   const [productsResult, movementsResult] = await Promise.all([
     supabase
@@ -505,11 +535,13 @@ export const fetchMonthlyInventoryUsageReport = async () => {
         product_code,
         product_name,
         image_url,
+        created_at,
         categories (
           category_id,
           category_name
         )
       `)
+      .lte('created_at', bounds.monthEnd.toISOString())
       .order('product_name', { ascending: true }),
     supabase
       .from('stock_movements')
@@ -540,14 +572,19 @@ export const fetchMonthlyInventoryUsageReport = async () => {
   });
 };
 
-export const fetchReportRows = async ({ reportId, dateRange, filters = {} }) => {
+export const fetchReportRows = async ({
+  reportId,
+  dateRange,
+  filters = {},
+  reportMonth,
+}) => {
   switch (reportId) {
     case 'movement':
       return fetchStockMovementReport(dateRange, filters);
     case 'loan':
       return fetchOutstandingLoanReport(dateRange, filters);
     case 'usage':
-      return fetchMonthlyInventoryUsageReport();
+      return fetchMonthlyInventoryUsageReport({ reportMonth });
     case 'stock':
     default:
       return fetchCurrentStockReport(filters);
