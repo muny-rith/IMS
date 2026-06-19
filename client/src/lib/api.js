@@ -1,11 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5002/api',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5002/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
