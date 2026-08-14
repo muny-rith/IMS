@@ -1,6 +1,5 @@
 import * as productModel from './product.model.js';
 import ApiError from '../../shared/errors/ApiError.js';
-import { syncProductToEcom, deleteProductFromEcom } from '../../integrations/ecom/ecomClient.js';
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -33,20 +32,6 @@ export const createProduct = async (req, res, next) => {
       openingNote: openingNote?.trim() || null
     });
 
-    // Fetch full product details including category_name for E-Commerce syncing
-    const fullProduct = await productModel.findById(product.product_id);
-    if (fullProduct) {
-      syncProductToEcom({
-        name: fullProduct.product_name,
-        price: fullProduct.unit_price,
-        imageUrl: fullProduct.image_url,
-        categoryName: fullProduct.category_name,
-        isActive: fullProduct.is_active
-      }).catch(err => {
-        console.error('[E-Commerce Sync Error] Failed to sync created product:', err.message);
-      });
-    }
-
     res.status(201).json({
       status: 'success',
       data: product,
@@ -76,21 +61,6 @@ export const updateProduct = async (req, res, next) => {
       is_active: isActive !== undefined ? isActive : existing.is_active
     });
 
-    // Fetch full updated product details and sync to E-Commerce
-    const fullProduct = await productModel.findById(productId);
-    if (fullProduct) {
-      syncProductToEcom({
-        name: fullProduct.product_name,
-        oldName: existing.product_name, // Send old name to find and update in E-Commerce
-        price: fullProduct.unit_price,
-        imageUrl: fullProduct.image_url,
-        categoryName: fullProduct.category_name,
-        isActive: fullProduct.is_active
-      }).catch(err => {
-        console.error('[E-Commerce Sync Error] Failed to sync updated product:', err.message);
-      });
-    }
-
     res.status(200).json({
       status: 'success',
       data: updated,
@@ -110,13 +80,6 @@ export const deleteProduct = async (req, res, next) => {
 
     await productModel.remove(productId);
 
-    // Sync deletion of product to E-Commerce
-    if (existing) {
-      deleteProductFromEcom({ name: existing.product_name }).catch(err => {
-        console.error('[E-Commerce Sync Error] Failed to sync deleted product:', err.message);
-      });
-    }
-
     res.status(200).json({
       status: 'success',
       data: null,
@@ -130,10 +93,12 @@ export const getExternalStocks = async (req, res, next) => {
   try {
     const stocks = await productModel.findExternalStocks();
     
-    // Transform array to key-value object: { "Product Name": on_hand_qty }
+    // Transform array to key-value object: { "product_code": on_hand_qty }
     const stockMap = {};
     stocks.forEach(row => {
-      stockMap[row.product_name] = row.on_hand_qty;
+      if (row.product_code) {
+        stockMap[row.product_code] = row.on_hand_qty;
+      }
     });
 
     res.status(200).json({

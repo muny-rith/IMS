@@ -1,6 +1,5 @@
 import * as categoryModel from './category.model.js';
 import ApiError from '../../shared/errors/ApiError.js';
-import { syncCategoryToEcom, deleteCategoryFromEcom } from '../../integrations/ecom/ecomClient.js';
 
 export const getCategories = async (req, res, next) => {
   try {
@@ -23,14 +22,6 @@ export const createCategory = async (req, res, next) => {
     }
 
     const category = await categoryModel.create({ category_name, description });
-    
-    // Sync to Ecom
-    syncCategoryToEcom({
-      name: category.category_name,
-      description: category.description
-    }).catch(err => {
-      console.error('[E-Commerce Sync Error] Failed to sync created category:', err.message);
-    });
 
     res.status(201).json({
       status: 'success',
@@ -57,15 +48,6 @@ export const updateCategory = async (req, res, next) => {
 
     const updated = await categoryModel.update(categoryId, { category_name, description });
 
-    // Sync to Ecom
-    syncCategoryToEcom({
-      name: updated.category_name,
-      oldName: category.category_name,
-      description: updated.description
-    }).catch(err => {
-      console.error('[E-Commerce Sync Error] Failed to sync updated category:', err.message);
-    });
-
     res.status(200).json({
       status: 'success',
       data: updated,
@@ -90,13 +72,6 @@ export const deleteCategory = async (req, res, next) => {
     }
 
     await categoryModel.remove(categoryId);
-
-    // Sync to Ecom
-    deleteCategoryFromEcom({
-      name: category.category_name
-    }).catch(err => {
-      console.error('[E-Commerce Sync Error] Failed to sync deleted category:', err.message);
-    });
 
     res.status(200).json({
       status: 'success',

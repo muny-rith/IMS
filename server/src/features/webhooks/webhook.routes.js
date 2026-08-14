@@ -1,9 +1,11 @@
 import express from 'express';
-import { handleEcomOrderWebhook } from './webhook.controller.js';
+import { handleEcomOrderWebhook, handleEcomCategoryWebhook, handleEcomProductWebhook } from './webhook.controller.js';
 
 const router = express.Router();
 
-// Webhook endpoint (doesn't require standard user JWT authentication since it's server-to-server)
+// Webhook endpoints (server-to-server)
+router.post('/ecom-category', handleEcomCategoryWebhook);
+router.post('/ecom-product', handleEcomProductWebhook);
 router.post('/ecom-order', handleEcomOrderWebhook);
 
 export default router;

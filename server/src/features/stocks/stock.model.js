@@ -1,4 +1,5 @@
 import pool, { query } from '../../config/db.js';
+import { triggerStockUpdateWebhook } from '../../integrations/ecom/ecomClient.js';
 
 // Stock Balances Queries
 export const getStockBalances = async () => {
@@ -84,6 +85,13 @@ export const applyStockAdjustmentTransaction = async ({ productId, qty, type, ad
     await client.query(movText, [productId, type, amount, notes || 'Stock adjustment', movementDate]);
 
     await client.query('COMMIT');
+    
+    // Webhook Sync
+    const prodRes = await query('SELECT product_code FROM products WHERE product_id = $1;', [productId]);
+    if (prodRes.rows.length > 0) {
+      triggerStockUpdateWebhook(prodRes.rows[0].product_code, nextQty);
+    }
+    
     return { productId, previousQty: currentQty, nextQty, qty: amount, type, adjustmentDate: movementDate };
   } catch (err) {
     await client.query('ROLLBACK');

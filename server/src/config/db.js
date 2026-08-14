@@ -69,16 +69,8 @@ export const initDB = async () => {
     await pool.query('SELECT NOW()');
     console.log('PostgreSQL connection established successfully.');
 
-    // Read the SQL init file
-    const sqlPath = path.join(__dirname, '../db/init.sql');
-    if (fs.existsSync(sqlPath)) {
-      console.log('Running database schema and seeding script...');
-      const sqlContent = fs.readFileSync(sqlPath, 'utf8');
-      await pool.query(sqlContent);
-      console.log('Database tables verified and seeded successfully.');
-    } else {
-      console.warn('init.sql script not found. Skipping table generation.');
-    }
+    // Read the SQL init file (Skipped automatically on startup to prevent accidental data drops)
+    console.log('Database connected successfully.');
   } catch (err) {
     console.error('Database connection / initialization failed!');
     console.error(err.message);
