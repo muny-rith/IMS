@@ -9,15 +9,23 @@ import PaidIcon              from '@mui/icons-material/Paid'
 import PersonIcon            from '@mui/icons-material/Person'
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import InsertDriveFileIcon   from '@mui/icons-material/InsertDriveFile'
+import StyleIcon from '@mui/icons-material/Style';
+import OutputIcon from '@mui/icons-material/Output';
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const navItems = [
   { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard' },
   { to: '/products',   icon: <ShoppingCartIcon />,   label: 'Product'   },
-  { to: '/stocks',    icon: <Inventory2Icon />,          label: 'Stock'    },
-  { to: '/categories',  icon: <TableRowsIcon />,       label: 'Category'  },
-  { to: '/loans',      icon: <PaidIcon />,            label: 'Loan'      },
-  { to: '/workers',    icon: <PersonIcon />,          label: 'Worker'    },
-  { to: '/reports',    icon: <InsertDriveFileIcon />, label: 'Report'    },
+  { to: '/attributes', icon: <StyleIcon />,          label: 'Attribute' },
+  { to: '/stocks',    icon: <Inventory2Icon />,      label: 'Stock'     },
+  { to: '/categories',  icon: <TableRowsIcon />,     label: 'Category'  },
+  { to: '/loans',      icon: <PaidIcon />,           label: 'Loan'      },
+  { to: '/sales',      icon: <PointOfSaleIcon />,    label: 'Sales'     },
+  { to: '/stock-issues', icon: <OutputIcon />,       label: 'Issue'     },
+  { to: '/purchase-requests', icon: <AssignmentIcon />, label: 'Request' },
+  { to: '/workers',    icon: <PersonIcon />,         label: 'Worker'    },
+  { to: '/reports',    icon: <InsertDriveFileIcon />, label: 'Report'   },
 ]
 
 const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {

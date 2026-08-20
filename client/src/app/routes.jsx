@@ -12,6 +12,10 @@ import LoanPage from "../features/loans/pages/LoanPage";
 import WorkerPage from "../features/workers/pages/WorkerPage";
 import StockPage from "../features/stocks/pages/StockAdjustmentPage";
 import ReportPage from "../features/reports/pages/ReportPage";
+import AttributePage from "../features/attributes/pages/AttributePage";
+import PurchaseRequestPage from "../features/purchase_requests/pages/PurchaseRequestPage";
+import StockIssuePage from "../features/stock_issues/pages/StockIssuePage";
+import SalePage from "../features/sales/pages/SalePage";
 
 function AppRoutes() {
   return (
@@ -28,6 +32,10 @@ function AppRoutes() {
           <Route path={ROUTE_SEGMENTS.loans} element={<LoanPage />} />
           <Route path={ROUTE_SEGMENTS.workers} element={<WorkerPage />} />
           <Route path={ROUTE_SEGMENTS.reports} element={<ReportPage />} />
+          <Route path={ROUTE_SEGMENTS.attributes} element={<AttributePage />} />
+          <Route path={ROUTE_SEGMENTS.purchase_requests} element={<PurchaseRequestPage />} />
+          <Route path={ROUTE_SEGMENTS.stock_issues} element={<StockIssuePage />} />
+          <Route path={ROUTE_SEGMENTS.sales} element={<SalePage />} />
         </Route>
       </Route>
 

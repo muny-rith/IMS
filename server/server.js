@@ -17,6 +17,10 @@ import stockRoutes from './src/features/stocks/stock.routes.js';
 import dashboardRoutes from './src/features/dashboard/dashboard.routes.js';
 import reportRoutes from './src/features/reports/report.routes.js';
 import webhookRoutes from './src/features/webhooks/webhook.routes.js';
+import attributeRoutes from './src/features/attributes/attribute.routes.js';
+import purchaseRequestRoutes from './src/features/purchase_requests/purchase_request.routes.js';
+import stockIssueRoutes from './src/features/stock_issues/stock_issue.routes.js';
+import saleRoutes from './src/features/sales/sale.routes.js';
 
 dotenv.config();
 
@@ -48,6 +52,10 @@ app.use('/api/stocks', stockRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/attributes', attributeRoutes);
+app.use('/api/purchase-requests', purchaseRequestRoutes);
+app.use('/api/stock-issues', stockIssueRoutes);
+app.use('/api/sales', saleRoutes);
 
 // Fallback for unhandled routes
 app.all('*', (req, res, next) => {

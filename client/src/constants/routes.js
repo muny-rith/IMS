@@ -7,6 +7,10 @@ export const ROUTE_SEGMENTS = Object.freeze({
   workers: "workers",
   stocks: "stocks",
   reports: "reports",
+  attributes: "attributes",
+  purchase_requests: "purchase-requests",
+  stock_issues: "stock-issues",
+  sales: "sales",
 });
 
 export const ROUTE_PATHS = Object.freeze({
@@ -18,4 +22,8 @@ export const ROUTE_PATHS = Object.freeze({
   workers: `/${ROUTE_SEGMENTS.workers}`,
   stocks: `/${ROUTE_SEGMENTS.stocks}`,
   reports: `/${ROUTE_SEGMENTS.reports}`,
+  attributes: `/${ROUTE_SEGMENTS.attributes}`,
+  purchase_requests: `/${ROUTE_SEGMENTS.purchase_requests}`,
+  stock_issues: `/${ROUTE_SEGMENTS.stock_issues}`,
+  sales: `/${ROUTE_SEGMENTS.sales}`,
 });
