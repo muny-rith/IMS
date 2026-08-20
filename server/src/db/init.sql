@@ -1,9 +1,21 @@
--- Database initialization schema for Moon IMS
--- Optimized with Product Variant & Dynamic Attribute System (EAV)
+-- ============================================================
+-- Moon IMS — Database Schema (Corrected Version)
+-- Product Variant & Dynamic Attribute System (EAV)
+--
+-- CHANGES FROM PREVIOUS VERSION:
+--   1. tb_product_variant.stock_qty REMOVED — tb_stock_balance
+--      is now the single source of truth for on-hand quantity.
+--      A trigger auto-creates the balance row on variant insert,
+--      so it's impossible to have a variant with no balance row.
+--   2. tb_loan.worker_id REMOVED — replaced with tb_loan_worker
+--      junction table, so one loan can cover a GROUP of workers.
+--   3. ON DELETE CASCADE replaced with RESTRICT/SET NULL wherever
+--      deleting master data (category, product, variant, worker)
+--      could silently destroy transaction/audit history.
+-- ============================================================
 
 -- ------------------------------------------------------------
 -- 1. tb_user
--- Stores user accounts for authentication & RBAC
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_user (
   user_id       SERIAL PRIMARY KEY,
@@ -15,14 +27,12 @@ CREATE TABLE IF NOT EXISTS tb_user (
   updated_at    TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
--- Seed default admin user (email: admin@moonims.com, password: admin123)
 INSERT INTO tb_user (name, email, password, role)
 SELECT 'Admin User', 'admin@moonims.com', '$2a$10$4MmqmYaQVbJXx.shmOkn/u1py2thSyhTyeOuf9K7qNRPqgdCvYQhq', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM tb_user WHERE email = 'admin@moonims.com');
 
 -- ------------------------------------------------------------
 -- 2. tb_category
--- Product categories
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_category (
   category_id    SERIAL PRIMARY KEY,
@@ -34,7 +44,6 @@ CREATE TABLE IF NOT EXISTS tb_category (
 
 -- ------------------------------------------------------------
 -- 3. tb_attribute
--- Defines attribute types (e.g. "Size", "Color", "Volume", "Weight")
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_attribute (
   attribute_id   SERIAL PRIMARY KEY,
@@ -44,7 +53,6 @@ CREATE TABLE IF NOT EXISTS tb_attribute (
 
 -- ------------------------------------------------------------
 -- 4. tb_attribute_value
--- Selectable values for attributes (e.g. "S", "M", "L", "Red", "Blue")
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_attribute_value (
   value_id       SERIAL PRIMARY KEY,
@@ -56,7 +64,6 @@ CREATE TABLE IF NOT EXISTS tb_attribute_value (
 
 -- ------------------------------------------------------------
 -- 5. tb_category_attribute
--- Attributes inherited by default for all products in a category
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_category_attribute (
   category_id    INT NOT NULL REFERENCES tb_category(category_id) ON DELETE CASCADE,
@@ -66,13 +73,12 @@ CREATE TABLE IF NOT EXISTS tb_category_attribute (
 
 -- ------------------------------------------------------------
 -- 6. tb_product
--- Core product catalog headers
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_product (
   product_id     SERIAL PRIMARY KEY,
   product_code   VARCHAR(50) NOT NULL UNIQUE,
   product_name   VARCHAR(150) NOT NULL,
-  category_id    INT NOT NULL REFERENCES tb_category(category_id) ON DELETE CASCADE,
+  category_id    INT NOT NULL REFERENCES tb_category(category_id) ON DELETE RESTRICT,
   department     VARCHAR(100),
   is_active      BOOLEAN NOT NULL DEFAULT TRUE,
   image_url      TEXT,
@@ -82,7 +88,6 @@ CREATE TABLE IF NOT EXISTS tb_product (
 
 -- ------------------------------------------------------------
 -- 7. tb_product_attribute
--- Product-specific attribute overrides/additions
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_product_attribute (
   product_id     INT NOT NULL REFERENCES tb_product(product_id) ON DELETE CASCADE,
@@ -92,22 +97,19 @@ CREATE TABLE IF NOT EXISTS tb_product_attribute (
 
 -- ------------------------------------------------------------
 -- 8. tb_product_variant
--- Stock Keeping Unit (SKU) level records.
--- Every product has >= 1 variant (even simple non-variant products)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_product_variant (
   variant_id     SERIAL PRIMARY KEY,
-  product_id     INT NOT NULL REFERENCES tb_product(product_id) ON DELETE CASCADE,
+  product_id     INT NOT NULL REFERENCES tb_product(product_id) ON DELETE RESTRICT,
   sku            VARCHAR(50) UNIQUE,
-  stock_qty      INT NOT NULL DEFAULT 0 CHECK (stock_qty >= 0),
   unit_price     NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (unit_price >= 0),
+  is_active      BOOLEAN NOT NULL DEFAULT TRUE,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- ------------------------------------------------------------
 -- 9. tb_variant_attribute_value
--- Junction mapping variant to attribute value combinations
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_variant_attribute_value (
   variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE CASCADE,
@@ -117,7 +119,6 @@ CREATE TABLE IF NOT EXISTS tb_variant_attribute_value (
 
 -- ------------------------------------------------------------
 -- 10. tb_worker
--- Registered workers eligible for equipment loans
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_worker (
   worker_id      SERIAL PRIMARY KEY,
@@ -132,12 +133,10 @@ CREATE TABLE IF NOT EXISTS tb_worker (
 
 -- ------------------------------------------------------------
 -- 11. tb_loan
--- Loan transaction headers
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_loan (
   loan_id        SERIAL PRIMARY KEY,
   loan_code      VARCHAR(50) NOT NULL UNIQUE,
-  worker_id      INT NOT NULL REFERENCES tb_worker(worker_id) ON DELETE CASCADE,
   loan_date      DATE NOT NULL DEFAULT CURRENT_DATE,
   due_date       DATE,
   returned_at    TIMESTAMP,
@@ -148,13 +147,21 @@ CREATE TABLE IF NOT EXISTS tb_loan (
 );
 
 -- ------------------------------------------------------------
+-- 11a. tb_loan_worker  (junction for group borrowing)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tb_loan_worker (
+  loan_id        INT NOT NULL REFERENCES tb_loan(loan_id) ON DELETE CASCADE,
+  worker_id      INT NOT NULL REFERENCES tb_worker(worker_id) ON DELETE RESTRICT,
+  PRIMARY KEY (loan_id, worker_id)
+);
+
+-- ------------------------------------------------------------
 -- 12. tb_loan_item
--- Loan line items referencing specific variants
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_loan_item (
   loan_item_id   SERIAL PRIMARY KEY,
   loan_id        INT NOT NULL REFERENCES tb_loan(loan_id) ON DELETE CASCADE,
-  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE CASCADE,
+  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE RESTRICT,
   qty            INT NOT NULL CHECK (qty > 0),
   returned_qty   INT NOT NULL DEFAULT 0 CHECK (returned_qty >= 0),
   item_status    VARCHAR(20) NOT NULL DEFAULT 'OPEN' CHECK (item_status IN ('OPEN', 'PARTIAL', 'RETURNED', 'CANCELLED')),
@@ -165,7 +172,6 @@ CREATE TABLE IF NOT EXISTS tb_loan_item (
 
 -- ------------------------------------------------------------
 -- 13. tb_sale
--- Sales order headers
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_sale (
   sale_id        SERIAL PRIMARY KEY,
@@ -180,12 +186,11 @@ CREATE TABLE IF NOT EXISTS tb_sale (
 
 -- ------------------------------------------------------------
 -- 14. tb_sale_item
--- Sales order line items referencing specific variants
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_sale_item (
   sale_item_id   SERIAL PRIMARY KEY,
   sale_id        INT NOT NULL REFERENCES tb_sale(sale_id) ON DELETE CASCADE,
-  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE CASCADE,
+  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE RESTRICT,
   qty            INT NOT NULL CHECK (qty > 0),
   unit_price     NUMERIC(12, 2) NOT NULL CHECK (unit_price >= 0),
   notes          TEXT,
@@ -195,7 +200,6 @@ CREATE TABLE IF NOT EXISTS tb_sale_item (
 
 -- ------------------------------------------------------------
 -- 15. tb_stock_issue
--- Stock issue headers (internal use, damage, loss, etc.)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_stock_issue (
   stock_issue_id SERIAL PRIMARY KEY,
@@ -210,12 +214,11 @@ CREATE TABLE IF NOT EXISTS tb_stock_issue (
 
 -- ------------------------------------------------------------
 -- 16. tb_stock_issue_item
--- Stock issue line items referencing specific variants
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_stock_issue_item (
   stock_issue_item_id SERIAL PRIMARY KEY,
   stock_issue_id INT NOT NULL REFERENCES tb_stock_issue(stock_issue_id) ON DELETE CASCADE,
-  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE CASCADE,
+  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE RESTRICT,
   qty            INT NOT NULL CHECK (qty > 0),
   notes          TEXT,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -223,8 +226,7 @@ CREATE TABLE IF NOT EXISTS tb_stock_issue_item (
 );
 
 -- ------------------------------------------------------------
--- 17. tb_stock_balance
--- Real-time stock balances per variant
+-- 17. tb_stock_balance  (single source of truth for stock)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_stock_balance (
   stock_balance_id SERIAL PRIMARY KEY,
@@ -234,13 +236,27 @@ CREATE TABLE IF NOT EXISTS tb_stock_balance (
   updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE OR REPLACE FUNCTION fn_create_stock_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO tb_stock_balance (variant_id, on_hand_qty, reserved_qty)
+  VALUES (NEW.variant_id, 0, 0)
+  ON CONFLICT (variant_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_variant_after_insert ON tb_product_variant;
+CREATE TRIGGER trg_variant_after_insert
+AFTER INSERT ON tb_product_variant
+FOR EACH ROW EXECUTE FUNCTION fn_create_stock_balance();
+
 -- ------------------------------------------------------------
--- 18. tb_stock_movement
--- Audit log of stock transactions per variant
+-- 18. tb_stock_movement  (audit log)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_stock_movement (
   movement_id    SERIAL PRIMARY KEY,
-  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE CASCADE,
+  variant_id     INT NOT NULL REFERENCES tb_product_variant(variant_id) ON DELETE RESTRICT,
   movement_type  VARCHAR(30) NOT NULL CHECK (movement_type IN ('OPENING', 'PURCHASE_IN', 'LOAN_OUT', 'LOAN_RETURN', 'SALE_OUT', 'ISSUE_OUT', 'ADJUSTMENT_IN', 'ADJUSTMENT_OUT')),
   qty            INT NOT NULL CHECK (qty > 0),
   loan_item_id   INT REFERENCES tb_loan_item(loan_item_id) ON DELETE SET NULL,
@@ -252,7 +268,6 @@ CREATE TABLE IF NOT EXISTS tb_stock_movement (
 
 -- ------------------------------------------------------------
 -- 19. tb_purchase_request
--- Purchase request headers
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_purchase_request (
   purchase_request_id SERIAL PRIMARY KEY,
@@ -274,7 +289,6 @@ CREATE TABLE IF NOT EXISTS tb_purchase_request (
 
 -- ------------------------------------------------------------
 -- 20. tb_purchase_request_item
--- Purchase request line items referencing specific variants
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_purchase_request_item (
   purchase_request_item_id SERIAL PRIMARY KEY,
@@ -289,8 +303,9 @@ CREATE TABLE IF NOT EXISTS tb_purchase_request_item (
 );
 
 -- ------------------------------------------------------------
--- Helpful Indexes for Frequent Lookups
+-- Indexes
 -- ------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_product_category_id ON tb_product(category_id);
 CREATE INDEX IF NOT EXISTS idx_product_variant_product_id ON tb_product_variant(product_id);
 CREATE INDEX IF NOT EXISTS idx_variant_attr_value_variant_id ON tb_variant_attribute_value(variant_id);
 CREATE INDEX IF NOT EXISTS idx_attribute_value_attribute_id ON tb_attribute_value(attribute_id);
@@ -298,5 +313,8 @@ CREATE INDEX IF NOT EXISTS idx_category_attribute_category_id ON tb_category_att
 CREATE INDEX IF NOT EXISTS idx_product_attribute_product_id ON tb_product_attribute(product_id);
 CREATE INDEX IF NOT EXISTS idx_stock_balance_variant_id ON tb_stock_balance(variant_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movement_variant_id ON tb_stock_movement(variant_id);
+CREATE INDEX IF NOT EXISTS idx_loan_worker_loan_id ON tb_loan_worker(loan_id);
+CREATE INDEX IF NOT EXISTS idx_loan_worker_worker_id ON tb_loan_worker(worker_id);
+CREATE INDEX IF NOT EXISTS idx_loan_item_loan_id ON tb_loan_item(loan_id);
 CREATE INDEX IF NOT EXISTS idx_loan_item_variant_id ON tb_loan_item(variant_id);
 CREATE INDEX IF NOT EXISTS idx_sale_item_variant_id ON tb_sale_item(variant_id);

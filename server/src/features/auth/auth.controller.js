@@ -11,7 +11,6 @@ export const login = async (req, res, next) => {
       return next(new ApiError(400, 'Please provide email/username and password.'));
     }
 
-    // Email might be normalized on client or server. If no domain, we normalize it.
     let userEmail = email.toLowerCase().trim();
     if (!userEmail.includes('@')) {
       userEmail = `${userEmail}@moonims.com`;
@@ -22,15 +21,16 @@ export const login = async (req, res, next) => {
       return next(new ApiError(401, 'Incorrect email/username or password.'));
     }
 
-    const token = signToken({ id: user.id, role: user.role });
+    const userId = user.user_id || user.id;
+    const token = signToken({ id: userId, role: user.role });
 
-    // Format output to match client requirements
     res.status(200).json({
       status: 'success',
       data: {
         token,
         user: {
-          id: user.id,
+          id: userId,
+          user_id: userId,
           email: user.email,
           name: user.name,
           role: user.role,
@@ -45,11 +45,16 @@ export const login = async (req, res, next) => {
 export const getProfile = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.user.id);
+    if (!user) {
+      return next(new ApiError(404, 'User no longer exists.'));
+    }
+    const userId = user.user_id || user.id;
     res.status(200).json({
       status: 'success',
       session: {
         user: {
-          id: user.id,
+          id: userId,
+          user_id: userId,
           email: user.email,
           name: user.name,
           role: user.role,

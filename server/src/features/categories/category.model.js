@@ -1,20 +1,20 @@
 import { query } from '../../config/db.js';
 
 export const findAll = async () => {
-  const text = 'SELECT * FROM categories ORDER BY category_name ASC;';
+  const text = 'SELECT * FROM tb_category ORDER BY category_name ASC;';
   const { rows } = await query(text);
   return rows;
 };
 
 export const findById = async (id) => {
-  const text = 'SELECT * FROM categories WHERE category_id = $1;';
+  const text = 'SELECT * FROM tb_category WHERE category_id = $1;';
   const { rows } = await query(text, [id]);
   return rows[0];
 };
 
 export const create = async ({ category_name, description }) => {
   const text = `
-    INSERT INTO categories (category_name, description)
+    INSERT INTO tb_category (category_name, description)
     VALUES ($1, $2)
     RETURNING *;
   `;
@@ -24,7 +24,7 @@ export const create = async ({ category_name, description }) => {
 
 export const update = async (id, { category_name, description }) => {
   const text = `
-    UPDATE categories
+    UPDATE tb_category
     SET category_name = $1, description = $2, updated_at = CURRENT_TIMESTAMP
     WHERE category_id = $3
     RETURNING *;
@@ -34,13 +34,13 @@ export const update = async (id, { category_name, description }) => {
 };
 
 export const getProductCount = async (id) => {
-  const text = 'SELECT COUNT(*)::INTEGER as count FROM products WHERE category_id = $1;';
+  const text = 'SELECT COUNT(*)::INTEGER as count FROM tb_product WHERE category_id = $1;';
   const { rows } = await query(text, [id]);
   return rows[0].count;
 };
 
 export const remove = async (id) => {
-  const text = 'DELETE FROM categories WHERE category_id = $1 RETURNING category_id;';
+  const text = 'DELETE FROM tb_category WHERE category_id = $1 RETURNING category_id;';
   const { rows } = await query(text, [id]);
   return rows[0];
 };

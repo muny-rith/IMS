@@ -78,9 +78,9 @@ export const getReportSummary = async (req, res, next) => {
     today.setHours(0, 0, 0, 0);
 
     const [balancesRes, loansRes, movementsRes] = await Promise.all([
-      pool.query('SELECT on_hand_qty, reserved_qty FROM stock_balances;'),
-      pool.query("SELECT loan_id FROM loans WHERE loan_status NOT IN ('RETURNED', 'CANCELLED');"),
-      pool.query('SELECT movement_id FROM stock_movements WHERE created_at >= $1;', [today.toISOString()])
+      pool.query('SELECT on_hand_qty, reserved_qty FROM tb_stock_balance;'),
+      pool.query("SELECT loan_id FROM tb_loan WHERE loan_status NOT IN ('RETURNED', 'CANCELLED');"),
+      pool.query('SELECT movement_id FROM tb_stock_movement WHERE created_at >= $1;', [today.toISOString()])
     ]);
 
     const balances = balancesRes.rows;
@@ -112,12 +112,12 @@ export const getReportSummary = async (req, res, next) => {
         {
           label: 'Available Units',
           value: availableUnits.toLocaleString('en-US'),
-          detail: `${balances.length} stocked products`,
+          detail: `${balances.length} stocked SKUs`,
         },
         {
           label: 'Low Stock Items',
           value: lowStockCount.toLocaleString('en-US'),
-          detail: `${outOfStockCount} out of stock`,
+          detail: `${outOfStockCount} depleted`,
         },
         {
           label: 'Open Loans',
@@ -145,7 +145,8 @@ export const getReportRows = async (req, res, next) => {
       let queryStr = `
         SELECT 
           sm.movement_id,
-          sm.product_id,
+          sm.variant_id,
+          p.product_id,
           sm.movement_type,
           sm.qty,
           sm.notes,
@@ -153,13 +154,15 @@ export const getReportRows = async (req, res, next) => {
           json_build_object(
             'product_id', p.product_id,
             'product_code', p.product_code,
+            'sku', pv.sku,
             'product_name', p.product_name,
-            'unit_price', p.unit_price,
+            'unit_price', pv.unit_price,
             'image_url', p.image_url,
             'department', p.department
           ) AS products
-        FROM stock_movements sm
-        LEFT JOIN products p ON sm.product_id = p.product_id
+        FROM tb_stock_movement sm
+        JOIN tb_product_variant pv ON sm.variant_id = pv.variant_id
+        JOIN tb_product p ON pv.product_id = p.product_id
         WHERE sm.created_at >= $1 AND sm.created_at <= $2
       `;
       const params = [from, to];
@@ -180,14 +183,22 @@ export const getReportRows = async (req, res, next) => {
         SELECT 
           l.loan_id,
           l.loan_code,
-          l.worker_id,
           l.loan_date,
           l.due_date,
           l.loan_status,
-          json_build_object(
-            'worker_id', w.worker_id,
-            'worker_code', w.worker_code,
-            'worker_name', w.worker_name
+          COALESCE(
+            (
+              SELECT json_build_object(
+                'worker_id', w.worker_id,
+                'worker_code', w.worker_code,
+                'worker_name', w.worker_name
+              )
+              FROM tb_loan_worker lw
+              JOIN tb_worker w ON lw.worker_id = w.worker_id
+              WHERE lw.loan_id = l.loan_id
+              LIMIT 1
+            ),
+            json_build_object('worker_id', 0, 'worker_code', '', 'worker_name', 'Unassigned')
           ) AS workers,
           COALESCE(
             (
@@ -196,18 +207,16 @@ export const getReportRows = async (req, res, next) => {
                 'qty', li.qty,
                 'returned_qty', li.returned_qty
               ))
-              FROM loan_items li
+              FROM tb_loan_item li
               WHERE li.loan_id = l.loan_id
             ),
             '[]'::json
           ) AS loan_items
-        FROM loans l
-        LEFT JOIN workers w ON l.worker_id = w.worker_id
+        FROM tb_loan l
         WHERE l.loan_date >= $1 AND l.loan_date <= $2
           AND l.loan_status NOT IN ('RETURNED', 'CANCELLED')
         ORDER BY l.due_date ASC;
       `;
-      // Slice ISO dates to YYYY-MM-DD for date comparison
       const { rows } = await pool.query(queryStr, [from.slice(0, 10), to.slice(0, 10)]);
       return res.status(200).json({ status: 'success', data: rows });
     }
@@ -227,22 +236,24 @@ export const getReportRows = async (req, res, next) => {
             'category_id', c.category_id,
             'category_name', c.category_name
           ) AS categories
-        FROM products p
-        LEFT JOIN categories c ON p.category_id = c.category_id
+        FROM tb_product p
+        LEFT JOIN tb_category c ON p.category_id = c.category_id
         WHERE p.created_at <= $1
         ORDER BY p.product_name ASC;
       `;
 
       const movementsQuery = `
         SELECT 
-          movement_id,
-          product_id,
-          movement_type,
-          qty,
-          created_at
-        FROM stock_movements
-        WHERE movement_type = ANY($1) AND created_at <= $2
-        ORDER BY created_at ASC;
+          sm.movement_id,
+          pv.product_id,
+          sm.variant_id,
+          sm.movement_type,
+          sm.qty,
+          sm.created_at
+        FROM tb_stock_movement sm
+        JOIN tb_product_variant pv ON sm.variant_id = pv.variant_id
+        WHERE sm.movement_type = ANY($1) AND sm.created_at <= $2
+        ORDER BY sm.created_at ASC;
       `;
 
       const [productsRes, movementsRes] = await Promise.all([
@@ -263,22 +274,25 @@ export const getReportRows = async (req, res, next) => {
     const queryStr = `
       SELECT 
         sb.stock_balance_id,
-        sb.product_id,
+        p.product_id,
+        pv.variant_id,
         sb.on_hand_qty,
         sb.reserved_qty,
         sb.updated_at,
         json_build_object(
           'product_id', p.product_id,
           'product_code', p.product_code,
+          'sku', pv.sku,
           'product_name', p.product_name,
           'categories', json_build_object(
             'category_id', c.category_id,
             'category_name', c.category_name
           )
         ) AS products
-      FROM stock_balances sb
-      LEFT JOIN products p ON sb.product_id = p.product_id
-      LEFT JOIN categories c ON p.category_id = c.category_id
+      FROM tb_stock_balance sb
+      JOIN tb_product_variant pv ON sb.variant_id = pv.variant_id
+      JOIN tb_product p ON pv.product_id = p.product_id
+      LEFT JOIN tb_category c ON p.category_id = c.category_id
       ORDER BY sb.updated_at DESC;
     `;
     const { rows } = await pool.query(queryStr);
