@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Box, Typography, Chip, TextField, IconButton, CircularProgress } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { useAttributeValues } from '../hooks/useAttributes';
 
 const AttributeValuesPanel = ({ attribute }) => {
@@ -20,42 +21,42 @@ const AttributeValuesPanel = ({ attribute }) => {
   if (!attribute) return null;
 
   return (
-    <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 1, border: '1px solid #e2e8f0', mt: 2 }}>
-      <Typography variant="subtitle2" sx={{ mb: 2, color: '#334155' }}>
-        Values for <strong>{attribute.attribute_name}</strong>
-      </Typography>
+    <Box sx={{ animation: 'fadeIn 0.3s ease-out' }}>
+      <h2 className="attribute-panel-title">{attribute.attribute_name}</h2>
+      <p className="attribute-panel-subtitle">Manage allowed values for this attribute.</p>
       
       {loading ? (
-        <CircularProgress size={20} />
+        <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>
       ) : (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+        <div className="attribute-chip-cloud">
           {values.map((v) => (
-            <Chip
-              key={v.value_id}
-              label={v.value}
-              onDelete={() => handleDeleteValue(v.value_id)}
-              size="small"
-              sx={{ bgcolor: 'white', border: '1px solid #cbd5e1' }}
-            />
+            <div key={v.value_id} className="attribute-chip">
+              {v.value}
+              <div 
+                className="attribute-chip__delete" 
+                onClick={() => handleDeleteValue(v.value_id)}
+                title="Delete value"
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </div>
+            </div>
           ))}
-          {values.length === 0 && (
-            <Typography variant="body2" color="textSecondary">No values defined yet.</Typography>
-          )}
-        </Box>
-      )}
 
-      <form onSubmit={onAdd} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-        <TextField
-          size="small"
-          placeholder="New value (e.g., Red)"
-          value={newValue}
-          onChange={(e) => setNewValue(e.target.value)}
-          disabled={adding}
-        />
-        <IconButton type="submit" color="primary" disabled={!newValue.trim() || adding} size="small" sx={{ bgcolor: '#e0e7ff' }}>
-          <AddIcon />
-        </IconButton>
-      </form>
+          <form onSubmit={onAdd} className="attribute-inline-add">
+            <input
+              type="text"
+              placeholder="Add new value..."
+              value={newValue}
+              onChange={(e) => setNewValue(e.target.value)}
+              disabled={adding}
+              autoFocus
+            />
+            <button type="submit" disabled={!newValue.trim() || adding} title="Add value">
+              <AddRoundedIcon fontSize="small" />
+            </button>
+          </form>
+        </div>
+      )}
     </Box>
   );
 };

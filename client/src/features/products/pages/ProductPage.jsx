@@ -62,6 +62,7 @@ const ProductPage = () => {
   const {
     rows = [],
     categories = [],
+    brands = [],
     loading,
     submitting,
     handleAdd,
@@ -232,6 +233,12 @@ const ProductPage = () => {
         headerName: 'Category',
         flex: 1,
         renderCell: (params) => params.row.category || '—',
+      },
+      {
+        field: 'brand',
+        headerName: 'Brand',
+        flex: 1,
+        renderCell: (params) => params.row.brand || '—',
       },
       {
         field: 'department',
@@ -414,6 +421,7 @@ const ProductPage = () => {
         onSubmit={handleSubmit}
         submitting={submitting}
         categories={categories}
+        brands={brands}
         defaultValues={modal.mode === 'create' ? null : modal.editRow}
         mode={modal.mode}
       />

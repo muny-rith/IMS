@@ -10,6 +10,7 @@ import ApiError from './src/shared/errors/ApiError.js';
 // Route imports
 import authRoutes from './src/features/auth/auth.routes.js';
 import categoryRoutes from './src/features/categories/category.routes.js';
+import brandRoutes from './src/features/brands/brand.routes.js';
 import productRoutes from './src/features/products/product.routes.js';
 import workerRoutes from './src/features/workers/worker.routes.js';
 import loanRoutes from './src/features/loans/loan.routes.js';
@@ -45,6 +46,7 @@ app.get('/health', (req, res) => {
 // Mounting routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/brands', brandRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/loans', loanRoutes);

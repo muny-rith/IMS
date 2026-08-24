@@ -1,62 +1,97 @@
-import { useState, useEffect, useCallback } from 'react';
-import * as purchaseRequestService from '../services/purchaseRequestService';
+import { useCallback, useEffect, useState } from 'react';
 
-export const usePurchaseRequests = () => {
-  const [requests, setRequests] = useState([]);
+import {
+  approvePurchaseRequest,
+  cancelPurchaseRequest,
+  createPurchaseRequest,
+  fetchProductsForPurchaseRequest,
+  fetchPurchaseRequests,
+  rejectPurchaseRequest,
+  updatePurchaseRequest,
+} from '../services/purchaseRequestService';
+
+const toResult = (callback) =>
+  callback()
+    .then((data) => ({
+      success: true,
+      data,
+    }))
+    .catch((error) => ({
+      success: false,
+      message: error.message,
+    }));
+
+const usePurchaseRequests = () => {
+  const [rows, setRows] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const loadRequests = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setError('');
+
     try {
-      const data = await purchaseRequestService.fetchPurchaseRequests();
-      setRequests(data);
-    } catch (err) {
-      console.error('Failed to load purchase requests', err);
+      const [requestRows, productOptions] = await Promise.all([
+        fetchPurchaseRequests(),
+        fetchProductsForPurchaseRequest(),
+      ]);
+
+      setRows(requestRows);
+      setProducts(productOptions);
+    } catch (loadError) {
+      setError(loadError.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadRequests();
-  }, [loadRequests]);
+    load();
+  }, [load]);
 
-  const handleCreate = async (data) => {
-    try {
-      await purchaseRequestService.createPurchaseRequest(data);
-      await loadRequests();
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
+  const runMutation = async (callback) => {
+    setSubmitting(true);
+
+    const result = await toResult(async () => {
+      const mutationResult = await callback();
+      await load();
+      return mutationResult;
+    });
+
+    setSubmitting(false);
+    return result;
   };
 
-  const handleUpdateStatus = async (id, status) => {
-    try {
-      await purchaseRequestService.updatePurchaseRequestStatus(id, status);
-      await loadRequests();
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
-  };
+  const handleCreate = (data) =>
+    runMutation(() => createPurchaseRequest(data));
 
-  const handleReceive = async (id, receivedItems) => {
-    try {
-      await purchaseRequestService.receivePurchaseRequest(id, receivedItems);
-      await loadRequests();
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
-  };
+  const handleUpdate = (id, data) =>
+    runMutation(() => updatePurchaseRequest(id, data));
+
+  const handleApprove = (id, actor) =>
+    runMutation(() => approvePurchaseRequest(id, actor));
+
+  const handleReject = (id, actor) =>
+    runMutation(() => rejectPurchaseRequest(id, actor));
+
+  const handleCancel = (id, actor) =>
+    runMutation(() => cancelPurchaseRequest(id, actor));
 
   return {
-    requests,
+    rows,
+    products,
     loading,
+    submitting,
+    error,
+    refetch: load,
     handleCreate,
-    handleUpdateStatus,
-    handleReceive,
-    refresh: loadRequests,
+    handleUpdate,
+    handleApprove,
+    handleReject,
+    handleCancel,
   };
 };
+
+export default usePurchaseRequests;

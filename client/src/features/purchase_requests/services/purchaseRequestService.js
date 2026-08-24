@@ -1,26 +1,119 @@
 import api from '../../../lib/api';
 
-export const fetchPurchaseRequests = async () => {
-  const response = await api.get('/purchase-requests');
-  return response.data.data;
+const normalizePurchaseRequestItem = (item) => {
+  return {
+    id: item.purchase_request_item_id,
+    productId: item.product_id,
+    productCode: item.product_code ?? '',
+    productName: item.product_name ?? '',
+    customItemName: item.custom_item_name ?? '',
+    requestedQty: Number(item.requested_qty ?? 0),
+    receivedQty: Number(item.received_qty ?? 0),
+    reason: item.reason ?? '',
+    notes: item.notes ?? '',
+  };
 };
 
-export const fetchPurchaseRequestById = async (id) => {
-  const response = await api.get(`/purchase-requests/${id}`);
-  return response.data.data;
+const normalizePurchaseRequestRow = (row) => {
+  const items = (row.items ?? []).map(normalizePurchaseRequestItem);
+
+  return {
+    id: row.purchase_request_id,
+    requestNo: row.request_no,
+    requestedBy: row.requested_by,
+    requestedDate: row.requested_date,
+    purpose: row.purpose ?? '',
+    status: row.request_status,
+    approvedBy: row.approved_by,
+    approvedAt: row.approved_at,
+    rejectedBy: row.rejected_by,
+    rejectedAt: row.rejected_at,
+    receivedBy: row.received_by,
+    receivedAt: row.received_at,
+    notes: row.notes ?? '',
+    totalItems: items.length,
+    totalRequestedQty: items.reduce((sum, item) => sum + item.requestedQty, 0),
+    totalReceivedQty: items.reduce((sum, item) => sum + item.receivedQty, 0),
+    items,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+};
+
+const normalizeCreateItems = (items) => {
+  const normalized = (items ?? [])
+    .map((item) => {
+      const productId = item.productId ? Number(item.productId) : null;
+      const customItemName = item.customItemName?.trim() || '';
+
+      return {
+        productId,
+        customItemName: productId ? '' : customItemName,
+        requestedQty: Number(item.requestedQty ?? item.qty),
+        reason: item.reason?.trim() || '',
+        notes: item.notes?.trim() || '',
+      };
+    })
+    .filter(
+      (item) => item.requestedQty > 0 && (item.productId || item.customItemName)
+    );
+
+  if (!normalized.length) {
+    throw new Error('At least one requested item is required.');
+  }
+
+  return normalized;
+};
+
+export const fetchPurchaseRequests = async () => {
+  const response = await api.get('/purchase-requests');
+  return (response.data.data ?? []).map(normalizePurchaseRequestRow);
+};
+
+export const fetchProductsForPurchaseRequest = async () => {
+  const response = await api.get('/products');
+  return (response.data.data ?? []).map((row) => ({
+    id: row.product_id,
+    code: row.product_code,
+    name: row.product_name,
+    label: `${row.product_code} - ${row.product_name}`,
+  }));
 };
 
 export const createPurchaseRequest = async (data) => {
-  const response = await api.post('/purchase-requests', data);
-  return response.data.data;
+  const response = await api.post('/purchase-requests', {
+    request_no: data.requestNo,
+    requested_by: data.requestedBy,
+    requestedDate: data.requestedDate,
+    purpose: data.purpose,
+    notes: data.notes,
+    items: normalizeCreateItems(data.items),
+  });
+  return response.data.data.purchase_request_id;
 };
 
-export const updatePurchaseRequestStatus = async (id, status) => {
-  const response = await api.patch(`/purchase-requests/${id}/status`, { status });
-  return response.data.data;
+export const updatePurchaseRequest = async (id, data) => {
+  const response = await api.put(`/purchase-requests/${id}`, {
+    requestedBy: data.requestedBy,
+    requestedDate: data.requestedDate,
+    purpose: data.purpose,
+    notes: data.notes,
+    items: normalizeCreateItems(data.items),
+  });
+  return response.data.data.purchase_request_id;
 };
 
-export const receivePurchaseRequest = async (id, receivedItems) => {
-  const response = await api.post(`/purchase-requests/${id}/receive`, { received_items: receivedItems });
-  return response.data;
+export const approvePurchaseRequest = async (id, actor) => {
+  const response = await api.put(`/purchase-requests/${id}/status`, { status: 'APPROVED' });
+  return response.data.data.purchase_request_id;
+};
+
+export const rejectPurchaseRequest = async (id, actor) => {
+  const response = await api.put(`/purchase-requests/${id}/status`, { status: 'REJECTED' });
+  return response.data.data.purchase_request_id;
+};
+
+export const cancelPurchaseRequest = async (id, actor) => {
+  const response = await api.put(`/purchase-requests/${id}/status`, { status: 'CANCELLED' });
+  return response.data.data.purchase_request_id;
 };

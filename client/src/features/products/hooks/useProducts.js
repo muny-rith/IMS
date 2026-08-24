@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   fetchProducts,
   fetchCategories,
+  fetchBrands,
   addProduct,
   updateProduct,
   deleteProduct,
@@ -10,6 +11,7 @@ import {
 export const useProducts = () => {
   const [rows, setRows] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -34,15 +36,17 @@ export const useProducts = () => {
         setLoading(true);
         setError(null);
 
-        const [productRows, categoryRows] = await Promise.all([
+        const [productRows, categoryRows, brandRows] = await Promise.all([
           fetchProducts(),
           fetchCategories(),
+          fetchBrands(),
         ]);
 
         if (!active) return;
 
         setRows(productRows);
         setCategories(categoryRows);
+        setBrands(brandRows);
       } catch (err) {
         if (!active) return;
         setError(err.message || 'Failed to load products.');
@@ -114,6 +118,7 @@ export const useProducts = () => {
   return {
     rows,
     categories,
+    brands,
     loading,
     submitting,
     error,

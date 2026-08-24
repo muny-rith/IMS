@@ -1,0 +1,2 @@
+ALTER TABLE tb_brand ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE tb_category ADD COLUMN IF NOT EXISTS image_url TEXT;

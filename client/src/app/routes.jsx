@@ -8,6 +8,7 @@ import LoginPage from "../features/auth/pages/LoginPage";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import ProductPage from "../features/products/pages/ProductPage";
 import CategoryPage from "../features/categories/pages/CategoryPage";
+import BrandPage from "../features/brands/pages/BrandPage";
 import LoanPage from "../features/loans/pages/LoanPage";
 import WorkerPage from "../features/workers/pages/WorkerPage";
 import StockPage from "../features/stocks/pages/StockAdjustmentPage";
@@ -29,6 +30,7 @@ function AppRoutes() {
           <Route path={ROUTE_SEGMENTS.products} element={<ProductPage />} />
           <Route path={ROUTE_SEGMENTS.stocks} element={<StockPage />} />
           <Route path={ROUTE_SEGMENTS.categories} element={<CategoryPage />} />
+          <Route path={ROUTE_SEGMENTS.brands} element={<BrandPage />} />
           <Route path={ROUTE_SEGMENTS.loans} element={<LoanPage />} />
           <Route path={ROUTE_SEGMENTS.workers} element={<WorkerPage />} />
           <Route path={ROUTE_SEGMENTS.reports} element={<ReportPage />} />

@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
+import './attribute.css';
 import '../../products/pages/product.css';
 import { Box, CircularProgress, IconButton, Tooltip, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
+import DashboardCustomizeOutlinedIcon from '@mui/icons-material/DashboardCustomizeOutlined';
 
-import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import { useAttributes } from '../hooks/useAttributes';
@@ -15,7 +16,7 @@ import AttributeModal from '../components/AttributeModal';
 import AttributeValuesPanel from '../components/AttributeValuesPanel';
 
 const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
-  <div className={`product-summary-card product-summary-card--${tone}`}>
+  <div className={'product-summary-card product-summary-card--' + tone}>
     <div className="product-summary-card__icon">{icon}</div>
     <div className="product-summary-card__content">
       <div className="product-summary-card__title">{title}</div>
@@ -62,6 +63,9 @@ const AttributePage = () => {
     const result = await handleDelete(deleting);
     setDeleting(null);
     if (result.success) {
+      if (expandedAttribute?.attribute_id === deleting) {
+        setExpandedAttribute(null);
+      }
       showToast('Attribute deleted.');
     } else {
       showToast(result.message || 'Error deleting attribute', 'error');
@@ -87,52 +91,8 @@ const AttributePage = () => {
     ];
   }, [attributes.length, filteredAttributes.length]);
 
-  const columns = useMemo(() => [
-    { field: 'attribute_name', headerName: 'Attribute Name', flex: 1 },
-    {
-      field: 'action',
-      headerName: 'Actions',
-      flex: 0.5,
-      align: 'right',
-      headerAlign: 'right',
-      renderCell: (params) => (
-        <Box className="product-table-actions" sx={{ justifyContent: 'flex-end', width: '100%', pr: 2 }}>
-          <Tooltip title="Manage Values">
-            <IconButton
-              size="small"
-              className="product-action product-action--view"
-              onClick={() => setExpandedAttribute(
-                expandedAttribute?.attribute_id === params.row.attribute_id ? null : params.row
-              )}
-            >
-              <FormatListBulletedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Edit">
-            <IconButton
-              size="small"
-              className="product-action product-action--edit"
-              onClick={() => setModal({ open: true, mode: 'edit', editRow: params.row })}
-            >
-              <EditIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              size="small"
-              className="product-action product-action--delete"
-              onClick={() => setDeleting(params.row.attribute_id)}
-            >
-              <DeleteIcon sx={{ fontSize: 18 }} />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      ),
-    },
-  ], [expandedAttribute]);
-
   return (
-    <div className="product-page">
+    <div className="product-page attribute-page">
       <section className="product-page__hero">
         <div>
           <p className="product-page__eyebrow">Variant Engine</p>
@@ -156,54 +116,75 @@ const AttributePage = () => {
         </div>
       </section>
 
-      <section className="product-panel">
-        <section className="product-toolbar">
-          <div>
-            <h6 className="product-panel__title">Current Attributes</h6>
-            <p className="product-panel__subtitle">
-              Search and manage your global attribute keys and allowed values.
-            </p>
-          </div>
-
-          <div className="product-toolbar__controls">
-            <Button value="New Attribute" onClick={() => setModal({ open: true, mode: 'create', editRow: null })} />
-            <div className="product-toolbar__search">
-              <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-                placeholder="Search attributes..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-        </section>
-
-        <div className="product-panel__header">
-          <div className="product-panel__meta">
-            <p className="product-panel__eyebrow">Live attributes</p>
-            <div className="product-panel__badge">{filteredAttributes.length} visible</div>
-          </div>
+      <section className="product-toolbar">
+        <div>
+          <h6 className="product-panel__title">Current Attributes</h6>
+          <p className="product-panel__subtitle">
+            Select an attribute to manage its allowed values.
+          </p>
         </div>
 
-        <div className="product-panel__body">
+        <div className="product-toolbar__controls">
+          <Button value="New Attribute" onClick={() => setModal({ open: true, mode: 'create', editRow: null })} />
+          <div className="product-toolbar__search">
+            <Input
+              leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+              placeholder="Search attributes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="attribute-split-pane">
+        {/* LEFT PANE - MASTER LIST */}
+        <div className="attribute-left-pane">
           {loading ? (
             <Box display="flex" justifyContent="center" py={5}><CircularProgress /></Box>
-          ) : (
-            <div className="product-desktop-table">
-              <DataTable 
-                rows={filteredAttributes.map(a => ({ id: a.attribute_id, ...a }))} 
-                columns={columns} 
-              />
+          ) : filteredAttributes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+              No attributes found.
             </div>
+          ) : (
+            filteredAttributes.map(attr => (
+              <div 
+                key={attr.attribute_id} 
+                className={'attribute-card' + (expandedAttribute?.attribute_id === attr.attribute_id ? ' active' : '')}
+                onClick={() => setExpandedAttribute(attr)}
+              >
+                <div className="attribute-card__title">{attr.attribute_name}</div>
+                <div className="attribute-card__actions" onClick={(e) => e.stopPropagation()}>
+                  <Tooltip title="Edit">
+                    <IconButton size="small" onClick={() => setModal({ open: true, mode: 'edit', editRow: attr })}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" onClick={() => setDeleting(attr.attribute_id)}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <ChevronRightIcon sx={{ color: expandedAttribute?.attribute_id === attr.attribute_id ? '#4f46e5' : '#cbd5e1', ml: 1 }} />
+                </div>
+              </div>
+            ))
           )}
         </div>
 
-        {expandedAttribute && (
-          <Box sx={{ mt: 3, p: 3, bgcolor: '#ffffff', borderRadius: 4, border: '1px solid #eef2f7', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.04)' }}>
+        {/* RIGHT PANE - DETAIL VIEW */}
+        <div className="attribute-right-pane">
+          {expandedAttribute ? (
             <AttributeValuesPanel attribute={expandedAttribute} />
-          </Box>
-        )}
-      </section>
+          ) : (
+            <div className="attribute-empty-state">
+              <DashboardCustomizeOutlinedIcon />
+              <h3>Select an Attribute</h3>
+              <p>Click on an attribute from the left menu to view and manage its predefined values.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       <AttributeModal
         open={modal.open}

@@ -1,150 +1,353 @@
-import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Box, IconButton, MenuItem, Typography } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import Button from '../../../components/ui/Button/Button';
-import { fetchProducts } from '../../products/services/productService';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Autocomplete, TextField } from '@mui/material';
 
-const PurchaseRequestModal = ({ open, onClose, onSubmit, submitting }) => {
-  const [requestCode, setRequestCode] = useState('');
-  const [supplierName, setSupplierName] = useState('');
-  const [expectedDate, setExpectedDate] = useState('');
-  const [notes, setNotes] = useState('');
-  const [items, setItems] = useState([]);
-  
-  const [products, setProducts] = useState([]);
+const EMPTY_ITEM = {
+  itemType: 'product',
+  productId: '',
+  customItemName: '',
+  qty: 1,
+  reason: '',
+};
+
+const createEmptyForm = () => ({
+  requestedBy: '',
+  requestedDate: new Date().toISOString().slice(0, 10),
+  purpose: '',
+  items: [{ ...EMPTY_ITEM }],
+});
+
+const normalizeFormValues = (defaultValues, mode) => {
+  if (!defaultValues || mode === 'create') {
+    return createEmptyForm();
+  }
+
+  return {
+    requestedBy: defaultValues.requestedBy ?? '',
+    requestedDate:
+      defaultValues.requestedDate ?? new Date().toISOString().slice(0, 10),
+    purpose: defaultValues.purpose ?? '',
+    items: defaultValues.items?.length
+      ? defaultValues.items.map((item) => ({
+          itemType: item.productId ? 'product' : 'custom',
+          productId:
+            item.productId !== undefined && item.productId !== null
+              ? String(item.productId)
+              : '',
+          customItemName: item.customItemName ?? '',
+          qty: item.requestedQty ?? item.qty ?? 1,
+          reason: item.reason ?? '',
+        }))
+      : [{ ...EMPTY_ITEM }],
+  };
+};
+
+const PurchaseRequestModal = ({
+  open,
+  onClose,
+  onSubmit,
+  products = [],
+  submitting = false,
+  mode = 'create',
+  defaultValues = null,
+}) => {
+  const [form, setForm] = useState(createEmptyForm);
+  const isEdit = mode === 'edit';
+  const formValues = useMemo(
+    () => normalizeFormValues(defaultValues, mode),
+    [defaultValues, mode]
+  );
 
   useEffect(() => {
     if (open) {
-      setRequestCode(`PR-${Date.now().toString().slice(-6)}`);
-      setSupplierName('');
-      setExpectedDate('');
-      setNotes('');
-      setItems([]);
-      loadProducts();
+      setForm(formValues);
     }
-  }, [open]);
+  }, [formValues, open]);
 
-  const loadProducts = async () => {
-    try {
-      const data = await fetchProducts();
-      setProducts(data);
-    } catch (e) {
-      console.error(e);
+  if (!open) return null;
+
+  const getSelectedProduct = (productId) =>
+    products.find((product) => String(product.id) === String(productId)) ?? null;
+
+  const updateField = (field, value) => {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  };
+
+  const updateItem = (index, field, value) => {
+    setForm((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const updateItemType = (index, itemType) => {
+    setForm((current) => ({
+      ...current,
+      items: current.items.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              itemType,
+              productId: itemType === 'product' ? item.productId : '',
+              customItemName:
+                itemType === 'custom' ? item.customItemName : '',
+            }
+          : item
+      ),
+    }));
+  };
+
+  const addItem = () => {
+    setForm((current) => ({
+      ...current,
+      items: [...current.items, { ...EMPTY_ITEM }],
+    }));
+  };
+
+  const removeItem = (index) => {
+    setForm((current) => ({
+      ...current,
+      items:
+        current.items.length === 1
+          ? current.items
+          : current.items.filter((_item, itemIndex) => itemIndex !== index),
+    }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    const items = form.items
+      .map((item) => {
+        const isCustom = item.itemType === 'custom';
+
+        return {
+          productId: isCustom ? null : Number(item.productId),
+          customItemName: isCustom ? item.customItemName.trim() : '',
+          requestedQty: Number(item.qty),
+          reason: item.reason.trim(),
+        };
+      })
+      .filter(
+        (item) =>
+          item.requestedQty > 0 && (item.productId || item.customItemName)
+      );
+
+    if (!form.requestedBy.trim() || !form.requestedDate || !items.length) {
+      return;
     }
-  };
 
-  const handleAddItem = () => {
-    setItems([...items, { variant_id: '', requested_qty: 1, unit_cost: 0 }]);
-  };
-
-  const handleRemoveItem = (index) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
-
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index][field] = value;
-    setItems(newItems);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
     onSubmit({
-      request_code: requestCode,
-      supplier_name: supplierName,
-      expected_delivery_date: expectedDate || null,
-      notes,
-      items: items.map(item => ({
-        variant_id: item.variant_id,
-        requested_qty: Number(item.requested_qty),
-        unit_cost: Number(item.unit_cost)
-      }))
+      requestedBy: form.requestedBy.trim(),
+      requestedDate: form.requestedDate,
+      purpose: form.purpose.trim(),
+      items,
     });
   };
 
+  let submitLabel = isEdit ? 'Save Changes' : 'Create Request';
+
+  if (submitting) {
+    submitLabel = isEdit ? 'Saving...' : 'Creating...';
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <form onSubmit={handleSubmit}>
-        <DialogTitle>New Purchase Request</DialogTitle>
-        <DialogContent dividers>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 3 }}>
-            <TextField
-              label="Request Code"
+    <div className="purchase-request-modal" role="dialog" aria-modal="true">
+      <div className="purchase-request-modal__backdrop" onClick={onClose} />
+
+      <form className="purchase-request-modal__paper" onSubmit={handleSubmit}>
+        <div className="purchase-request-modal__header">
+          <div>
+            <p className="purchase-request-eyebrow">
+              {isEdit ? 'Edit request' : 'Material request'}
+            </p>
+            <h3>បណ្ណស្នើរទិញសម្ភារៈ</h3>
+          </div>
+
+          <button
+            type="button"
+            className="purchase-request-icon-button"
+            onClick={onClose}
+            disabled={submitting}
+            aria-label="Close purchase request form"
+          >
+            x
+          </button>
+        </div>
+
+        <div className="purchase-request-form-grid">
+          <label className="purchase-request-field">
+            <span>Requested By *</span>
+            <input
+              value={form.requestedBy}
+              onChange={(event) => updateField('requestedBy', event.target.value)}
+              placeholder="Example: Warehouse"
+              disabled={submitting}
               required
-              value={requestCode}
-              onChange={(e) => setRequestCode(e.target.value)}
             />
-            <TextField
-              label="Supplier Name"
-              value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
-            />
-            <TextField
-              label="Expected Delivery Date"
+          </label>
+
+          <label className="purchase-request-field">
+            <span>Request Date *</span>
+            <input
               type="date"
-              InputLabelProps={{ shrink: true }}
-              value={expectedDate}
-              onChange={(e) => setExpectedDate(e.target.value)}
+              value={form.requestedDate}
+              onChange={(event) =>
+                updateField('requestedDate', event.target.value)
+              }
+              disabled={submitting}
+              required
             />
-            <TextField
-              label="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </Box>
+          </label>
+        </div>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Requested Items</Typography>
-            <IconButton color="primary" onClick={handleAddItem}><AddCircleIcon /></IconButton>
-          </Box>
+        <label className="purchase-request-field">
+          <span>Purpose / Note</span>
+          <textarea
+            value={form.purpose}
+            onChange={(event) => updateField('purpose', event.target.value)}
+            placeholder="Why are these materials needed?"
+            rows={3}
+            disabled={submitting}
+          />
+        </label>
 
-          {items.map((item, index) => (
-            <Box key={index} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'center' }}>
-              <TextField
-                select
-                label="Product/Variant"
-                fullWidth
-                required
-                value={item.variant_id}
-                onChange={(e) => handleItemChange(index, 'variant_id', e.target.value)}
+        <div className="purchase-request-items">
+          <div className="purchase-request-items__header">
+            <strong>Requested items</strong>
+            <button
+              type="button"
+              className="purchase-request-secondary-button"
+              onClick={addItem}
+              disabled={submitting}
+            >
+              Add item
+            </button>
+          </div>
+
+          {form.items.map((item, index) => (
+            <div className="purchase-request-item-row" key={index}>
+              <label className="purchase-request-field">
+                <span>Item Type *</span>
+                <select
+                  value={item.itemType}
+                  onChange={(event) => updateItemType(index, event.target.value)}
+                  disabled={submitting}
+                >
+                  <option value="product">Product</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </label>
+
+              <label className="purchase-request-field">
+                <span>{item.itemType === 'custom' ? 'Custom Item *' : 'Product *'}</span>
+                {item.itemType === 'custom' ? (
+                  <input
+                    value={item.customItemName}
+                    onChange={(event) =>
+                      updateItem(index, 'customItemName', event.target.value)
+                    }
+                    placeholder="Example: Pen"
+                    disabled={submitting}
+                    required
+                  />
+                ) : (
+                  <Autocomplete
+                    options={products}
+                    value={getSelectedProduct(item.productId)}
+                    disabled={submitting}
+                    disablePortal={false}
+                    isOptionEqualToValue={(option, value) =>
+                      String(option.id) === String(value.id)
+                    }
+                    getOptionLabel={(option) => option?.label ?? ''}
+                    onChange={(_event, option) =>
+                      updateItem(index, 'productId', option ? String(option.id) : '')
+                    }
+                    componentsProps={{
+                      popper: {
+                        className: 'purchase-request-product-popper',
+                        modifiers: [{ name: 'flip', enabled: false }],
+                      },
+                      paper: {
+                        className: 'purchase-request-product-paper',
+                      },
+                    }}
+                    ListboxProps={{
+                      className: 'purchase-request-product-listbox',
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        required
+                        size="small"
+                        placeholder="Search product..."
+                        className="purchase-request-product-input"
+                      />
+                    )}
+                  />
+                )}
+              </label>
+
+              <label className="purchase-request-field">
+                <span>Qty *</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={item.qty}
+                  onChange={(event) => updateItem(index, 'qty', event.target.value)}
+                  disabled={submitting}
+                  required
+                />
+              </label>
+
+              <label className="purchase-request-field">
+                <span>Reason</span>
+                <input
+                  value={item.reason}
+                  onChange={(event) =>
+                    updateItem(index, 'reason', event.target.value)
+                  }
+                  placeholder="Optional"
+                  disabled={submitting}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="purchase-request-remove-button"
+                onClick={() => removeItem(index)}
+                disabled={submitting || form.items.length === 1}
               >
-                {products.map(p => (
-                  <MenuItem key={p.id} value={p.id}>
-                    {p.name} {p.code ? `(${p.code})` : ''}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                label="Qty"
-                type="number"
-                required
-                inputProps={{ min: 1 }}
-                sx={{ width: '120px' }}
-                value={item.requested_qty}
-                onChange={(e) => handleItemChange(index, 'requested_qty', e.target.value)}
-              />
-              <TextField
-                label="Est. Cost ($)"
-                type="number"
-                inputProps={{ min: 0, step: 0.01 }}
-                sx={{ width: '150px' }}
-                value={item.unit_cost}
-                onChange={(e) => handleItemChange(index, 'unit_cost', e.target.value)}
-              />
-              <IconButton color="error" onClick={() => handleRemoveItem(index)}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
+                Remove
+              </button>
+            </div>
           ))}
-          
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button value="Cancel" variant="text" onClick={onClose} disabled={submitting} />
-          <Button value="Submit Request" type="submit" loading={submitting} disabled={items.length === 0} />
-        </DialogActions>
+        </div>
+
+        <div className="purchase-request-modal__actions">
+          <button
+            type="button"
+            className="purchase-request-secondary-button"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="purchase-request-primary-button"
+            disabled={submitting}
+          >
+            {submitLabel}
+          </button>
+        </div>
       </form>
-    </Dialog>
+    </div>
   );
 };
 

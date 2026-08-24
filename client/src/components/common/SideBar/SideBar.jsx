@@ -13,6 +13,7 @@ import StyleIcon from '@mui/icons-material/Style';
 import OutputIcon from '@mui/icons-material/Output';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
 const navItems = [
   { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard' },
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/attributes', icon: <StyleIcon />,          label: 'Attribute' },
   { to: '/stocks',    icon: <Inventory2Icon />,      label: 'Stock'     },
   { to: '/categories',  icon: <TableRowsIcon />,     label: 'Category'  },
+  { to: '/brands',      icon: <LocalOfferIcon />,    label: 'Brand'     },
   { to: '/loans',      icon: <PaidIcon />,           label: 'Loan'      },
   { to: '/sales',      icon: <PointOfSaleIcon />,    label: 'Sales'     },
   { to: '/stock-issues', icon: <OutputIcon />,       label: 'Issue'     },

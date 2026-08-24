@@ -43,6 +43,17 @@ CREATE TABLE IF NOT EXISTS tb_category (
 );
 
 -- ------------------------------------------------------------
+-- 2a. tb_brand
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tb_brand (
+  brand_id       SERIAL PRIMARY KEY,
+  brand_name     VARCHAR(100) NOT NULL UNIQUE,
+  description    TEXT,
+  created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- ------------------------------------------------------------
 -- 3. tb_attribute
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tb_attribute (
@@ -79,6 +90,7 @@ CREATE TABLE IF NOT EXISTS tb_product (
   product_code   VARCHAR(50) NOT NULL UNIQUE,
   product_name   VARCHAR(150) NOT NULL,
   category_id    INT NOT NULL REFERENCES tb_category(category_id) ON DELETE RESTRICT,
+  brand_id       INT REFERENCES tb_brand(brand_id) ON DELETE RESTRICT,
   department     VARCHAR(100),
   is_active      BOOLEAN NOT NULL DEFAULT TRUE,
   image_url      TEXT,
@@ -306,6 +318,7 @@ CREATE TABLE IF NOT EXISTS tb_purchase_request_item (
 -- Indexes
 -- ------------------------------------------------------------
 CREATE INDEX IF NOT EXISTS idx_product_category_id ON tb_product(category_id);
+CREATE INDEX IF NOT EXISTS idx_product_brand_id ON tb_product(brand_id);
 CREATE INDEX IF NOT EXISTS idx_product_variant_product_id ON tb_product_variant(product_id);
 CREATE INDEX IF NOT EXISTS idx_variant_attr_value_variant_id ON tb_variant_attribute_value(variant_id);
 CREATE INDEX IF NOT EXISTS idx_attribute_value_attribute_id ON tb_attribute_value(attribute_id);

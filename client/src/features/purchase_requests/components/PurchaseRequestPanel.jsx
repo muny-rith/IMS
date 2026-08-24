@@ -16,7 +16,7 @@ import {
   getPurchaseRequestItemLabel,
   getPurchaseRequestStatusClassName,
 } from './purchaseRequestViewUtils';
-import './purchaseRequest.css';
+import '../pages/purchaseRequest.css';
 
 const statusLabel = {
   ALL: 'All',

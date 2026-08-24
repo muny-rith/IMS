@@ -17,7 +17,6 @@ import StockHistoryDrawer from '../components/StockHistoryDrawer';
 import StockMobileCardList from '../components/StockMobileCardList'
 
 
-import PurchaseRequestPanel from '../components/PurchaseRequestPanel';
 
 import { useStock } from '../hooks/useStock';
 import { fetchStockMovementsByProduct } from '../services/stockService';
@@ -25,7 +24,6 @@ import { fetchStockMovementsByProduct } from '../services/stockService';
 
 const STOCK_TABS = [
   { id: 'balances', label: 'Stock Balances' },
-  { id: 'requests', label: 'Purchase Requests' },
 ];
 
 
@@ -399,12 +397,6 @@ const StockAdjustmentPage = () => {
 
           </div>
         )}
-          
-        {activeTab === 'requests' && (
-          // request
-          <PurchaseRequestPanel />
-        )}
-
 
 
 

@@ -12,6 +12,7 @@ import {
   IconButton,
   Snackbar,
   Tooltip,
+  Avatar,
 } from '@mui/material';
 
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -179,6 +180,22 @@ const CategoryPage = () => {
 
   const columns = useMemo(
     () => [
+      {
+        field: 'category',
+        headerName: 'Category',
+        flex: 0.8,
+        sortable: false,
+        filterable: false,
+        align: 'center',
+        headerAlign: 'center',
+        renderCell: (params) => (
+          <Box className="category-avatar-cell" sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <Avatar src={params.row.imageUrl ?? undefined} className="category-avatar">
+              {params.row.name?.[0]?.toUpperCase() ?? '?'}
+            </Avatar>
+          </Box>
+        ),
+      },
       {
         field: 'name',
         headerName: 'Category Name',
