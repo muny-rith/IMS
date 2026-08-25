@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 import sharp from 'sharp';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -6,7 +7,14 @@ dotenv.config();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false
+  },
+  realtime: {
+    transport: WebSocket
+  }
+});
 
 export const uploadFileToSupabase = async (fileBuffer, originalName, mimeType) => {
   const fileExt = 'webp';
