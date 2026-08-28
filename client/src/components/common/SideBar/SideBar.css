@@ -1,11 +1,15 @@
 :root {
   --sb-bg: #ffffff;
   --sb-border: rgba(209, 209, 209, 0.384);
-  --sb-accent: #fff;
-  --sb-text: rgba(0, 0, 0, 0.836);
-  --sb-text-active: #000000;
-  --sb-hover-bg: var(--second-color);
-  --sb-active-bg: var(--primary-color);
+  --sb-accent: #ffffff;
+  --sb-text: #2d3744;
+  --sb-text-hover: #1e293b;
+  --sb-primary: var(--primary-color, #e11d48);
+  /* The active background should be a very light tint of the primary color. 
+     If var(--second-color) is light pink, we use it. Otherwise fallback to #fff1f2 */
+  --sb-bg-active: var(--second-color, #fff1f2);
+  --sb-bg-hover: #e4ebf1bd;
+  --sb-menu-label: #8a99af;
 }
 
 .sidebar {
@@ -16,67 +20,177 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* ── Logo ── */
 .sidebar__logo {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 20px 16px;
+  gap: 12px;
+  padding: 24px 24px;
   border-bottom: 1px solid rgba(219, 219, 219, 0.315);
-
   flex-shrink: 0;
-  height: 60px;
+  height: 70px;
   overflow: hidden;
 }
+
 .sidebar__logo img {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 8px;
   object-fit: cover;
   flex-shrink: 0;
 }
+
 .sidebar__logo-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: #000000;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
   white-space: nowrap;
+  letter-spacing: -0.5px;
 }
 
 /* ── Nav ── */
 .sidebar__nav {
   list-style: none;
   margin: 0;
-  padding: 12px 8px;
+  padding: 16px 0;
   flex: 1;
   overflow-y: auto;
   scrollbar-width: none;
-  /* gap: 20px; */
 }
-.sidebar__nav::-webkit-scrollbar { display: none; }
+
+.sidebar__nav::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar__menu-label {
+  padding: 12px 24px 12px 24px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sb-menu-label);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Accordion Groups (Expanded) ── */
+.sidebar__group {
+  margin-bottom: 8px;
+}
+
+.sidebar__group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  margin: 0 20px;
+  border-radius: 8px;
+  color: var(--sb-text);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.sidebar__group-header:hover {
+  background: var(--sb-bg-hover);
+  color: var(--sb-text-hover);
+}
+
+.sidebar__group-header--active {
+  background: transparent;
+  color: var(--sb-primary);
+}
+
+.sidebar__group-header--active:hover {
+  background: var(--sb-bg-hover);
+}
+
+.sidebar__group-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar__label {
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sidebar__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+.sidebar__group-items {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__sublink {
+  display: block;
+  /* padding-left = 16px (parent padding) + 20px (icon width) + 12px (gap) = 48px */
+  padding: 10px 16px 10px 48px;
+  margin: 0 20px;
+  border-radius: 8px;
+  color: var(--sb-text);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar__sublink:hover {
+  background: var(--sb-bg-hover);
+  color: var(--sb-text-hover);
+}
+
+.sidebar__sublink--active,
+.sidebar__sublink--active:hover {
+  background: var(--sb-bg-active);
+  color: var(--sb-primary);
+}
+
+/* ── Flat List Items (Collapsed) ── */
+.sidebar__group-items--collapsed {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .sidebar__link {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 12px 16px;
+  margin: 0 20px;
   border-radius: 8px;
   color: var(--sb-text);
   text-decoration: none;
-  font-size: 14px;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
-  margin: 5px 0;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
+
 .sidebar__link:hover {
-  background: var(--sb-hover-bg);
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  background: var(--sb-bg-hover);
+  color: var(--sb-text-hover);
 }
-.sidebar__link--active {
-  background: var(--sb-active-bg);
-  color: var(--sb-accent);
+
+.sidebar__link--active,
+.sidebar__link--active:hover {
+  background: var(--sb-bg-active);
+  color: var(--sb-primary);
 }
 
 .sidebar__icon {
@@ -87,17 +201,33 @@
   align-items: center;
   justify-content: center;
 }
-.sidebar__icon svg { font-size: 20px !important; }
+
+.sidebar__icon svg {
+  font-size: 20px !important;
+  color: currentColor;
+  transition: color 0.2s ease;
+}
 
 /* ── Collapsed (desktop) ── */
 .sidebar--collapsed .sidebar__logo-text,
 .sidebar--collapsed .sidebar__label {
   display: none;
 }
+
 .sidebar--collapsed .sidebar__link {
   justify-content: center;
   padding: 10px 0;
+  margin: 4px 12px;
 }
+
 .sidebar--collapsed .sidebar__logo {
   justify-content: center;
+  padding: 24px 0;
+}
+
+.sidebar__group-divider {
+  display: block;
+  height: 1px;
+  background-color: var(--sb-border);
+  margin: 8px 12px;
 }
