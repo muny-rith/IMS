@@ -14,7 +14,6 @@ export const getStockBalances = async () => {
       pv.sku,
       pv.unit_price,
       p.product_id,
-      p.product_code,
       p.product_name,
       c.category_name
     FROM tb_stock_balance sb
@@ -42,7 +41,6 @@ export const getStockMovements = async (limit = 30) => {
       sm.created_at,
       pv.sku,
       p.product_id,
-      p.product_code,
       p.product_name
     FROM tb_stock_movement sm
     JOIN tb_product_variant pv ON sm.variant_id = pv.variant_id
@@ -68,7 +66,6 @@ export const getStockMovementsByProduct = async (productId, limit = 50) => {
       sm.created_at,
       pv.sku,
       p.product_id,
-      p.product_code,
       p.product_name
     FROM tb_stock_movement sm
     JOIN tb_product_variant pv ON sm.variant_id = pv.variant_id

@@ -61,15 +61,15 @@ export const handleEcomProductWebhook = async (req, res, next) => {
     // Create an IMS product and variants
     for (const v of variants) {
       const sku = v.sku;
-      const checkProd = await client.query('SELECT product_id FROM tb_product WHERE product_code = $1;', [sku]);
+      const checkProd = await client.query('SELECT product_id FROM tb_product_variant WHERE sku = $1;', [sku]);
       if (checkProd.rows.length > 0) continue;
 
       const prodName = `${baseProductName} (${sku})`;
       const insertProd = await client.query(`
-        INSERT INTO tb_product (product_code, product_name, category_id, department, is_active)
-        VALUES ($1, $2, $3, $4, true)
+        INSERT INTO tb_product (product_name, category_id, department, is_active)
+        VALUES ($1, $2, $3, true)
         RETURNING product_id;
-      `, [sku, prodName, categoryId, brand || 'General']);
+      `, [prodName, categoryId, brand || 'General']);
 
       const pId = insertProd.rows[0].product_id;
       createdProductIds.push(pId);

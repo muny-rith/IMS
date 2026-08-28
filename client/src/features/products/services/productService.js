@@ -5,7 +5,6 @@ const normalizeProductRow = (row) => {
 
   return {
     id: row.product_id,
-    code: row.product_code,
     name: row.product_name,
     categoryId: row.category_id,
     brandId: row.brand_id,
@@ -48,7 +47,6 @@ export const fetchBrands = async () => {
 
 export const addProduct = async (data) => {
   const formData = new FormData();
-  formData.append('code', data.code.trim());
   formData.append('name', data.name.trim());
   formData.append('categoryId', data.categoryId);
   
@@ -75,7 +73,6 @@ export const addProduct = async (data) => {
 
 export const updateProduct = async (id, data) => {
   const formData = new FormData();
-  formData.append('code', data.code.trim());
   formData.append('name', data.name.trim());
   formData.append('categoryId', data.categoryId);
   

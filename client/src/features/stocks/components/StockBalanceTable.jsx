@@ -34,7 +34,6 @@ const getStatusMeta = (row) => {
 const StockBalanceTable = ({ rows, onAdjust, onViewHistory }) => {
   const columns = useMemo(
     () => [
-      { field: 'productCode', headerName: 'Code', flex: 0.7 },
       { field: 'productName', headerName: 'Product', flex: 1.3 },
       // { field: 'category', headerName: 'Category', flex: 1 },
       { field: 'onHandQty', headerName: 'On Hand', flex: 0.8, type: 'number', align: 'left', headerAlign: 'left' },

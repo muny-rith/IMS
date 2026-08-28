@@ -153,7 +153,6 @@ export const getReportRows = async (req, res, next) => {
           sm.created_at,
           json_build_object(
             'product_id', p.product_id,
-            'product_code', p.product_code,
             'sku', pv.sku,
             'product_name', p.product_name,
             'unit_price', pv.unit_price,
@@ -228,7 +227,6 @@ export const getReportRows = async (req, res, next) => {
       const productsQuery = `
         SELECT 
           p.product_id,
-          p.product_code,
           p.product_name,
           p.image_url,
           p.created_at,
@@ -281,7 +279,6 @@ export const getReportRows = async (req, res, next) => {
         sb.updated_at,
         json_build_object(
           'product_id', p.product_id,
-          'product_code', p.product_code,
           'sku', pv.sku,
           'product_name', p.product_name,
           'categories', json_build_object(

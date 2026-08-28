@@ -61,7 +61,6 @@ export const findAll = async () => {
         li.notes,
         pv.sku,
         p.product_id,
-        p.product_code,
         p.product_name
       FROM tb_loan_item li
       JOIN tb_product_variant pv ON li.variant_id = pv.variant_id
@@ -137,7 +136,6 @@ export const findById = async (id) => {
       li.notes,
       pv.sku,
       p.product_id,
-      p.product_code,
       p.product_name
     FROM tb_loan_item li
     JOIN tb_product_variant pv ON li.variant_id = pv.variant_id

@@ -31,7 +31,6 @@ const formatDateTime = (value) => {
 const StockMovementTable = ({ rows }) => {
   const columns = useMemo(
     () => [
-      { field: 'productCode', headerName: 'Code', flex: 1 },
       { field: 'productName', headerName: 'Product', flex: 1.4 },
       {
         field: 'movementType',

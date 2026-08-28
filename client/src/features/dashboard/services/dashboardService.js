@@ -138,7 +138,6 @@ const normalizeStockBalance = (row) => {
   return {
     id: row.stock_balance_id,
     productId: row.product_id,
-    productCode: product?.product_code ?? "",
     productName: product?.product_name ?? "Unnamed product",
     category: category?.category_name ?? "-",
     onHandQty,

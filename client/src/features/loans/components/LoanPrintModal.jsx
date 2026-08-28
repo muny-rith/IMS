@@ -125,7 +125,6 @@ const LoanPrintModal = ({ open, onClose, loan = null }) => {
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>Code</th>
                                         <th>Product</th>
                                         <th>Borrowed</th>
                                         {/* <th>Returned</th>
@@ -138,7 +137,6 @@ const LoanPrintModal = ({ open, onClose, loan = null }) => {
                                         items.map((item, index) => (
                                             <tr key={item.id ?? index}>
                                                 <td>{index + 1}</td>
-                                                <td>{item.productCode || '—'}</td>
                                                 <td>{item.productName || '—'}</td>
                                                 <td>{formatQty(item.qty)}</td>
                                                 {/* <td>{formatQty(item.returnedQty)}</td>

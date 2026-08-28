@@ -7,7 +7,6 @@ const normalizeStockBalanceRow = (row) => {
   return {
     id: row.stock_balance_id,
     productId: row.product_id,
-    productCode: row.product_code ?? '',
     productName: row.product_name ?? '',
     category: row.category_name ?? '—',
     onHandQty,
@@ -21,7 +20,6 @@ const normalizeStockMovementRow = (row) => {
   return {
     id: row.movement_id,
     productId: row.product_id,
-    productCode: row.product_code ?? '',
     productName: row.product_name ?? '',
     movementType: row.movement_type,
     qty: Number(row.qty ?? 0),

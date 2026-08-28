@@ -22,14 +22,12 @@ import { fetchAttributes, fetchAttributeValues } from '../../attributes/services
 import './ProductModal.css';
 
 const RULES = {
-  code: { required: 'Code is required' },
   name: { required: 'Name is required' },
   categoryId: { required: 'Category is required' },
   department: { required: 'Department is required' },
 };
 
 const EMPTY_FORM = {
-  code: '',
   name: '',
   categoryId: '',
   brandId: '',
@@ -42,7 +40,6 @@ const normalizeFormValues = (defaultValues, mode) => {
     return EMPTY_FORM;
   }
   return {
-    code: defaultValues.code ?? '',
     name: defaultValues.name ?? '',
     categoryId:
       defaultValues.categoryId !== undefined && defaultValues.categoryId !== null
@@ -162,7 +159,6 @@ const ProductModal = ({
 
   const handleFormSubmit = (values) => {
     onSubmit({
-      code: values.code.trim(),
       name: values.name.trim(),
       categoryId: values.categoryId ? Number(values.categoryId) : null,
       brandId: values.brandId ? Number(values.brandId) : null,
@@ -266,16 +262,7 @@ const ProductModal = ({
               </div>
             </Box>
 
-            <Box>
-              <label className="form-label">Code</label>
-              <input
-                {...register('code', RULES.code)}
-                disabled={isView}
-                placeholder="Product code *"
-                className={'form-field' + (errors.code ? ' field-error' : '')}
-              />
-              {errors.code && <span className="error-msg">{errors.code.message}</span>}
-            </Box>
+
 
             <Box>
               <label className="form-label">Name</label>

@@ -89,13 +89,6 @@ const StockAdjustmentModal = ({
           sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}
         >
           <Box className="stock-adjustment-summary">
-            <div className="stock-adjustment-summary__item item_code">
-              <span className="stock-adjustment-summary__label">Code</span>
-              <strong className="stock-adjustment-summary__value">
-                {selectedBalance?.productCode || '—'}
-              </strong>
-            </div>
-
             <div className="stock-adjustment-summary__item stock-adjustment-summary__item--wide">
               <span className="stock-adjustment-summary__label">Product</span>
               <strong className="stock-adjustment-summary__value">

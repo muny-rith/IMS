@@ -42,7 +42,7 @@ const StockMobileCardList = ({
             key={row.id}
             avatar={getInitial(row.productName)}
             title={row.productName || 'Unnamed product'}
-            subtitle={row.productCode ? `SKU ${row.productCode}` : 'No code'}
+            subtitle={row.category || 'No category'}
             rightContent={
               <span className={getAvailableClassName(availableQty)}>
                 {availableQty} available

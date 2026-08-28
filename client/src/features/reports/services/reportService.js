@@ -186,7 +186,7 @@ const normalizeStockRow = (row) => {
   const availableQty = onHandQty - reservedQty;
 
   return {
-    id: product?.product_code || `STK-${row.stock_balance_id}`,
+    id: product?.sku || `STK-${row.stock_balance_id}`,
     name: product?.product_name || 'Unnamed product',
     category: category?.category_name || '-',
     owner: 'Inventory',
@@ -212,7 +212,7 @@ const normalizeMovementRow = (row) => {
   return {
     reportType: 'stockMovement',
     id: `MV-${row.movement_id}`,
-    productCode: product?.product_code || '',
+    productCode: product?.sku || '',
     movementId: row.movement_id,
     movementType,
     name: product?.product_name || 'Unnamed product',
@@ -313,7 +313,7 @@ const createMonthlyUsageRow = ({ product, daysInMonth, monthLabel, reportMonth }
   return {
     reportType: 'monthlyUsage',
     productId: product.product_id,
-    id: product.product_code || `PR-${product.product_id}`,
+    id: product?.sku || `PR-${product.product_id}`,
     name: product.product_name || 'Unnamed product',
     category: category?.category_name || '-',
     image:

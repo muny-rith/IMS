@@ -28,9 +28,7 @@ export const formatPurchaseRequestDate = (value) => {
 };
 
 export const getPurchaseRequestItemName = (item) => {
-  const productLabel = [item.productCode, item.productName]
-    .filter(Boolean)
-    .join(' - ');
+  const productLabel = item.productName || '';
 
   return productLabel || item.customItemName || 'Unknown item';
 };

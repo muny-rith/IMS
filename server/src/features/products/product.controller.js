@@ -16,7 +16,7 @@ export const getProducts = async (req, res, next) => {
 
 export const createProduct = async (req, res, next) => {
   try {
-    const { code, name, categoryId, brandId, department, imageUrl } = req.body;
+    const { name, categoryId, brandId, department, imageUrl } = req.body;
     let variants = [];
     let productAttributes = [];
 
@@ -28,8 +28,8 @@ export const createProduct = async (req, res, next) => {
       productAttributes = typeof req.body.productAttributes === 'string' ? JSON.parse(req.body.productAttributes) : req.body.productAttributes;
     }
 
-    if (!code || !name || !categoryId) {
-      return next(new ApiError(400, 'Product code, name, and category ID are required.'));
+    if (!name || !categoryId) {
+      return next(new ApiError(400, 'Product name and category ID are required.'));
     }
 
     let finalImageUrl = imageUrl || null;
@@ -38,7 +38,6 @@ export const createProduct = async (req, res, next) => {
     }
 
     const product = await productModel.createProductWithBalance({
-      product_code: code.trim(),
       product_name: name.trim(),
       category_id: Number(categoryId),
       brand_id: brandId ? Number(brandId) : null,
@@ -60,7 +59,7 @@ export const createProduct = async (req, res, next) => {
 export const updateProduct = async (req, res, next) => {
   try {
     const productId = req.params.id;
-    const { code, name, categoryId, brandId, department, price, imageUrl, isActive } = req.body;
+    const { name, categoryId, brandId, department, price, imageUrl, isActive } = req.body;
 
     let finalImageUrl = imageUrl;
     if (req.file) {
@@ -78,7 +77,6 @@ export const updateProduct = async (req, res, next) => {
     }
 
     const updated = await productModel.update(productId, {
-      product_code: code ? code.trim() : existing.product_code,
       product_name: name ? name.trim() : existing.product_name,
       category_id: categoryId ? Number(categoryId) : existing.category_id,
       brand_id: brandId !== undefined ? (brandId ? Number(brandId) : null) : existing.brand_id,
@@ -125,11 +123,11 @@ export const getExternalStocks = async (req, res, next) => {
   try {
     const stocks = await productModel.findExternalStocks();
     
-    // Transform array to key-value object: { "product_code": on_hand_qty }
+    // Transform array to key-value object: { "sku": on_hand_qty }
     const stockMap = {};
     stocks.forEach(row => {
-      if (row.product_code) {
-        stockMap[row.product_code] = row.on_hand_qty;
+      if (row.sku) {
+        stockMap[row.sku] = row.on_hand_qty;
       }
     });
 

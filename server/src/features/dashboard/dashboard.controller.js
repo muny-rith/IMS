@@ -29,7 +29,6 @@ export const getDashboardData = async (req, res, next) => {
         sb.updated_at,
         pv.sku,
         p.product_id,
-        p.product_code,
         p.product_name,
         c.category_name
       FROM tb_stock_balance sb
@@ -44,7 +43,6 @@ export const getDashboardData = async (req, res, next) => {
         id: row.stock_balance_id,
         productId: row.product_id,
         variantId: row.variant_id,
-        productCode: row.product_code || row.sku || "",
         productName: row.product_name || "Unnamed product",
         category: row.category_name || "-",
         onHandQty,

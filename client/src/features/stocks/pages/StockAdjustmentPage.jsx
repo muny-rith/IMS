@@ -135,7 +135,7 @@ const StockAdjustmentPage = () => {
     return balances.filter((row) => {
       const matchesSearch =
         !q ||
-        [row.productCode, row.productName, row.category]
+        [row.productName, row.category]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(q));
 
@@ -312,7 +312,7 @@ const StockAdjustmentPage = () => {
                     leftIcon={<i className="fa-solid fa-magnifying-glass" />}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by code, product, category..."
+                    placeholder="Search by product, category..."
                   />
                 </div>
               </div>

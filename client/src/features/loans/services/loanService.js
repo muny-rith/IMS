@@ -7,7 +7,6 @@ const normalizeLoanItem = (item) => {
   return {
     id: item.loan_item_id,
     productId: item.product_id,
-    productCode: item.product_code ?? '',
     productName: item.product_name ?? '',
     qty,
     returnedQty,
@@ -68,14 +67,13 @@ export const fetchProductsForLoan = async () => {
 
     return {
       id: row.product_id,
-      code: row.product_code,
       name: row.product_name,
       categoryId: row.category_id,
       category: row.category_name ?? '—',
       onHandQty,
       reservedQty,
       availableQty: onHandQty - reservedQty,
-      label: `${row.product_code} - ${row.product_name}`,
+      label: row.product_name,
     };
   });
 };

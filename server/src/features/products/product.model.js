@@ -4,7 +4,6 @@ export const findAll = async () => {
   const text = `
     SELECT 
       p.product_id,
-      p.product_code,
       p.product_name,
       p.category_id,
       p.brand_id,
@@ -35,7 +34,6 @@ export const findById = async (id) => {
   const prodText = `
     SELECT 
       p.product_id,
-      p.product_code,
       p.product_name,
       p.category_id,
       p.brand_id,
@@ -83,18 +81,18 @@ export const findById = async (id) => {
   return product;
 };
 
-export const createProductWithBalance = async ({ product_code, product_name, category_id, brand_id, department, image_url, variants = [], product_attributes = [] }) => {
+export const createProductWithBalance = async ({ product_name, category_id, brand_id, department, image_url, variants = [], product_attributes = [] }) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     // 1. Insert product
     const prodText = `
-      INSERT INTO tb_product (product_code, product_name, category_id, brand_id, department, image_url)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO tb_product (product_name, category_id, brand_id, department, image_url)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const prodValues = [product_code, product_name, category_id, brand_id || null, department, image_url];
+    const prodValues = [product_name, category_id, brand_id || null, department, image_url];
     const prodRes = await client.query(prodText, prodValues);
     const product = prodRes.rows[0];
 
@@ -112,7 +110,7 @@ export const createProductWithBalance = async ({ product_code, product_name, cat
 
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i];
-      const variantSku = v.sku || `${product_code}-${i + 1}`;
+      const variantSku = v.sku || `${product.product_id}-${i + 1}`;
       
       const varText = `
         INSERT INTO tb_product_variant (product_id, sku, unit_price, is_active)
@@ -189,7 +187,7 @@ export const createProductWithBalance = async ({ product_code, product_name, cat
   }
 };
 
-export const update = async (id, { product_code, product_name, category_id, brand_id, department, unit_price, image_url, is_active }) => {
+export const update = async (id, { product_name, category_id, brand_id, department, unit_price, image_url, is_active }) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -197,11 +195,11 @@ export const update = async (id, { product_code, product_name, category_id, bran
     // 1. Update product base
     const text = `
       UPDATE tb_product
-      SET product_code = $1, product_name = $2, category_id = $3, brand_id = $4, department = $5, image_url = $6, is_active = $7, updated_at = CURRENT_TIMESTAMP
-      WHERE product_id = $8
+      SET product_name = $1, category_id = $2, brand_id = $3, department = $4, image_url = $5, is_active = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE product_id = $7
       RETURNING *;
     `;
-    const { rows } = await client.query(text, [product_code, product_name, category_id, brand_id, department, image_url, is_active, id]);
+    const { rows } = await client.query(text, [product_name, category_id, brand_id, department, image_url, is_active, id]);
     const product = rows[0];
 
     // 2. Update default variant unit price if provided

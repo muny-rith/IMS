@@ -117,7 +117,7 @@ const StockIssueModal = ({ open, onClose, onSubmit, submitting }) => {
               >
                 {products.map(p => (
                   <MenuItem key={p.id} value={p.id} disabled={p.availableQty <= 0}>
-                    {p.name} {p.code ? `(${p.code})` : ''} - {p.availableQty} in stock
+                    {p.name} - {p.availableQty} in stock
                   </MenuItem>
                 ))}
               </TextField>

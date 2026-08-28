@@ -93,7 +93,6 @@ const StockHistoryDrawer = ({
 
               <div className="stock-history-product__main">
                 <strong>{product.productName || 'Unknown product'}</strong>
-                <span>Code: {product.productCode || '—'}</span>
               </div>
             </section>
 

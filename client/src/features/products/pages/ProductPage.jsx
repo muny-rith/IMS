@@ -121,7 +121,7 @@ const ProductPage = () => {
     if (!q) return rows;
 
     return rows.filter((row) =>
-      [row.name, row.code, row.category, row.department]
+      [row.name, row.category, row.department]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(q))
     );
@@ -227,7 +227,6 @@ const ProductPage = () => {
         flex: 1.35,
         renderCell: (params) =>  params.row.name || '—'
       },
-      { field: 'code', headerName: 'Code', flex: 0.9 },
       {
         field: 'category',
         headerName: 'Category',
@@ -376,7 +375,7 @@ const ProductPage = () => {
                 leftIcon={<i className="fa-solid fa-magnifying-glass" />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, code, category..."
+                placeholder="Search by name, category..."
               />
             </div>
           </div>

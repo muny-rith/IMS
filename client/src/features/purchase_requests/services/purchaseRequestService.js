@@ -4,7 +4,6 @@ const normalizePurchaseRequestItem = (item) => {
   return {
     id: item.purchase_request_item_id,
     productId: item.product_id,
-    productCode: item.product_code ?? '',
     productName: item.product_name ?? '',
     customItemName: item.custom_item_name ?? '',
     requestedQty: Number(item.requested_qty ?? 0),
@@ -74,9 +73,8 @@ export const fetchProductsForPurchaseRequest = async () => {
   const response = await api.get('/products');
   return (response.data.data ?? []).map((row) => ({
     id: row.product_id,
-    code: row.product_code,
     name: row.product_name,
-    label: `${row.product_code} - ${row.product_name}`,
+    label: row.product_name,
   }));
 };
 

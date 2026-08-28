@@ -112,7 +112,7 @@ const ReturnLoanModal = ({
 
                     {outstandingItems.map((item) => (
                       <MenuItem key={item.id} value={String(item.id)}>
-                        {item.productCode} - {item.productName} (Remaining: {item.remainingQty})
+                        {item.productName} (Remaining: {item.remainingQty})
                       </MenuItem>
                     ))}
                   </Select>
