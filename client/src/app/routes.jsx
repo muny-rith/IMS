@@ -7,6 +7,7 @@ import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import LoginPage from "../features/auth/pages/LoginPage";
 import DashboardPage from "../features/dashboard/pages/DashboardPage";
 import ProductPage from "../features/products/pages/ProductPage";
+import ProductFormPage from "../features/products/pages/ProductFormPage";
 import CategoryPage from "../features/categories/pages/CategoryPage";
 import BrandPage from "../features/brands/pages/BrandPage";
 import LoanPage from "../features/loans/pages/LoanPage";
@@ -28,6 +29,9 @@ function AppRoutes() {
           <Route index element={<Navigate to={ROUTE_PATHS.dashboard} replace />} />
           <Route path={ROUTE_SEGMENTS.dashboard} element={<DashboardPage />} />
           <Route path={ROUTE_SEGMENTS.products} element={<ProductPage />} />
+          <Route path={ROUTE_SEGMENTS.product_new} element={<ProductFormPage />} />
+          <Route path={ROUTE_SEGMENTS.product_edit} element={<ProductFormPage />} />
+          <Route path={ROUTE_SEGMENTS.product_view} element={<ProductFormPage />} />
           <Route path={ROUTE_SEGMENTS.stocks} element={<StockPage />} />
           <Route path={ROUTE_SEGMENTS.categories} element={<CategoryPage />} />
           <Route path={ROUTE_SEGMENTS.brands} element={<BrandPage />} />

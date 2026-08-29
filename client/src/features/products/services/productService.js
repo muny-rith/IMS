@@ -1,4 +1,5 @@
 import api from '../../../lib/api';
+
 const normalizeProductRow = (row) => {
   const onHandQty = Number(row.on_hand_qty ?? 0);
   const reservedQty = Number(row.reserved_qty ?? 0);
@@ -120,15 +121,10 @@ export const updateProduct = async (id, data) => {
   let currentImageUrl = data.imageUrl ?? data.image ?? null;
   if (currentImageUrl) formData.append('imageUrl', currentImageUrl);
   if (data.imageFile) formData.append('imageFile', data.imageFile);
-  if (Array.isArray(data.deletedVariantIds)) {
-    formData.append('deletedVariantIds', JSON.stringify(data.deletedVariantIds));
-  }
-  if (Array.isArray(data.productAttributes)) {
-    formData.append('productAttributes', JSON.stringify(data.productAttributes));
-  }
-  if (Array.isArray(data.variants)) {
+
+  if (data.variants && data.variants.length > 0) {
     const variantsPayload = data.variants.map((variant, index) => {
-      const { imageFile, imagePreview, imageUrl, attributeValues, ...rest } = variant;
+      const { imageFile, imagePreview, attributeValues, imageUrl, ...rest } = variant;
       if (imageFile) {
         formData.append(`variantImage_${index}`, imageFile);
       }
@@ -138,6 +134,16 @@ export const updateProduct = async (id, data) => {
       };
     });
     formData.append('variants', JSON.stringify(variantsPayload));
+  } else if (data.variants && data.variants.length === 0) {
+    formData.append('variants', JSON.stringify([]));
+  }
+
+  if (data.deletedVariantIds && data.deletedVariantIds.length > 0) {
+    formData.append('deletedVariantIds', JSON.stringify(data.deletedVariantIds));
+  }
+  
+  if (data.productAttributes !== undefined) {
+    formData.append('productAttributes', JSON.stringify(data.productAttributes));
   }
 
   const response = await api.put(`/products/${id}`, formData, {

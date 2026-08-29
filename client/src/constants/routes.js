@@ -12,6 +12,9 @@ export const ROUTE_SEGMENTS = Object.freeze({
   stock_issues: "stock-issues",
   sales: "sales",
   brands: "brands",
+  product_new: "products/new",
+  product_edit: "products/edit/:id",
+  product_view: "products/view/:id",
 });
 
 export const ROUTE_PATHS = Object.freeze({
@@ -28,4 +31,7 @@ export const ROUTE_PATHS = Object.freeze({
   stock_issues: `/${ROUTE_SEGMENTS.stock_issues}`,
   sales: `/${ROUTE_SEGMENTS.sales}`,
   brands: `/${ROUTE_SEGMENTS.brands}`,
+  product_new: `/${ROUTE_SEGMENTS.product_new}`,
+  product_edit: `/${ROUTE_SEGMENTS.product_edit}`,
+  product_view: `/${ROUTE_SEGMENTS.product_view}`,
 });

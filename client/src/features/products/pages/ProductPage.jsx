@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './product.css';
 
 import {
@@ -27,19 +28,12 @@ import Button from '../../../components/ui/Button/Button';
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
-import ProductModal from './ProductModal';
 import ProductMobileCardList from '../components/ProductMobileCardList';
 
 const INITIAL_TOAST = {
   open: false,
   message: '',
   severity: 'success',
-};
-
-const EMPTY_MODAL_STATE = {
-  open: false,
-  mode: 'create',
-  editRow: null,
 };
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -64,22 +58,14 @@ const ProductPage = () => {
     categories = [],
     brands = [],
     loading,
-    submitting,
-    handleAdd,
-    handleUpdate,
     handleDelete,
-    fetchProductDetail,
   } = useProducts();
 
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState('');
-  const [modal, setModal] = useState(EMPTY_MODAL_STATE);
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
-
-  const closeModal = useCallback(() => {
-    setModal(EMPTY_MODAL_STATE);
-  }, []);
 
   const showToast = useCallback((message, severity = 'success') => {
     setToast({
@@ -90,56 +76,16 @@ const ProductPage = () => {
   }, []);
 
   const openCreateModal = useCallback(() => {
-    setModal({
-      open: true,
-      mode: 'create',
-      editRow: null,
-    });
-  }, []);
+    navigate('/products/new');
+  }, [navigate]);
 
-  const openViewModal = useCallback(async (row) => {
-    setModal({
-      open: true,
-      mode: 'view',
-      editRow: row,
-    });
-    setLoadingDetail(true);
+  const openViewModal = useCallback((row) => {
+    navigate(`/products/view/${row.id}`);
+  }, [navigate]);
 
-    try {
-      const detail = await fetchProductDetail(row.id);
-      setModal({
-        open: true,
-        mode: 'view',
-        editRow: { ...row, ...detail },
-      });
-    } catch (err) {
-      showToast(err.message || 'Failed to load product details.', 'error');
-    } finally {
-      setLoadingDetail(false);
-    }
-  }, [fetchProductDetail, showToast]);
-
-  const openEditModal = useCallback(async (row) => {
-    setModal({
-      open: true,
-      mode: 'edit',
-      editRow: row,
-    });
-    setLoadingDetail(true);
-
-    try {
-      const detail = await fetchProductDetail(row.id);
-      setModal({
-        open: true,
-        mode: 'edit',
-        editRow: { ...row, ...detail },
-      });
-    } catch (err) {
-      showToast(err.message || 'Failed to load product details.', 'error');
-    } finally {
-      setLoadingDetail(false);
-    }
-  }, [fetchProductDetail, showToast]);
+  const openEditModal = useCallback((row) => {
+    navigate(`/products/edit/${row.id}`);
+  }, [navigate]);
 
   const requestDelete = useCallback((id) => {
     setDeleting(id);
@@ -444,17 +390,6 @@ const ProductPage = () => {
         </div>
       </section>
 
-      <ProductModal
-        open={modal.open}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        categories={categories}
-        brands={brands}
-        defaultValues={modal.mode === 'create' ? null : modal.editRow}
-        mode={modal.mode}
-        loadingDetails={loadingDetail}
-      />
 
       <Dialog
         open={Boolean(deleting)}

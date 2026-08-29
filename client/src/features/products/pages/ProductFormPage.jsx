@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   FormControl,
-  InputLabel,
   MenuItem,
   Select,
   IconButton,
@@ -19,7 +15,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import Button from '../../../components/ui/Button/Button';
 import { fetchAttributes, fetchAttributeValues } from '../../attributes/services/attributeService';
-import './ProductModal.css';
+import { useProducts } from '../hooks/useProducts';
+import './ProductFormPage.css';
 
 const RULES = {
   name: { required: 'Name is required' },
@@ -98,20 +95,27 @@ const normalizeFormValues = (defaultValues, mode) => {
   };
 };
 
-const ProductModal = ({
-  open,
-  onClose,
-  onSubmit,
-  submitting,
-  categories = [],
-  brands = [],
-  defaultValues = null,
-  mode = 'create',
-  loadingDetails = false,
-}) => {
-  const isCreate = mode === 'create';
-  const isEdit = mode === 'edit';
-  const isView = mode === 'view';
+const ProductFormPage = () => {
+  const { id } = useParams();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const isView = pathname.includes('/view/');
+  const isEdit = pathname.includes('/edit/');
+  const isCreate = !isView && !isEdit;
+  const mode = isView ? 'view' : isEdit ? 'edit' : 'create';
+
+  const {
+    categories = [],
+    brands = [],
+    handleAdd,
+    handleUpdate,
+    fetchProductDetail,
+  } = useProducts();
+
+  const [loadingDetails, setLoadingDetails] = useState(isEdit || isView);
+  const [submitting, setSubmitting] = useState(false);
+  const [defaultValues, setDefaultValues] = useState(null);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
@@ -140,6 +144,22 @@ const ProductModal = ({
 
   const selectedCategoryId = watch('categoryId');
 
+  // Load product detail if editing/viewing
+  useEffect(() => {
+    if ((isEdit || isView) && id) {
+      setLoadingDetails(true);
+      fetchProductDetail(id)
+        .then((data) => {
+          setDefaultValues(data);
+          setLoadingDetails(false);
+        })
+        .catch((err) => {
+          console.error(err);
+          setLoadingDetails(false);
+        });
+    }
+  }, [isEdit, isView, id, fetchProductDetail]);
+
   // Load attributes globally
   useEffect(() => {
     const loadAttrs = async () => {
@@ -153,44 +173,30 @@ const ProductModal = ({
     loadAttrs();
   }, []);
 
+  // Initialize form state once defaultValues are loaded (or immediately if creating)
   useEffect(() => {
-    if (open) {
-      reset(formValues);
-      setImageFile(null);
-      setImagePreview(formValues.imageUrl || '');
+    if (!defaultValues && !isCreate) return;
 
-      if (isCreate) {
-        // Start with one empty variant
-        setVariants([createEmptyVariant()]);
-      } else {
-        setVariants(normalizeVariantRows(defaultValues?.variants || []));
-      }
-      setDeletedVariantIds([]);
-      return;
-    }
-    reset(EMPTY_FORM);
+    reset(formValues);
     setImageFile(null);
-    setImagePreview('');
-    setVariants((prev) => {
-      prev.forEach((v) => {
-        if (v.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(v.imagePreview);
-      });
-      return [];
-    });
-    setProductAttributes([]);
+    setImagePreview(formValues.imageUrl || '');
+
+    if (isCreate) {
+      // Start with one empty variant
+      setVariants([createEmptyVariant()]);
+    } else {
+      setVariants(normalizeVariantRows(defaultValues?.variants || []));
+    }
     setDeletedVariantIds([]);
-  }, [open, formValues, reset, isCreate, defaultValues]);
+  }, [formValues, reset, isCreate, defaultValues]);
 
   useEffect(() => {
-    if (!open) return;
-
     if (isCreate) {
       setProductAttributes([]);
       return;
     }
-
     setProductAttributes(normalizeProductAttributes(defaultValues, allAttributes));
-  }, [open, isCreate, defaultValues, allAttributes]);
+  }, [isCreate, defaultValues, allAttributes]);
 
   useEffect(() => {
     return () => {
@@ -201,17 +207,7 @@ const ProductModal = ({
   }, [imagePreview]);
 
   const handleClose = () => {
-    reset(EMPTY_FORM);
-    setImageFile(null);
-    setImagePreview('');
-    setVariants((prev) => {
-      prev.forEach((v) => {
-        if (v.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(v.imagePreview);
-      });
-      return prev;
-    });
-    setDeletedVariantIds([]);
-    onClose();
+    navigate('/products');
   };
 
   const handleImageChange = (event) => {
@@ -227,8 +223,9 @@ const ProductModal = ({
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const handleFormSubmit = (values) => {
-    onSubmit({
+  const handleFormSubmit = async (values) => {
+    setSubmitting(true);
+    const data = {
       name: values.name.trim(),
       categoryId: values.categoryId ? Number(values.categoryId) : null,
       brandId: values.brandId ? Number(values.brandId) : null,
@@ -238,7 +235,16 @@ const ProductModal = ({
       variants: isCreate || isEdit ? variants : [],
       deletedVariantIds: isEdit ? deletedVariantIds : [],
       productAttributes: productAttributes.map(a => a.attribute_id),
-    });
+    };
+
+    const result = isCreate ? await handleAdd(data) : await handleUpdate(id, data);
+    setSubmitting(false);
+
+    if (result.success) {
+      navigate('/products');
+    } else {
+      alert(result.message || 'Something went wrong.');
+    }
   };
 
   // Compute category attributes
@@ -282,24 +288,24 @@ const ProductModal = ({
     setVariants([...variants, createEmptyVariant()]);
   };
 
-  const handleRemoveVariant = (id) => {
+  const handleRemoveVariant = (varId) => {
     setVariants((prev) => {
-      const target = prev.find((v) => v.id === id);
+      const target = prev.find((v) => v.id === varId);
       if (target?.imagePreview?.startsWith('blob:')) {
         URL.revokeObjectURL(target.imagePreview);
       }
       if (isEdit && target?.variant_id) {
         setDeletedVariantIds((current) => [...new Set([...current, Number(target.variant_id)])]);
       }
-      return prev.filter((v) => v.id !== id);
+      return prev.filter((v) => v.id !== varId);
     });
   };
 
-  const handleVariantImageChange = (id, event) => {
+  const handleVariantImageChange = (varId, event) => {
     const file = event.target.files?.[0];
     setVariants((prev) =>
       prev.map((v) => {
-        if (v.id !== id) return v;
+        if (v.id !== varId) return v;
         if (v.imagePreview?.startsWith('blob:')) {
           URL.revokeObjectURL(v.imagePreview);
         }
@@ -311,31 +317,58 @@ const ProductModal = ({
     );
   };
 
-  const handleVariantChange = (id, field, value) => {
-    setVariants((current) => current.map(v => v.id === id ? { ...v, [field]: value } : v));
+  const handleVariantChange = (varId, field, value) => {
+    setVariants((current) => current.map(v => v.id === varId ? { ...v, [field]: value } : v));
   };
 
-  const handleVariantAttrChange = (id, attrId, value) => {
+  const handleVariantAttrChange = (varId, attrId, value) => {
     setVariants((current) => current.map(v => {
-      if (v.id === id) {
+      if (v.id === varId) {
         return { ...v, attributes: { ...v.attributes, [attrId]: value } };
       }
       return v;
     }));
   };
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="lg" fullWidth>
-      <DialogTitle>
-        {isView ? 'View product' : isEdit ? 'Edit product' : 'Add product'}
-      </DialogTitle>
+  if (loadingDetails) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 6 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-      <DialogContent dividers>
+  return (
+    <div className="product-form-page">
+      <div className="product-form-page__header">
+        <h2 className="product-form-page__title">
+          {isView ? 'View product' : isEdit ? 'Edit product' : 'Add product'}
+        </h2>
+        <div className="product-form-page__actions">
+          <Button
+            variant="text"
+            onClick={handleClose}
+            disabled={submitting}
+            value={isView ? 'Close' : 'Cancel'}
+          />
+          {!isView && (
+            <Button
+              type="submit"
+              form="product-form"
+              value={submitting ? '' : isEdit ? 'Save changes' : 'Add product'}
+              disabled={submitting || ((isCreate || isEdit) && variants.length === 0)}
+              startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="product-form-page__content">
         <Box
           component="form"
           id="product-form"
           onSubmit={handleSubmit(handleFormSubmit)}
-          sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4, pt: 1 }}
+          sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 4 }}
         >
           {/* LEFT SIDE: General Product Info */}
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -358,8 +391,6 @@ const ProductModal = ({
               </div>
             </Box>
 
-
-
             <Box>
               <label className="form-label">Name</label>
               <input
@@ -372,22 +403,29 @@ const ProductModal = ({
             </Box>
 
             <Box>
-              <label className="form-label">Category</label>
+              <label className="form-label">Category *</label>
               <Controller
                 name="categoryId"
                 control={control}
                 rules={RULES.categoryId}
                 render={({ field }) => (
                   <FormControl fullWidth size="small" error={Boolean(errors.categoryId)}>
-                    <InputLabel id="product-category-label">Category *</InputLabel>
                     <Select
                       {...field}
-                      labelId="product-category-label"
-                      label="Category *"
+                      displayEmpty
                       disabled={isView}
                       value={field.value ?? ''}
                       onChange={(event) => field.onChange(event.target.value)}
-                      sx={{ backgroundColor: '#fff' }}
+                      sx={{
+                        backgroundColor: isView ? '#f5f5f5' : '#fff',
+                        '& .MuiSelect-select.Mui-disabled': {
+                          color: '#333333',
+                          WebkitTextFillColor: '#333333',
+                        },
+                        '& fieldset': {
+                          borderColor: isView ? '#e0e0e0' : undefined
+                        }
+                      }}
                     >
                       <MenuItem value="" disabled>Select category</MenuItem>
                       {categories.map((c) => (
@@ -401,21 +439,28 @@ const ProductModal = ({
             </Box>
 
             <Box>
-              <label className="form-label">Brand</label>
+              <label className="form-label">Brand (Optional)</label>
               <Controller
                 name="brandId"
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth size="small">
-                    <InputLabel id="product-brand-label">Brand (Optional)</InputLabel>
                     <Select
                       {...field}
-                      labelId="product-brand-label"
-                      label="Brand (Optional)"
+                      displayEmpty
                       disabled={isView}
                       value={field.value ?? ''}
                       onChange={(event) => field.onChange(event.target.value)}
-                      sx={{ backgroundColor: '#fff' }}
+                      sx={{
+                        backgroundColor: isView ? '#f5f5f5' : '#fff',
+                        '& .MuiSelect-select.Mui-disabled': {
+                          color: '#333333',
+                          WebkitTextFillColor: '#333333',
+                        },
+                        '& fieldset': {
+                          borderColor: isView ? '#e0e0e0' : undefined
+                        }
+                      }}
                     >
                       <MenuItem value=""><em>None</em></MenuItem>
                       {brands.map((b) => (
@@ -426,8 +471,6 @@ const ProductModal = ({
                 )}
               />
             </Box>
-
-
 
             <Box>
               <label className="form-label">Department</label>
@@ -451,32 +494,28 @@ const ProductModal = ({
             </Box>
 
             {/* Custom Attributes selector for all variants */}
-            <Box sx={{ mb: 3, p: 2, bgcolor: '#f1f5f9', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-              <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontWeight: 600 }}>Add Custom Attributes</label>
-              <Autocomplete
-                multiple
-                size="small"
-                disabled={isView}
-                options={allAttributes.filter(a => !categoryAttributes.find(ca => ca.attribute_id === a.attribute_id))}
-                getOptionLabel={(option) => option.attribute_name}
-                value={productAttributes}
-                onChange={(e, newValue) => setProductAttributes(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Select specific attributes for this product..."
-                    sx={{ bgcolor: '#fff', borderRadius: 1 }}
-                  />
-                )}
-              />
-              <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block', marginTop: '4px' }}>
-                These attributes will apply to all variants below.
-              </span>
-            </Box>
-
-            {loadingDetails && (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-                <CircularProgress size={24} />
+            {!isView && (
+              <Box sx={{ mb: 3, p: 2, bgcolor: '#fafafa', borderRadius: 2, border: '1px solid #e0e0e0' }}>
+                <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontWeight: 600 }}>Add Custom Attributes</label>
+                <Autocomplete
+                  multiple
+                  size="small"
+                  disabled={isView}
+                  options={allAttributes.filter(a => !categoryAttributes.find(ca => ca.attribute_id === a.attribute_id))}
+                  getOptionLabel={(option) => option.attribute_name}
+                  value={productAttributes}
+                  onChange={(e, newValue) => setProductAttributes(newValue)}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Select specific attributes for this product..."
+                      sx={{ bgcolor: '#fff', borderRadius: 1 }}
+                    />
+                  )}
+                />
+                <span style={{ fontSize: '0.75rem', color: '#757575', display: 'block', marginTop: '4px' }}>
+                  These attributes will apply to all variants below.
+                </span>
               </Box>
             )}
 
@@ -487,16 +526,15 @@ const ProductModal = ({
             )}
 
             {!loadingDetails && variants.length > 0 && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: '60vh', overflowY: 'auto', pr: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 4 }}>
                 {variants.map((v, index) => (
                   <Box key={v.id} sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#fafafa', position: 'relative' }}>
 
                     {!isView && (
                       <IconButton
                         size="small"
-                        color="error"
                         onClick={() => handleRemoveVariant(v.id)}
-                        sx={{ position: 'absolute', top: 8, right: 8 }}
+                        sx={{ position: 'absolute', top: 8, right: 8, color: '#ef1744' }}
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
@@ -515,7 +553,7 @@ const ProductModal = ({
                         )}
                       </div>
                       {!isView && (
-                        <label style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#1976d2' }}>
+                        <label style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#ef1744' }}>
                           {v.imagePreview ? 'Change photo' : 'Add photo (optional)'}
                           <input
                             type="file"
@@ -578,7 +616,7 @@ const ProductModal = ({
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
-                                  placeholder={`Select ${attr.attribute_name} (e.g. Apple + Peach)`}
+                                  placeholder={isView ? '' : `Select ${attr.attribute_name} (e.g. Apple + Peach)`}
                                   sx={{
                                     '& .MuiOutlinedInput-root': {
                                       bgcolor: '#f8fafc',
@@ -586,6 +624,22 @@ const ProductModal = ({
                                       '& fieldset': { borderColor: '#e2e8f0' },
                                       '&:hover fieldset': { borderColor: '#cbd5e1' },
                                       '&.Mui-focused fieldset': { borderColor: '#4f46e5', borderWidth: '1px' },
+                                      '&.Mui-disabled': {
+                                        bgcolor: '#f5f5f5',
+                                        '& fieldset': { borderColor: '#e0e0e0' },
+                                        '& .MuiInputBase-input.Mui-disabled': {
+                                          color: '#333333',
+                                          WebkitTextFillColor: '#333333'
+                                        },
+                                        '& .MuiChip-root.Mui-disabled': {
+                                          opacity: 1,
+                                          color: '#333333',
+                                          bgcolor: '#e2e8f0',
+                                          '& .MuiChip-deleteIcon': {
+                                            display: 'none'
+                                          }
+                                        }
+                                      }
                                     }
                                   }}
                                 />
@@ -629,28 +683,9 @@ const ProductModal = ({
             )}
           </Box>
         </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2.5 }}>
-        <Button
-          variant="text"
-          onClick={handleClose}
-          disabled={submitting}
-          value={isView ? 'Close' : 'Cancel'}
-        />
-
-        {!isView && (
-          <Button
-            type="submit"
-            form="product-form"
-            value={submitting ? '' : isEdit ? 'Save changes' : 'Add product'}
-            disabled={submitting || loadingDetails || ((isCreate || isEdit) && variants.length === 0)}
-            startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
-          />
-        )}
-      </DialogActions>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
-export default ProductModal;
+export default ProductFormPage;
