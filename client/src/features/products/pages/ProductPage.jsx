@@ -151,21 +151,7 @@ const ProductPage = () => {
     ];
   }, [rows, categories, filteredRows.length]);
 
-  const handleSubmit = async (data) => {
-    const isEdit = modal.mode === 'edit' && modal.editRow?.id;
 
-    const result = isEdit
-      ? await handleUpdate(modal.editRow.id, data)
-      : await handleAdd(data);
-
-    if (result.success) {
-      closeModal();
-      showToast(isEdit ? 'Product updated.' : 'Product added.');
-      return;
-    }
-
-    showToast(result.message || 'Something went wrong.', 'error');
-  };
 
   const confirmDelete = async () => {
     const result = await handleDelete(deleting);
