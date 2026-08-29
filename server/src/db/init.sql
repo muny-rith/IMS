@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS tb_product_variant (
   product_id     INT NOT NULL REFERENCES tb_product(product_id) ON DELETE RESTRICT,
   sku            VARCHAR(50) UNIQUE,
   unit_price     NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (unit_price >= 0),
+  image_url      TEXT,
   is_active      BOOLEAN NOT NULL DEFAULT TRUE,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMP NOT NULL DEFAULT NOW()

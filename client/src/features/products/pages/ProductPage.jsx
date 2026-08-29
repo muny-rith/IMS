@@ -68,12 +68,14 @@ const ProductPage = () => {
     handleAdd,
     handleUpdate,
     handleDelete,
+    fetchProductDetail,
   } = useProducts();
 
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(EMPTY_MODAL_STATE);
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   const closeModal = useCallback(() => {
     setModal(EMPTY_MODAL_STATE);
@@ -95,21 +97,49 @@ const ProductPage = () => {
     });
   }, []);
 
-  const openViewModal = useCallback((row) => {
+  const openViewModal = useCallback(async (row) => {
     setModal({
       open: true,
       mode: 'view',
       editRow: row,
     });
-  }, []);
+    setLoadingDetail(true);
 
-  const openEditModal = useCallback((row) => {
+    try {
+      const detail = await fetchProductDetail(row.id);
+      setModal({
+        open: true,
+        mode: 'view',
+        editRow: { ...row, ...detail },
+      });
+    } catch (err) {
+      showToast(err.message || 'Failed to load product details.', 'error');
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, [fetchProductDetail, showToast]);
+
+  const openEditModal = useCallback(async (row) => {
     setModal({
       open: true,
       mode: 'edit',
       editRow: row,
     });
-  }, []);
+    setLoadingDetail(true);
+
+    try {
+      const detail = await fetchProductDetail(row.id);
+      setModal({
+        open: true,
+        mode: 'edit',
+        editRow: { ...row, ...detail },
+      });
+    } catch (err) {
+      showToast(err.message || 'Failed to load product details.', 'error');
+    } finally {
+      setLoadingDetail(false);
+    }
+  }, [fetchProductDetail, showToast]);
 
   const requestDelete = useCallback((id) => {
     setDeleting(id);
@@ -423,6 +453,7 @@ const ProductPage = () => {
         brands={brands}
         defaultValues={modal.mode === 'create' ? null : modal.editRow}
         mode={modal.mode}
+        loadingDetails={loadingDetail}
       />
 
       <Dialog

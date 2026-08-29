@@ -12,10 +12,11 @@ router.use(protect); // All product endpoints require login
 
 router.route('/')
   .get(productController.getProducts)
-  .post(upload.single('imageFile'), productController.createProduct);
+  .post(upload.any(), productController.createProduct);
 
 router.route('/:id')
-  .put(upload.single('imageFile'), productController.updateProduct)
+  .get(productController.getProductById)
+  .put(upload.any(), productController.updateProduct)
   .delete(productController.deleteProduct);
 
 export default router;

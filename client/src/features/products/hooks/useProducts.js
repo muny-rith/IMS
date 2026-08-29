@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   fetchProducts,
+  fetchProductById,
   fetchCategories,
   fetchBrands,
   addProduct,
@@ -26,6 +27,10 @@ export const useProducts = () => {
     const data = await fetchCategories();
     setCategories(data);
     return data;
+  }, []);
+
+  const loadProductDetail = useCallback(async (id) => {
+    return fetchProductById(id);
   }, []);
 
   useEffect(() => {
@@ -127,5 +132,6 @@ export const useProducts = () => {
     handleDelete,
     reload: loadProducts,
     reloadCategories: loadCategories,
+    fetchProductDetail: loadProductDetail,
   };
 };

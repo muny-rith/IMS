@@ -35,6 +35,50 @@ const EMPTY_FORM = {
   imageUrl: '',
 };
 
+const createEmptyVariant = () => ({
+  id: `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  variant_id: null,
+  sku: '',
+  unit_price: '',
+  openingQty: '',
+  openingNote: '',
+  reservedQty: 0,
+  attributes: {},
+  imageFile: null,
+  imageUrl: '',
+  imagePreview: '',
+});
+
+const normalizeVariantRows = (variantRows = []) =>
+  variantRows.map((variant) => ({
+    id: variant.variant_id || variant.id || `new-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    variant_id: variant.variant_id || null,
+    sku: variant.sku ?? '',
+    unit_price: variant.unit_price ?? '',
+    openingQty: variant.openingQty ?? variant.on_hand_qty ?? 0,
+    openingNote: '',
+    reservedQty: variant.reservedQty ?? variant.reserved_qty ?? 0,
+    attributes: variant.attributes ?? {},
+    imageFile: null,
+    imageUrl: variant.imageUrl ?? variant.image_url ?? '',
+    imagePreview: variant.imagePreview ?? variant.imageUrl ?? variant.image_url ?? '',
+    is_active: variant.isActive ?? variant.is_active ?? true,
+  }));
+
+const normalizeProductAttributes = (defaultValues, allAttributes) => {
+  const values = defaultValues?.productAttributes ?? defaultValues?.product_attributes ?? [];
+
+  return values
+    .map((attribute) => {
+      const attributeId = Number(attribute.attribute_id ?? attribute);
+      return allAttributes.find((item) => item.attribute_id === attributeId) || {
+        attribute_id: attributeId,
+        attribute_name: attribute.attribute_name ?? `Attribute ${attributeId}`,
+      };
+    })
+    .filter((attribute) => Number.isInteger(attribute.attribute_id));
+};
+
 const normalizeFormValues = (defaultValues, mode) => {
   if (!defaultValues || mode === 'create') {
     return EMPTY_FORM;
@@ -63,6 +107,7 @@ const ProductModal = ({
   brands = [],
   defaultValues = null,
   mode = 'create',
+  loadingDetails = false,
 }) => {
   const isCreate = mode === 'create';
   const isEdit = mode === 'edit';
@@ -75,6 +120,7 @@ const ProductModal = ({
   const [attributeValuesMap, setAttributeValuesMap] = useState({});
   const [productAttributes, setProductAttributes] = useState([]);
   const [variants, setVariants] = useState([]);
+  const [deletedVariantIds, setDeletedVariantIds] = useState([]);
 
   const formValues = useMemo(
     () => normalizeFormValues(defaultValues, mode),
@@ -115,19 +161,36 @@ const ProductModal = ({
 
       if (isCreate) {
         // Start with one empty variant
-        setVariants([{ id: Date.now(), sku: '', unit_price: '', openingQty: '', openingNote: '', attributes: {} }]);
+        setVariants([createEmptyVariant()]);
       } else {
-        // If edit/view, we would normally load existing variants. For now, we clear or load them if passed.
-        setVariants([]);
+        setVariants(normalizeVariantRows(defaultValues?.variants || []));
       }
+      setDeletedVariantIds([]);
       return;
     }
     reset(EMPTY_FORM);
     setImageFile(null);
     setImagePreview('');
-    setVariants([]);
+    setVariants((prev) => {
+      prev.forEach((v) => {
+        if (v.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(v.imagePreview);
+      });
+      return [];
+    });
     setProductAttributes([]);
-  }, [open, formValues, reset, isCreate]);
+    setDeletedVariantIds([]);
+  }, [open, formValues, reset, isCreate, defaultValues]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (isCreate) {
+      setProductAttributes([]);
+      return;
+    }
+
+    setProductAttributes(normalizeProductAttributes(defaultValues, allAttributes));
+  }, [open, isCreate, defaultValues, allAttributes]);
 
   useEffect(() => {
     return () => {
@@ -141,6 +204,13 @@ const ProductModal = ({
     reset(EMPTY_FORM);
     setImageFile(null);
     setImagePreview('');
+    setVariants((prev) => {
+      prev.forEach((v) => {
+        if (v.imagePreview?.startsWith('blob:')) URL.revokeObjectURL(v.imagePreview);
+      });
+      return prev;
+    });
+    setDeletedVariantIds([]);
     onClose();
   };
 
@@ -165,7 +235,8 @@ const ProductModal = ({
       department: values.department.trim(),
       imageFile,
       imageUrl: formValues.imageUrl || '',
-      variants: isCreate ? variants : [], // Pass variants only on create for now
+      variants: isCreate || isEdit ? variants : [],
+      deletedVariantIds: isEdit ? deletedVariantIds : [],
       productAttributes: productAttributes.map(a => a.attribute_id),
     });
   };
@@ -205,22 +276,47 @@ const ProductModal = ({
       if (changed) setAttributeValuesMap(newMap);
     };
     if (activeAttributes.length > 0) loadValues();
-  }, [activeAttributes]);
+  }, [activeAttributes, attributeValuesMap]);
 
   const handleAddVariant = () => {
-    setVariants([...variants, { id: Date.now(), sku: '', unit_price: '', openingQty: '', openingNote: '', attributes: {} }]);
+    setVariants([...variants, createEmptyVariant()]);
   };
 
   const handleRemoveVariant = (id) => {
-    setVariants(variants.filter(v => v.id !== id));
+    setVariants((prev) => {
+      const target = prev.find((v) => v.id === id);
+      if (target?.imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(target.imagePreview);
+      }
+      if (isEdit && target?.variant_id) {
+        setDeletedVariantIds((current) => [...new Set([...current, Number(target.variant_id)])]);
+      }
+      return prev.filter((v) => v.id !== id);
+    });
+  };
+
+  const handleVariantImageChange = (id, event) => {
+    const file = event.target.files?.[0];
+    setVariants((prev) =>
+      prev.map((v) => {
+        if (v.id !== id) return v;
+        if (v.imagePreview?.startsWith('blob:')) {
+          URL.revokeObjectURL(v.imagePreview);
+        }
+        if (!file) {
+          return { ...v, imageFile: null, imagePreview: '' };
+        }
+        return { ...v, imageFile: file, imagePreview: URL.createObjectURL(file) };
+      })
+    );
   };
 
   const handleVariantChange = (id, field, value) => {
-    setVariants(variants.map(v => v.id === id ? { ...v, [field]: value } : v));
+    setVariants((current) => current.map(v => v.id === id ? { ...v, [field]: value } : v));
   };
 
   const handleVariantAttrChange = (id, attrId, value) => {
-    setVariants(variants.map(v => {
+    setVariants((current) => current.map(v => {
       if (v.id === id) {
         return { ...v, attributes: { ...v.attributes, [attrId]: value } };
       }
@@ -349,7 +445,7 @@ const ProductModal = ({
           <Box sx={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: 2, borderLeft: { md: '1px solid #eee' }, pl: { md: 4 } }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#333' }}>Product Variants</h3>
-              {isCreate && (
+              {!isView && (
                 <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={handleAddVariant} value="Add Variant" />
               )}
             </Box>
@@ -378,24 +474,24 @@ const ProductModal = ({
               </span>
             </Box>
 
-            {!isCreate && (
-              <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderRadius: 1, border: '1px dashed #ccc' }}>
-                <span style={{ fontSize: '0.9rem', color: '#666' }}>Variant management is available during product creation.</span>
+            {loadingDetails && (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
+                <CircularProgress size={24} />
               </Box>
             )}
 
-            {isCreate && variants.length === 0 && (
+            {!loadingDetails && variants.length === 0 && (
               <Box sx={{ p: 3, textAlign: 'center', bgcolor: '#f9f9f9', borderRadius: 1, border: '1px dashed #ccc' }}>
                 <span style={{ color: '#666' }}>No variants added. Please add at least one variant.</span>
               </Box>
             )}
 
-            {isCreate && variants.length > 0 && (
+            {!loadingDetails && variants.length > 0 && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, maxHeight: '60vh', overflowY: 'auto', pr: 1 }}>
                 {variants.map((v, index) => (
                   <Box key={v.id} sx={{ p: 2, border: '1px solid #e0e0e0', borderRadius: '8px', bgcolor: '#fafafa', position: 'relative' }}>
 
-                    {variants.length > 1 && (
+                    {!isView && (
                       <IconButton
                         size="small"
                         color="error"
@@ -406,7 +502,30 @@ const ProductModal = ({
                       </IconButton>
                     )}
 
-                    <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#555' }}>Variant #{index + 1}</h4>
+                    <h4 style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#555' }}>
+                      Variant #{index + 1}{v.variant_id ? ` - ID ${v.variant_id}` : ' - New'}
+                    </h4>
+
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                      <div style={{ width: '56px', height: '56px', flexShrink: 0, border: '1px dashed #ccc', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', background: '#fff' }}>
+                        {v.imagePreview ? (
+                          <img src={v.imagePreview} alt={`Variant ${index + 1} preview`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <span style={{ fontSize: '0.65rem', color: '#aaa', textAlign: 'center', padding: '0 4px' }}>Uses product photo</span>
+                        )}
+                      </div>
+                      {!isView && (
+                        <label style={{ cursor: 'pointer', fontSize: '0.8rem', color: '#1976d2' }}>
+                          {v.imagePreview ? 'Change photo' : 'Add photo (optional)'}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(e) => handleVariantImageChange(v.id, e)}
+                            hidden
+                          />
+                        </label>
+                      )}
+                    </Box>
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
                       <Box>
@@ -416,6 +535,7 @@ const ProductModal = ({
                           className="form-field"
                           placeholder="Auto-generated if empty"
                           value={v.sku}
+                          disabled={isView}
                           onChange={(e) => handleVariantChange(v.id, 'sku', e.target.value)}
                         />
                       </Box>
@@ -428,6 +548,7 @@ const ProductModal = ({
                           className="form-field"
                           placeholder="0.00"
                           value={v.unit_price}
+                          disabled={isView}
                           onChange={(e) => handleVariantChange(v.id, 'unit_price', e.target.value)}
                           required
                         />
@@ -477,13 +598,16 @@ const ProductModal = ({
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 2 }}>
                       <Box>
-                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Opening Qty</label>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>
+                          {v.variant_id ? 'Current Qty' : 'Opening Qty'}
+                        </label>
                         <input
                           type="number"
                           min="0"
                           className="form-field"
                           placeholder="0"
                           value={v.openingQty}
+                          disabled={isView || Boolean(v.variant_id)}
                           onChange={(e) => handleVariantChange(v.id, 'openingQty', e.target.value)}
                         />
                       </Box>
@@ -494,6 +618,7 @@ const ProductModal = ({
                           className="form-field"
                           placeholder="Note"
                           value={v.openingNote}
+                          disabled={isView || Boolean(v.variant_id)}
                           onChange={(e) => handleVariantChange(v.id, 'openingNote', e.target.value)}
                         />
                       </Box>
@@ -519,7 +644,7 @@ const ProductModal = ({
             type="submit"
             form="product-form"
             value={submitting ? '' : isEdit ? 'Save changes' : 'Add product'}
-            disabled={submitting || (isCreate && variants.length === 0)}
+            disabled={submitting || loadingDetails || ((isCreate || isEdit) && variants.length === 0)}
             startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
           />
         )}

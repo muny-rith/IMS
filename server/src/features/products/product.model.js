@@ -1,6 +1,154 @@
 import pool, { query } from '../../config/db.js';
 import ApiError from '../../shared/errors/ApiError.js';
 
+const normalizeIdList = (value) => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0);
+};
+
+const normalizeAttributeValues = (value) => {
+  const values = Array.isArray(value) ? value : [value];
+
+  return values
+    .map((item) => String(item ?? '').trim())
+    .filter(Boolean);
+};
+
+const buildVariantSignature = (valueIds) =>
+  [...new Set(valueIds.map((valueId) => Number(valueId)).filter(Boolean))]
+    .sort((a, b) => a - b)
+    .join(',');
+
+const resolveVariantValueIds = async (client, attributes = {}) => {
+  const resolvedValueIds = [];
+
+  if (!attributes || typeof attributes !== 'object') {
+    return resolvedValueIds;
+  }
+
+  for (const [attrId, attrValues] of Object.entries(attributes)) {
+    const attributeId = Number(attrId);
+    if (!Number.isInteger(attributeId) || attributeId <= 0) continue;
+
+    for (const attrVal of normalizeAttributeValues(attrValues)) {
+      const valRes = await client.query(
+        'SELECT value_id FROM tb_attribute_value WHERE attribute_id = $1 AND value = $2',
+        [attributeId, attrVal]
+      );
+
+      if (valRes.rows.length > 0) {
+        resolvedValueIds.push(valRes.rows[0].value_id);
+        continue;
+      }
+
+      const newValRes = await client.query(
+        'INSERT INTO tb_attribute_value (attribute_id, value) VALUES ($1, $2) RETURNING value_id',
+        [attributeId, attrVal]
+      );
+      resolvedValueIds.push(newValRes.rows[0].value_id);
+    }
+  }
+
+  return [...new Set(resolvedValueIds)];
+};
+
+const getVariantValueIdsByVariant = async (client, variantIds) => {
+  if (!variantIds.length) return new Map();
+
+  const { rows } = await client.query(
+    `
+      SELECT variant_id, value_id
+      FROM tb_variant_attribute_value
+      WHERE variant_id = ANY($1);
+    `,
+    [variantIds]
+  );
+
+  const valueMap = new Map();
+  for (const variantId of variantIds) {
+    valueMap.set(Number(variantId), []);
+  }
+
+  for (const row of rows) {
+    const variantId = Number(row.variant_id);
+    valueMap.set(variantId, [...(valueMap.get(variantId) || []), row.value_id]);
+  }
+
+  return valueMap;
+};
+
+const assertNoDuplicateVariantSignatures = (signatureRows) => {
+  const seen = new Map();
+
+  for (const row of signatureRows) {
+    const previous = seen.get(row.signature);
+    if (previous) {
+      throw new ApiError(
+        400,
+        `Duplicate variant: "${previous.label}" and "${row.label}" share the exact same attribute values.`
+      );
+    }
+    seen.set(row.signature, row);
+  }
+};
+
+const getVariantHistoryCounts = async (client, variantId) => {
+  const { rows } = await client.query(
+    `
+      SELECT
+        (SELECT COUNT(*)::INTEGER FROM tb_stock_movement WHERE variant_id = $1) AS stock_movements,
+        (SELECT COUNT(*)::INTEGER FROM tb_loan_item WHERE variant_id = $1) AS loan_items,
+        (SELECT COUNT(*)::INTEGER FROM tb_sale_item WHERE variant_id = $1) AS sale_items,
+        (SELECT COUNT(*)::INTEGER FROM tb_stock_issue_item WHERE variant_id = $1) AS stock_issue_items,
+        (SELECT COUNT(*)::INTEGER FROM tb_purchase_request_item WHERE variant_id = $1) AS purchase_request_items;
+    `,
+    [variantId]
+  );
+
+  return rows[0];
+};
+
+const assertVariantCanBeDeleted = async (client, variantId) => {
+  const counts = await getVariantHistoryCounts(client, variantId);
+  const hasHistory = Object.values(counts).some((count) => Number(count) > 0);
+
+  if (hasHistory) {
+    throw new ApiError(
+      409,
+      `Variant ${variantId} cannot be deleted because it already has stock, loan, sale, issue, or purchase request history.`
+    );
+  }
+};
+
+const insertVariantAttributeLinks = async (client, variantId, valueIds) => {
+  for (const valueId of valueIds) {
+    await client.query(
+      'INSERT INTO tb_variant_attribute_value (variant_id, value_id) VALUES ($1, $2)',
+      [variantId, valueId]
+    );
+  }
+};
+
+const buildNextGeneratedSku = async (client, productId, startIndex) => {
+  let nextIndex = startIndex;
+
+  while (true) {
+    const sku = `${productId}-${nextIndex}`;
+    const existing = await client.query(
+      'SELECT 1 FROM tb_product_variant WHERE sku = $1 LIMIT 1;',
+      [sku]
+    );
+
+    if (existing.rows.length === 0) {
+      return sku;
+    }
+    nextIndex += 1;
+  }
+};
+
 export const findAll = async () => {
   const text = `
     SELECT 
@@ -61,6 +209,16 @@ export const findById = async (id) => {
   const product = prodRows[0];
   if (!product) return null;
 
+  const attrText = `
+    SELECT a.attribute_id, a.attribute_name
+    FROM tb_product_attribute pa
+    JOIN tb_attribute a ON pa.attribute_id = a.attribute_id
+    WHERE pa.product_id = $1
+    ORDER BY a.attribute_name ASC;
+  `;
+  const { rows: productAttributes } = await query(attrText, [id]);
+  product.product_attributes = productAttributes;
+
   // Fetch individual variants with their stock balances
   const varText = `
     SELECT 
@@ -68,16 +226,44 @@ export const findById = async (id) => {
       pv.product_id,
       pv.sku,
       pv.unit_price,
+      pv.image_url,
       pv.is_active,
       COALESCE(sb.on_hand_qty, 0)::INTEGER AS on_hand_qty,
-      COALESCE(sb.reserved_qty, 0)::INTEGER AS reserved_qty
+      COALESCE(sb.reserved_qty, 0)::INTEGER AS reserved_qty,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'attribute_id', av.attribute_id,
+            'attribute_name', a.attribute_name,
+            'value_id', av.value_id,
+            'value', av.value
+          )
+          ORDER BY a.attribute_name, av.value
+        ) FILTER (WHERE av.value_id IS NOT NULL),
+        '[]'::json
+      ) AS attribute_values
     FROM tb_product_variant pv
     LEFT JOIN tb_stock_balance sb ON pv.variant_id = sb.variant_id
+    LEFT JOIN tb_variant_attribute_value vav ON pv.variant_id = vav.variant_id
+    LEFT JOIN tb_attribute_value av ON vav.value_id = av.value_id
+    LEFT JOIN tb_attribute a ON av.attribute_id = a.attribute_id
     WHERE pv.product_id = $1
+    GROUP BY pv.variant_id, sb.on_hand_qty, sb.reserved_qty
     ORDER BY pv.variant_id ASC;
   `;
   const { rows: variantRows } = await query(varText, [id]);
-  product.variants = variantRows;
+  product.variants = variantRows.map((variant) => {
+    const attributes = {};
+    for (const value of variant.attribute_values || []) {
+      const key = String(value.attribute_id);
+      attributes[key] = [...(attributes[key] || []), value.value];
+    }
+
+    return {
+      ...variant,
+      attributes,
+    };
+  });
 
   return product;
 };
@@ -119,37 +305,7 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
 
       // Resolve attribute values FIRST (lookup-or-insert) so we can build the
       // signature and check for duplicates before touching tb_product_variant.
-      const resolvedValueIds = [];
-
-      if (v.attributes && typeof v.attributes === 'object') {
-        for (const [attrId, attrValues] of Object.entries(v.attributes)) {
-          // Accept either a single value or an array of values — an attribute
-          // like Flavor can now hold more than one value per variant
-          // (e.g. Apple + Peach), not just one.
-          const valueList = Array.isArray(attrValues) ? attrValues : [attrValues];
-
-          for (const attrVal of valueList) {
-            if (!attrVal) continue;
-
-            // Check if value exists
-            let valRes = await client.query('SELECT value_id FROM tb_attribute_value WHERE attribute_id = $1 AND value = $2', [attrId, attrVal]);
-            let valueId;
-
-            if (valRes.rows.length > 0) {
-              valueId = valRes.rows[0].value_id;
-            } else {
-              // Insert new value
-              const newValRes = await client.query(
-                'INSERT INTO tb_attribute_value (attribute_id, value) VALUES ($1, $2) RETURNING value_id',
-                [attrId, attrVal]
-              );
-              valueId = newValRes.rows[0].value_id;
-            }
-
-            resolvedValueIds.push(valueId);
-          }
-        }
-      }
+      const resolvedValueIds = await resolveVariantValueIds(client, v.attributes);
 
       // Order-independent signature: sorted value_ids joined into one string.
       // Two variants with the same values in a different pick order (e.g.
@@ -164,20 +320,15 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
       seenSignatures.add(signature);
 
       const varText = `
-        INSERT INTO tb_product_variant (product_id, sku, unit_price, is_active)
-        VALUES ($1, $2, $3, true)
+        INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, is_active)
+        VALUES ($1, $2, $3, $4, true)
         RETURNING *;
       `;
-      const varRes = await client.query(varText, [product.product_id, variantSku, v.unit_price || 0]);
+      const varRes = await client.query(varText, [product.product_id, variantSku, v.unit_price || 0, v.image_url || null]);
       const variant = varRes.rows[0];
 
       // Link the variant to every resolved attribute value
-      for (const valueId of resolvedValueIds) {
-        await client.query(
-          'INSERT INTO tb_variant_attribute_value (variant_id, value_id) VALUES ($1, $2)',
-          [variant.variant_id, valueId]
-        );
-      }
+      await insertVariantAttributeLinks(client, variant.variant_id, resolvedValueIds);
 
       // 3. Update stock balance and record movement if opening stock > 0
       const openingQty = Number(v.openingQty || 0);
@@ -218,7 +369,21 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
   }
 };
 
-export const update = async (id, { product_name, category_id, brand_id, department, unit_price, image_url, is_active }) => {
+export const update = async (
+  id,
+  {
+    product_name,
+    category_id,
+    brand_id,
+    department,
+    unit_price,
+    image_url,
+    is_active,
+    variants,
+    deleted_variant_ids = [],
+    product_attributes = null,
+  }
+) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -233,8 +398,181 @@ export const update = async (id, { product_name, category_id, brand_id, departme
     const { rows } = await client.query(text, [product_name, category_id, brand_id, department, image_url, is_active, id]);
     const product = rows[0];
 
-    // 2. Update default variant unit price if provided
-    if (unit_price !== undefined) {
+    if (Array.isArray(product_attributes)) {
+      await client.query('DELETE FROM tb_product_attribute WHERE product_id = $1;', [id]);
+
+      for (const attrId of normalizeIdList(product_attributes)) {
+        await client.query(
+          'INSERT INTO tb_product_attribute (product_id, attribute_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+          [id, attrId]
+        );
+      }
+    }
+
+    if (Array.isArray(variants)) {
+      const productId = Number(id);
+      const deletedIds = new Set(normalizeIdList(deleted_variant_ids));
+      const existingRes = await client.query(
+        'SELECT * FROM tb_product_variant WHERE product_id = $1 ORDER BY variant_id ASC FOR UPDATE;',
+        [productId]
+      );
+      const existingMap = new Map(
+        existingRes.rows.map((variant) => [Number(variant.variant_id), variant])
+      );
+      const incomingResolutions = new Map();
+
+      for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
+        const variantId = Number(variant.variant_id || variant.variantId);
+
+        if (variantId) {
+          if (!existingMap.has(variantId)) {
+            throw new ApiError(400, `Variant ${variantId} does not belong to product ${productId}.`);
+          }
+          if (deletedIds.has(variantId)) {
+            throw new ApiError(400, `Variant ${variantId} cannot be both updated and deleted.`);
+          }
+        }
+
+        incomingResolutions.set(i, {
+          variantId: variantId || null,
+          valueIds: await resolveVariantValueIds(client, variant.attributes),
+        });
+      }
+
+      for (const deletedId of deletedIds) {
+        if (!existingMap.has(deletedId)) {
+          throw new ApiError(400, `Variant ${deletedId} does not belong to product ${productId}.`);
+        }
+        await assertVariantCanBeDeleted(client, deletedId);
+      }
+
+      const currentValueMap = await getVariantValueIdsByVariant(
+        client,
+        [...existingMap.keys()]
+      );
+      const incomingVariantIds = new Set(
+        [...incomingResolutions.values()]
+          .map((resolution) => resolution.variantId)
+          .filter(Boolean)
+      );
+      const signatureRows = [];
+
+      for (const [variantId, currentVariant] of existingMap.entries()) {
+        if (deletedIds.has(variantId)) continue;
+
+        if (incomingVariantIds.has(variantId)) {
+          const matchingIndex = variants.findIndex((variant) =>
+            Number(variant.variant_id || variant.variantId) === variantId
+          );
+          const resolution = incomingResolutions.get(matchingIndex);
+          signatureRows.push({
+            key: `existing-${variantId}`,
+            label: variants[matchingIndex]?.sku || currentVariant.sku || `Variant ${variantId}`,
+            signature: buildVariantSignature(resolution.valueIds),
+          });
+          continue;
+        }
+
+        signatureRows.push({
+          key: `existing-${variantId}`,
+          label: currentVariant.sku || `Variant ${variantId}`,
+          signature: buildVariantSignature(currentValueMap.get(variantId) || []),
+        });
+      }
+
+      for (let i = 0; i < variants.length; i++) {
+        const resolution = incomingResolutions.get(i);
+        if (resolution.variantId) continue;
+
+        signatureRows.push({
+          key: `new-${i}`,
+          label: variants[i]?.sku || `New variant ${i + 1}`,
+          signature: buildVariantSignature(resolution.valueIds),
+        });
+      }
+
+      assertNoDuplicateVariantSignatures(signatureRows);
+
+      for (const deletedId of deletedIds) {
+        await client.query('DELETE FROM tb_stock_balance WHERE variant_id = $1;', [deletedId]);
+        await client.query('DELETE FROM tb_variant_attribute_value WHERE variant_id = $1;', [deletedId]);
+        await client.query('DELETE FROM tb_product_variant WHERE variant_id = $1 AND product_id = $2;', [deletedId, productId]);
+      }
+
+      let generatedSkuIndex = existingMap.size + 1;
+      for (let i = 0; i < variants.length; i++) {
+        const variant = variants[i];
+        const resolution = incomingResolutions.get(i);
+        const variantId = resolution.variantId;
+
+        if (variantId) {
+          const currentVariant = existingMap.get(variantId);
+          const nextSku = String(variant.sku ?? currentVariant.sku ?? '').trim() || null;
+          const nextUnitPrice = variant.unit_price !== undefined
+            ? Number(variant.unit_price)
+            : Number(currentVariant.unit_price || 0);
+          const nextImageUrl = variant.image_url !== undefined
+            ? variant.image_url
+            : currentVariant.image_url;
+          const nextIsActive = variant.is_active !== undefined
+            ? (variant.is_active === true || variant.is_active === 'true')
+            : currentVariant.is_active;
+
+          await client.query(
+            `
+              UPDATE tb_product_variant
+              SET sku = $1, unit_price = $2, image_url = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP
+              WHERE variant_id = $5 AND product_id = $6;
+            `,
+            [nextSku, nextUnitPrice, nextImageUrl || null, nextIsActive, variantId, productId]
+          );
+
+          await client.query('DELETE FROM tb_variant_attribute_value WHERE variant_id = $1;', [variantId]);
+          await insertVariantAttributeLinks(client, variantId, resolution.valueIds);
+          continue;
+        }
+
+        const nextSku = String(variant.sku ?? '').trim()
+          || await buildNextGeneratedSku(client, productId, generatedSkuIndex);
+        generatedSkuIndex += 1;
+
+        const insertVariantRes = await client.query(
+          `
+            INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, is_active)
+            VALUES ($1, $2, $3, $4, true)
+            RETURNING *;
+          `,
+          [productId, nextSku, Number(variant.unit_price || 0), variant.image_url || null]
+        );
+        const insertedVariant = insertVariantRes.rows[0];
+
+        await insertVariantAttributeLinks(client, insertedVariant.variant_id, resolution.valueIds);
+
+        const openingQty = Number(variant.openingQty || 0);
+        if (openingQty > 0) {
+          await client.query(
+            `
+              UPDATE tb_stock_balance
+              SET on_hand_qty = $1, updated_at = NOW()
+              WHERE variant_id = $2;
+            `,
+            [openingQty, insertedVariant.variant_id]
+          );
+
+          await client.query(
+            `
+              INSERT INTO tb_stock_movement (variant_id, movement_type, qty, notes)
+              VALUES ($1, 'OPENING', $2, $3);
+            `,
+            [insertedVariant.variant_id, openingQty, variant.openingNote || 'Opening stock balance']
+          );
+        }
+      }
+
+      product.variants = variants;
+    } else if (unit_price !== undefined) {
+      // Keep the legacy edit path for callers that only send a product-level price.
       await client.query(`
         UPDATE tb_product_variant
         SET unit_price = $1, is_active = $2, updated_at = CURRENT_TIMESTAMP
