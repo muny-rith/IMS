@@ -199,7 +199,7 @@ const ProductModal = ({
             const vals = await fetchAttributeValues(attr.attribute_id);
             newMap[attr.attribute_id] = vals || [];
             changed = true;
-          } catch (e) {}
+          } catch (e) { }
         }
       }
       if (changed) setAttributeValuesMap(newMap);
@@ -323,7 +323,7 @@ const ProductModal = ({
                     >
                       <MenuItem value=""><em>None</em></MenuItem>
                       {brands.map((b) => (
-                         <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
+                        <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -366,9 +366,9 @@ const ProductModal = ({
                 value={productAttributes}
                 onChange={(e, newValue) => setProductAttributes(newValue)}
                 renderInput={(params) => (
-                  <TextField 
-                    {...params} 
-                    placeholder="Select specific attributes for this product..." 
+                  <TextField
+                    {...params}
+                    placeholder="Select specific attributes for this product..."
                     sx={{ bgcolor: '#fff', borderRadius: 1 }}
                   />
                 )}
@@ -443,24 +443,29 @@ const ProductModal = ({
                           <Box key={attr.attribute_id}>
                             <label className="form-label" style={{ fontSize: '0.75rem', marginBottom: '4px', display: 'block' }}>{attr.attribute_name}</label>
                             <Autocomplete
+                              multiple
                               freeSolo
                               size="small"
+                              disabled={isView}
                               options={(attributeValuesMap[attr.attribute_id] || []).map(val => val.value)}
-                              value={v.attributes[attr.attribute_id] || ''}
+                              value={
+                                Array.isArray(v.attributes[attr.attribute_id])
+                                  ? v.attributes[attr.attribute_id]
+                                  : (v.attributes[attr.attribute_id] ? [v.attributes[attr.attribute_id]] : [])
+                              }
                               onChange={(event, newValue) => handleVariantAttrChange(v.id, attr.attribute_id, newValue)}
-                              onInputChange={(event, newInputValue) => handleVariantAttrChange(v.id, attr.attribute_id, newInputValue)}
                               renderInput={(params) => (
-                                <TextField 
-                                  {...params} 
-                                  placeholder={`Enter ${attr.attribute_name}`}
-                                  sx={{ 
-                                    '& .MuiOutlinedInput-root': { 
+                                <TextField
+                                  {...params}
+                                  placeholder={`Select ${attr.attribute_name} (e.g. Apple + Peach)`}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
                                       bgcolor: '#f8fafc',
                                       borderRadius: '8px',
                                       '& fieldset': { borderColor: '#e2e8f0' },
                                       '&:hover fieldset': { borderColor: '#cbd5e1' },
                                       '&.Mui-focused fieldset': { borderColor: '#4f46e5', borderWidth: '1px' },
-                                    } 
+                                    }
                                   }}
                                 />
                               )}

@@ -1,4 +1,5 @@
 import pool, { query } from '../../config/db.js';
+import ApiError from '../../shared/errors/ApiError.js';
 
 export const findAll = async () => {
   const text = `
@@ -107,11 +108,61 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
     // 2. Insert variants
     const insertedVariants = [];
     let totalOnHand = 0;
+    // Duplicate-variant guard: tracks each variant's attribute-value signature
+    // within THIS request, so two variants with the identical combo (e.g. Flavor:
+    // Apple+Peach entered twice) can't both be created for the same product.
+    const seenSignatures = new Set();
 
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i];
       const variantSku = v.sku || `${product.product_id}-${i + 1}`;
-      
+
+      // Resolve attribute values FIRST (lookup-or-insert) so we can build the
+      // signature and check for duplicates before touching tb_product_variant.
+      const resolvedValueIds = [];
+
+      if (v.attributes && typeof v.attributes === 'object') {
+        for (const [attrId, attrValues] of Object.entries(v.attributes)) {
+          // Accept either a single value or an array of values — an attribute
+          // like Flavor can now hold more than one value per variant
+          // (e.g. Apple + Peach), not just one.
+          const valueList = Array.isArray(attrValues) ? attrValues : [attrValues];
+
+          for (const attrVal of valueList) {
+            if (!attrVal) continue;
+
+            // Check if value exists
+            let valRes = await client.query('SELECT value_id FROM tb_attribute_value WHERE attribute_id = $1 AND value = $2', [attrId, attrVal]);
+            let valueId;
+
+            if (valRes.rows.length > 0) {
+              valueId = valRes.rows[0].value_id;
+            } else {
+              // Insert new value
+              const newValRes = await client.query(
+                'INSERT INTO tb_attribute_value (attribute_id, value) VALUES ($1, $2) RETURNING value_id',
+                [attrId, attrVal]
+              );
+              valueId = newValRes.rows[0].value_id;
+            }
+
+            resolvedValueIds.push(valueId);
+          }
+        }
+      }
+
+      // Order-independent signature: sorted value_ids joined into one string.
+      // Two variants with the same values in a different pick order (e.g.
+      // Peach+Apple vs Apple+Peach) must be treated as the same duplicate.
+      const signature = [...resolvedValueIds].sort((a, b) => a - b).join(',');
+      if (seenSignatures.has(signature)) {
+        throw new ApiError(
+          400,
+          'Duplicate variant: two variants in this request share the exact same attribute values.'
+        );
+      }
+      seenSignatures.add(signature);
+
       const varText = `
         INSERT INTO tb_product_variant (product_id, sku, unit_price, is_active)
         VALUES ($1, $2, $3, true)
@@ -120,32 +171,12 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
       const varRes = await client.query(varText, [product.product_id, variantSku, v.unit_price || 0]);
       const variant = varRes.rows[0];
 
-      // Insert attribute values
-      if (v.attributes && typeof v.attributes === 'object') {
-        for (const [attrId, attrVal] of Object.entries(v.attributes)) {
-          if (!attrVal) continue;
-          
-          // Check if value exists
-          let valRes = await client.query('SELECT value_id FROM tb_attribute_value WHERE attribute_id = $1 AND value = $2', [attrId, attrVal]);
-          let valueId;
-          
-          if (valRes.rows.length > 0) {
-            valueId = valRes.rows[0].value_id;
-          } else {
-            // Insert new value
-            const newValRes = await client.query(
-              'INSERT INTO tb_attribute_value (attribute_id, value) VALUES ($1, $2) RETURNING value_id',
-              [attrId, attrVal]
-            );
-            valueId = newValRes.rows[0].value_id;
-          }
-
-          // Link variant to value
-          await client.query(
-            'INSERT INTO tb_variant_attribute_value (variant_id, value_id) VALUES ($1, $2)',
-            [variant.variant_id, valueId]
-          );
-        }
+      // Link the variant to every resolved attribute value
+      for (const valueId of resolvedValueIds) {
+        await client.query(
+          'INSERT INTO tb_variant_attribute_value (variant_id, value_id) VALUES ($1, $2)',
+          [variant.variant_id, valueId]
+        );
       }
 
       // 3. Update stock balance and record movement if opening stock > 0
