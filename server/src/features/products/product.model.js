@@ -158,7 +158,19 @@ export const findAll = async () => {
       p.brand_id,
       p.department,
       p.is_active,
-      p.image_url,
+      COALESCE(
+        (
+          SELECT pv2.image_url 
+          FROM tb_product_variant pv2 
+          WHERE pv2.product_id = p.product_id AND pv2.image_url IS NOT NULL AND pv2.is_active = true 
+          ORDER BY pv2.variant_id ASC 
+          LIMIT 1
+        ),
+        CASE 
+          WHEN EXISTS (SELECT 1 FROM tb_product_variant pv3 WHERE pv3.product_id = p.product_id AND pv3.is_active = true) THEN NULL 
+          ELSE p.image_url 
+        END
+      ) AS image_url,
       p.created_at,
       p.updated_at,
       c.category_name,
@@ -267,6 +279,13 @@ export const findById = async (id) => {
     };
   });
 
+  // Optimize: When that product has variants, it will never show its own image.
+  // Instead, use the first variant's image (if available) or null.
+  if (product.variants && product.variants.length > 0) {
+    const firstVariantWithImage = product.variants.find((v) => v.image_url);
+    product.image_url = firstVariantWithImage ? firstVariantWithImage.image_url : null;
+  }
+
   return product;
 };
 
@@ -275,13 +294,14 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
   try {
     await client.query('BEGIN');
 
-    // 1. Insert product
+    // 1. Insert product (when product has variants, it will never store its own image)
+    const finalProductImageUrl = (Array.isArray(variants) && variants.length > 0) ? null : image_url;
     const prodText = `
       INSERT INTO tb_product (product_name, category_id, brand_id, department, image_url)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const prodValues = [product_name, category_id, brand_id || null, department, image_url];
+    const prodValues = [product_name, category_id, brand_id || null, department, finalProductImageUrl];
     const prodRes = await client.query(prodText, prodValues);
     const product = prodRes.rows[0];
 
@@ -390,14 +410,16 @@ export const update = async (
   try {
     await client.query('BEGIN');
 
-    // 1. Update product base
+    // 1. Update product base (when product has variants, it will never store its own image)
+    const hasVariants = Array.isArray(variants) ? variants.length > 0 : false;
+    const finalProductImageUrl = hasVariants ? null : image_url;
     const text = `
       UPDATE tb_product
       SET product_name = $1, category_id = $2, brand_id = $3, department = $4, image_url = $5, is_active = $6, updated_at = CURRENT_TIMESTAMP
       WHERE product_id = $7
       RETURNING *;
     `;
-    const { rows } = await client.query(text, [product_name, category_id, brand_id, department, image_url, is_active, id]);
+    const { rows } = await client.query(text, [product_name, category_id, brand_id, department, finalProductImageUrl, is_active, id]);
     const product = rows[0];
 
     if (Array.isArray(product_attributes)) {

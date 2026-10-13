@@ -6,6 +6,8 @@
   position: relative;
   display: inline-block;
   width: 200px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* 1. Trigger Button */
@@ -69,6 +71,9 @@
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .multiselect__trigger-label {
@@ -184,8 +189,9 @@
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  right: 0;
   z-index: 1000;
+  min-width: 200px;
+  max-width: min(320px, calc(100vw - 32px));
   width: 100%;
   box-sizing: border-box;
   background-color: #ffffff;

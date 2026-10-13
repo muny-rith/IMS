@@ -54,7 +54,11 @@ const ProductDetailPage = () => {
       .then((data) => {
         if (!mounted) return;
         setProduct(data);
-        setActiveImage(data.imageUrl || data.image || '');
+        const firstVariantImg = data.variants?.find((v) => v.imageUrl || v.imagePreview)?.imageUrl;
+        const initialImg = (data.variants && data.variants.length > 0 && firstVariantImg)
+          ? firstVariantImg
+          : (data.imageUrl || data.image || '');
+        setActiveImage(initialImg);
         setLoading(false);
       })
       .catch((err) => {
@@ -125,13 +129,23 @@ const ProductDetailPage = () => {
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const set = new Set();
-    const mainImg = product.imageUrl || product.image;
-    if (mainImg) set.add(mainImg);
+    const hasVariants = variants && variants.length > 0;
 
-    variants.forEach((v) => {
-      const vImg = v.imageUrl || v.imagePreview;
-      if (vImg) set.add(vImg);
-    });
+    // When the product has variants, never show product's own image in the gallery
+    if (!hasVariants) {
+      const mainImg = product.imageUrl || product.image;
+      if (mainImg) set.add(mainImg);
+    } else {
+      variants.forEach((v) => {
+        const vImg = v.imageUrl || v.imagePreview;
+        if (vImg) set.add(vImg);
+      });
+      // Fallback only if no variants have any image uploaded
+      if (set.size === 0) {
+        const mainImg = product.imageUrl || product.image;
+        if (mainImg) set.add(mainImg);
+      }
+    }
 
     return Array.from(set);
   }, [product, variants]);
@@ -447,7 +461,16 @@ const ProductDetailPage = () => {
                             return (
                               <tr key={v.id || v.variant_id || idx}>
                                 <td>
-                                  <div className="product-detail-tbl-avatar">
+                                  <div
+                                    className="product-detail-tbl-avatar"
+                                    style={{ cursor: (v.imageUrl || v.imagePreview) ? 'pointer' : 'default' }}
+                                    onClick={() => {
+                                      if (v.imageUrl || v.imagePreview) {
+                                        setActiveImage(v.imageUrl || v.imagePreview);
+                                      }
+                                    }}
+                                    title={v.imageUrl || v.imagePreview ? 'Click to preview variant image' : undefined}
+                                  >
                                     {v.imageUrl || v.imagePreview ? (
                                       <img src={v.imageUrl || v.imagePreview} alt={vSku} />
                                     ) : (
