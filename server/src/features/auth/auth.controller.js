@@ -65,3 +65,51 @@ export const getProfile = async (req, res, next) => {
     next(err);
   }
 };
+
+export const register = async (req, res, next) => {
+  try {
+    const { name, email, password, role = 'staff' } = req.body;
+    if (!name || !email || !password) {
+      return next(new ApiError(400, 'Name, email, and password are required.'));
+    }
+
+    let userEmail = email.toLowerCase().trim();
+    if (!userEmail.includes('@')) {
+      userEmail = `${userEmail}@moonims.com`;
+    }
+
+    const existingUser = await userModel.findByEmail(userEmail);
+    if (existingUser) {
+      return next(new ApiError(400, 'User with this email already exists.'));
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const userRole = ['admin', 'manager', 'staff', 'worker'].includes(role) ? role : 'staff';
+
+    const newUser = await userModel.create({
+      name: name.trim(),
+      email: userEmail,
+      password: hashedPassword,
+      role: userRole,
+    });
+
+    res.status(201).json({
+      status: 'success',
+      data: newUser,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getUsers = async (req, res, next) => {
+  try {
+    const users = await userModel.findAll();
+    res.status(200).json({
+      status: 'success',
+      data: users,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

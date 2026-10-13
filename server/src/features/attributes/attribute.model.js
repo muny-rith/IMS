@@ -48,19 +48,30 @@ export const findValuesByAttributeId = async (attribute_id) => {
   return rows;
 };
 
-export const addAttributeValue = async (attribute_id, value) => {
+export const addAttributeValue = async (attribute_id, value, other = null) => {
   const text = `
-    INSERT INTO tb_attribute_value (attribute_id, value)
-    VALUES ($1, $2)
+    INSERT INTO tb_attribute_value (attribute_id, value, other)
+    VALUES ($1, $2, $3)
     RETURNING *;
   `;
-  const { rows } = await query(text, [attribute_id, value]);
+  const { rows } = await query(text, [attribute_id, value, other || null]);
   return rows[0];
 };
 
 export const removeAttributeValue = async (value_id) => {
   const text = 'DELETE FROM tb_attribute_value WHERE value_id = $1;';
   await query(text, [value_id]);
+};
+
+export const updateAttributeValue = async (value_id, value, other = null) => {
+  const text = `
+    UPDATE tb_attribute_value
+    SET value = $1, other = $2
+    WHERE value_id = $3
+    RETURNING *;
+  `;
+  const { rows } = await query(text, [value, other || null, value_id]);
+  return rows[0];
 };
 
 // --- Category Attributes ---

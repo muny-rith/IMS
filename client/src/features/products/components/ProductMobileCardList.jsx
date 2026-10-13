@@ -33,12 +33,28 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                 const qty = Number(row.qty ?? 0);
                 return (
                     <MobileCard
-                        avatar={row.image ? (
-                            <img src={row.image} alt={row.name} />
-                        ) : (
-                            getInitial(row.name)
-                        )}
-                        title={row.name || 'Unnamed product'}
+                        avatar={
+                            <div
+                                onClick={() => onView?.(row)}
+                                style={{ cursor: 'pointer', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                title="View details"
+                            >
+                                {row.image ? (
+                                    <img src={row.image} alt={row.name} />
+                                ) : (
+                                    getInitial(row.name)
+                                )}
+                            </div>
+                        }
+                        title={
+                            <span
+                                onClick={() => onView?.(row)}
+                                style={{ cursor: 'pointer' }}
+                                title="View details"
+                            >
+                                {row.name || 'Unnamed product'}
+                            </span>
+                        }
                         subtitle={row.code ? `SKU ${row.code}` : 'No code'}
                         rightContent={
                             row.price != null && row.price !== ''
@@ -76,12 +92,14 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                                 icon: <EditIcon fontSize="small" />,
                                 onClick: () => onEdit(row),
                             },
-                            {
-                                label: 'Delete',
-                                icon: <DeleteIcon fontSize="small" />,
-                                onClick: () => onDelete(row.id),
-                                className: 'mobile-card__action--danger',
-                            },
+                            ...(onDelete
+                                ? [{
+                                    label: 'Delete',
+                                    icon: <DeleteIcon fontSize="small" />,
+                                    onClick: () => onDelete(row.id),
+                                    className: 'mobile-card__action--danger',
+                                }]
+                                : []),
                         ]}
                     />
                 )

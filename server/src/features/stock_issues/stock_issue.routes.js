@@ -9,7 +9,7 @@ router.use(protect);
 router
   .route('/')
   .get(issueController.getStockIssues)
-  .post(restrictTo('admin'), issueController.createStockIssue);
+  .post(restrictTo('admin', 'manager', 'staff'), issueController.createStockIssue);
 
 router
   .route('/:id')

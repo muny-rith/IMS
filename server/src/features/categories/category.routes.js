@@ -1,6 +1,6 @@
 import express from 'express';
 import * as categoryController from './category.controller.js';
-import { protect } from '../../middleware/auth.middleware.js';
+import { protect, restrictTo } from '../../middleware/auth.middleware.js';
 import multer from 'multer';
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -11,10 +11,10 @@ router.use(protect); // All category endpoints require login
 
 router.route('/')
   .get(categoryController.getCategories)
-  .post(upload.single('imageFile'), categoryController.createCategory);
+  .post(restrictTo('admin', 'manager'), upload.single('imageFile'), categoryController.createCategory);
 
 router.route('/:id')
-  .put(upload.single('imageFile'), categoryController.updateCategory)
-  .delete(categoryController.deleteCategory);
+  .put(restrictTo('admin', 'manager'), upload.single('imageFile'), categoryController.updateCategory)
+  .delete(restrictTo('admin', 'manager'), categoryController.deleteCategory);
 
 export default router;

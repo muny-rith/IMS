@@ -4,16 +4,18 @@ import {
   addBrand,
   updateBrand,
   deleteBrand,
+  getCachedBrands,
 } from '../services/brandService';
 
 export const useBrands = () => {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedBrands();
+  const [rows, setRows] = useState(() => cached || []);
+  const [loading, setLoading] = useState(() => !cached);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadBrands = useCallback(async () => {
-    const data = await fetchBrands();
+  const loadBrands = useCallback(async (force = false) => {
+    const data = await fetchBrands(force);
     setRows(data);
     return data;
   }, []);
@@ -23,7 +25,9 @@ export const useBrands = () => {
 
     const loadInitialData = async () => {
       try {
-        setLoading(true);
+        if (!cached) {
+          setLoading(true);
+        }
         setError(null);
 
         const data = await fetchBrands();
@@ -45,7 +49,7 @@ export const useBrands = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [cached]);
 
   const handleAdd = async (data) => {
     setSubmitting(true);
@@ -53,7 +57,7 @@ export const useBrands = () => {
 
     try {
       await addBrand(data);
-      await loadBrands();
+      await loadBrands(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to add brand.';
@@ -70,7 +74,7 @@ export const useBrands = () => {
 
     try {
       await updateBrand(id, data);
-      await loadBrands();
+      await loadBrands(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to update brand.';
@@ -106,6 +110,6 @@ export const useBrands = () => {
     handleAdd,
     handleUpdate,
     handleDelete,
-    reload: loadBrands,
+    reload: (force = true) => loadBrands(force),
   };
 };

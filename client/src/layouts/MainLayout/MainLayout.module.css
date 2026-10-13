@@ -37,6 +37,14 @@
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+  width: 0;
+  height: 0;
 }
 
 /* Mobile backdrop */

@@ -1,4 +1,5 @@
 :root {
+  --app-font: 'Battambang', 'Khmer OS Battambang', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --primary-color: #eb0029;
   --second-color: #fde5e9;
   --third-color: #fc791a;
@@ -11,16 +12,13 @@
   --bp-md: 900px;
   --bp-sm: 768px;
   --bp-xs: 480px;
-
-
-
 }
-
 
 html,
 body,
 #root {
   height: 100%;
+  font-family: var(--app-font);
 }
 
 a {
@@ -33,14 +31,7 @@ a {
   padding: 10px 20px;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Epilogue:ital,wght@0,100..900;1,100..900&display=swap');
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Epilogue', 'Battambang', system-ui, sans-serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&display=swap');
 
 *,
 *::before,
@@ -48,12 +39,52 @@ a {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  font-family: var(--app-font);
 }
 
-/* html {
-    scrollbar-gutter: stable;
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: var(--app-font);
+}
 
-} */
+/* Material-UI Component Overrides to enforce Battambang */
+.MuiTypography-root,
+.MuiButton-root,
+.MuiButtonBase-root,
+.MuiInputBase-root,
+.MuiInputBase-input,
+.MuiOutlinedInput-root,
+.MuiInputLabel-root,
+.MuiFormLabel-root,
+.MuiTableCell-root,
+.MuiChip-root,
+.MuiChip-label,
+.MuiMenuItem-root,
+.MuiTab-root,
+.MuiTooltip-tooltip,
+.MuiDialog-root,
+.MuiAlert-root,
+.MuiAutocomplete-root,
+.MuiAutocomplete-input {
+  font-family: var(--app-font) !important;
+}
+
+/* Hide default browser scrollbar while preserving full scrollability */
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+  width: 0;
+  height: 0;
+}
 
 body {
   overflow-x: hidden;

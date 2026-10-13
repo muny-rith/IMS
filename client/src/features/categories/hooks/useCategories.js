@@ -4,16 +4,18 @@ import {
   addCategory,
   updateCategory,
   deleteCategory,
+  getCachedCategories,
 } from '../services/categoryService';
 
 export const useCategories = () => {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedCategories();
+  const [rows, setRows] = useState(() => cached || []);
+  const [loading, setLoading] = useState(() => !cached);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadCategories = useCallback(async () => {
-    const data = await fetchCategories();
+  const loadCategories = useCallback(async (force = false) => {
+    const data = await fetchCategories(force);
     setRows(data);
     return data;
   }, []);
@@ -23,7 +25,9 @@ export const useCategories = () => {
 
     const loadInitialData = async () => {
       try {
-        setLoading(true);
+        if (!cached) {
+          setLoading(true);
+        }
         setError(null);
 
         const data = await fetchCategories();
@@ -45,7 +49,7 @@ export const useCategories = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [cached]);
 
   const handleAdd = async (data) => {
     setSubmitting(true);
@@ -53,7 +57,7 @@ export const useCategories = () => {
 
     try {
       await addCategory(data);
-      await loadCategories();
+      await loadCategories(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to add category.';
@@ -70,7 +74,7 @@ export const useCategories = () => {
 
     try {
       await updateCategory(id, data);
-      await loadCategories();
+      await loadCategories(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to update category.';
@@ -106,6 +110,6 @@ export const useCategories = () => {
     handleAdd,
     handleUpdate,
     handleDelete,
-    reload: loadCategories,
+    reload: (force = true) => loadCategories(force),
   };
 };

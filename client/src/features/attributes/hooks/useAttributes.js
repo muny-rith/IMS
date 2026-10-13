@@ -82,9 +82,19 @@ export const useAttributeValues = (attributeId) => {
     loadValues();
   }, [loadValues]);
 
-  const handleAddValue = async (value) => {
+  const handleAddValue = async (value, other = null) => {
     try {
-      await attributeService.createAttributeValue(attributeId, { value });
+      await attributeService.createAttributeValue(attributeId, { value, other });
+      await loadValues();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  };
+
+  const handleUpdateValue = async (valueId, value, other = null) => {
+    try {
+      await attributeService.updateAttributeValue(valueId, { value, other });
       await loadValues();
       return { success: true };
     } catch (err) {
@@ -106,6 +116,7 @@ export const useAttributeValues = (attributeId) => {
     values,
     loading,
     handleAddValue,
+    handleUpdateValue,
     handleDeleteValue,
     refresh: loadValues,
   };

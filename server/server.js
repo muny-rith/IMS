@@ -22,6 +22,8 @@ import attributeRoutes from './src/features/attributes/attribute.routes.js';
 import purchaseRequestRoutes from './src/features/purchase_requests/purchase_request.routes.js';
 import stockIssueRoutes from './src/features/stock_issues/stock_issue.routes.js';
 import saleRoutes from './src/features/sales/sale.routes.js';
+import diagnosticsRoutes from './src/features/diagnostics/diagnostics.routes.js';
+import { apiRateLimiter } from './src/middleware/rateLimit.middleware.js';
 
 dotenv.config();
 
@@ -37,6 +39,9 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(morgan('dev'));
+
+// Global API Rate Limiter
+app.use('/api', apiRateLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -58,6 +63,8 @@ app.use('/api/attributes', attributeRoutes);
 app.use('/api/purchase-requests', purchaseRequestRoutes);
 app.use('/api/stock-issues', stockIssueRoutes);
 app.use('/api/sales', saleRoutes);
+app.use('/api/diagnostics', diagnosticsRoutes);
+
 
 // Fallback for unhandled routes
 app.all('*', (req, res, next) => {

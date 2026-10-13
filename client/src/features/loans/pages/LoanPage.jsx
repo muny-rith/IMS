@@ -18,6 +18,7 @@ import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlin
 import DoneAllOutlinedIcon from '@mui/icons-material/DoneAllOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
@@ -411,7 +412,7 @@ const LoanPage = () => {
 
             <div className="loan-toolbar__search">
               <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by loan code, worker, status..."

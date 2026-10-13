@@ -227,6 +227,7 @@ export const findById = async (id) => {
       pv.sku,
       pv.unit_price,
       pv.image_url,
+      pv.other,
       pv.is_active,
       COALESCE(sb.on_hand_qty, 0)::INTEGER AS on_hand_qty,
       COALESCE(sb.reserved_qty, 0)::INTEGER AS reserved_qty,
@@ -236,7 +237,8 @@ export const findById = async (id) => {
             'attribute_id', av.attribute_id,
             'attribute_name', a.attribute_name,
             'value_id', av.value_id,
-            'value', av.value
+            'value', av.value,
+            'other', av.other
           )
           ORDER BY a.attribute_name, av.value
         ) FILTER (WHERE av.value_id IS NOT NULL),
@@ -320,11 +322,11 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
       seenSignatures.add(signature);
 
       const varText = `
-        INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, is_active)
-        VALUES ($1, $2, $3, $4, true)
+        INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, other, is_active)
+        VALUES ($1, $2, $3, $4, $5, true)
         RETURNING *;
       `;
-      const varRes = await client.query(varText, [product.product_id, variantSku, v.unit_price || 0, v.image_url || null]);
+      const varRes = await client.query(varText, [product.product_id, variantSku, v.unit_price || 0, v.image_url || null, v.other ? String(v.other).trim() : null]);
       const variant = varRes.rows[0];
 
       // Link the variant to every resolved attribute value
@@ -519,13 +521,17 @@ export const update = async (
             ? (variant.is_active === true || variant.is_active === 'true')
             : currentVariant.is_active;
 
+          const nextOther = variant.other !== undefined
+            ? (variant.other ? String(variant.other).trim() : null)
+            : currentVariant.other;
+
           await client.query(
             `
               UPDATE tb_product_variant
-              SET sku = $1, unit_price = $2, image_url = $3, is_active = $4, updated_at = CURRENT_TIMESTAMP
-              WHERE variant_id = $5 AND product_id = $6;
+              SET sku = $1, unit_price = $2, image_url = $3, other = $4, is_active = $5, updated_at = CURRENT_TIMESTAMP
+              WHERE variant_id = $6 AND product_id = $7;
             `,
-            [nextSku, nextUnitPrice, nextImageUrl || null, nextIsActive, variantId, productId]
+            [nextSku, nextUnitPrice, nextImageUrl || null, nextOther || null, nextIsActive, variantId, productId]
           );
 
           await client.query('DELETE FROM tb_variant_attribute_value WHERE variant_id = $1;', [variantId]);
@@ -539,11 +545,11 @@ export const update = async (
 
         const insertVariantRes = await client.query(
           `
-            INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, is_active)
-            VALUES ($1, $2, $3, $4, true)
+            INSERT INTO tb_product_variant (product_id, sku, unit_price, image_url, other, is_active)
+            VALUES ($1, $2, $3, $4, $5, true)
             RETURNING *;
           `,
-          [productId, nextSku, Number(variant.unit_price || 0), variant.image_url || null]
+          [productId, nextSku, Number(variant.unit_price || 0), variant.image_url || null, variant.other ? String(variant.other).trim() : null]
         );
         const insertedVariant = insertVariantRes.rows[0];
 
@@ -620,6 +626,97 @@ export const remove = async (id) => {
   }
 };
 
+export const bulkRemove = async (ids) => {
+  const cleanIds = normalizeIdList(ids);
+  if (cleanIds.length === 0) return { deletedCount: 0, deletedIds: [], imageUrls: [] };
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Find all variants and their images for these products
+    const varRows = (
+      await client.query(
+        'SELECT variant_id, image_url FROM tb_product_variant WHERE product_id = ANY($1);',
+        [cleanIds]
+      )
+    ).rows;
+    const variantIds = varRows.map((v) => v.variant_id);
+    const variantImageUrls = varRows.map((v) => v.image_url).filter(Boolean);
+
+    if (variantIds.length > 0) {
+      await client.query('DELETE FROM tb_stock_movement WHERE variant_id = ANY($1);', [variantIds]);
+      await client.query('DELETE FROM tb_stock_balance WHERE variant_id = ANY($1);', [variantIds]);
+      await client.query('DELETE FROM tb_variant_attribute_value WHERE variant_id = ANY($1);', [variantIds]);
+      await client.query('DELETE FROM tb_product_variant WHERE variant_id = ANY($1);', [variantIds]);
+    }
+
+    await client.query('DELETE FROM tb_product_attribute WHERE product_id = ANY($1);', [cleanIds]);
+    const { rows } = await client.query(
+      'DELETE FROM tb_product WHERE product_id = ANY($1) RETURNING product_id, image_url;',
+      [cleanIds]
+    );
+
+    await client.query('COMMIT');
+
+    const productImages = rows.map((r) => r.image_url).filter(Boolean);
+
+    return {
+      deletedCount: rows.length,
+      deletedIds: rows.map((r) => r.product_id),
+      imageUrls: [...productImages, ...variantImageUrls],
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+export const bulkSetStatus = async (ids, isActive) => {
+  const cleanIds = normalizeIdList(ids);
+  if (cleanIds.length === 0) return { updatedCount: 0, updatedIds: [], isActive: Boolean(isActive) };
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const statusBool = Boolean(isActive);
+
+    const { rows } = await client.query(
+      `
+        UPDATE tb_product
+        SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = ANY($2)
+        RETURNING product_id;
+      `,
+      [statusBool, cleanIds]
+    );
+
+    await client.query(
+      `
+        UPDATE tb_product_variant
+        SET is_active = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = ANY($2);
+      `,
+      [statusBool, cleanIds]
+    );
+
+    await client.query('COMMIT');
+    return {
+      updatedCount: rows.length,
+      updatedIds: rows.map((r) => r.product_id),
+      isActive: statusBool,
+    };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
 export const findExternalStocks = async () => {
   const text = `
     SELECT p.product_name, pv.sku, sb.on_hand_qty
@@ -631,3 +728,4 @@ export const findExternalStocks = async () => {
   const { rows } = await query(text);
   return rows;
 };
+

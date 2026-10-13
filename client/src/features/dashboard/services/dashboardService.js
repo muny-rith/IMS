@@ -1,24 +1,12 @@
 import { ROUTE_PATHS } from "../../../constants/routes";
 import api from "../../../lib/api";
+import cacheService, { CACHE_TTL } from "../../../services/cacheService";
+
+export const DASHBOARD_CACHE_KEY = 'dashboard_summary';
+
+export const getCachedDashboardData = () => cacheService.get(DASHBOARD_CACHE_KEY);
 
 const LOW_STOCK_THRESHOLD = 10;
-const STOCK_IN_MOVEMENT_TYPES = new Set([
-  "OPENING",
-  "ADJUSTMENT_IN",
-  "LOAN_RETURN",
-  "RETURN",
-  "STOCK_IN",
-]);
-const STOCK_OUT_MOVEMENT_TYPES = new Set([
-  "ADJUSTMENT_OUT",
-  "LOAN_OUT",
-  "SALE",
-  "SALE_OUT",
-  "STOCK_ISSUE",
-  "STOCK_ISSUE_OUT",
-  "ISSUE",
-]);
-
 const asObject = (value) => (Array.isArray(value) ? value[0] : value);
 
 const formatNumber = (value) =>
@@ -36,58 +24,6 @@ const formatDate = (value) => {
     month: "short",
     day: "numeric",
   }).format(date);
-};
-
-const getDateKey = (value) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return date.toISOString().slice(0, 10);
-};
-
-const getDayLabel = (date) =>
-  new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date);
-
-const getLastSevenDays = () => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (6 - index));
-
-    return {
-      date,
-      key: getDateKey(date),
-      label: getDayLabel(date),
-      stockIn: 0,
-      stockOut: 0,
-    };
-  });
-};
-
-const getMovementDirection = (movementType = "") => {
-  if (STOCK_IN_MOVEMENT_TYPES.has(movementType)) {
-    return "in";
-  }
-
-  if (STOCK_OUT_MOVEMENT_TYPES.has(movementType)) {
-    return "out";
-  }
-
-  if (movementType.endsWith("_IN") || movementType.includes("RETURN")) {
-    return "in";
-  }
-
-  if (
-    movementType.endsWith("_OUT") ||
-    movementType.includes("ISSUE") ||
-    movementType.includes("SALE")
-  ) {
-    return "out";
-  }
-
-  return null;
 };
 
 const getOutstandingQty = (loan) =>
@@ -114,37 +50,6 @@ const isOverdueLoan = (loan, today) => {
     !Number.isNaN(dueDate.getTime()) &&
     dueDate < today
   );
-};
-
-const isDueSoonLoan = (loan, today, nextSevenDays) => {
-  const dueDate = loan.due_date ? new Date(loan.due_date) : null;
-
-  return (
-    isOpenLoan(loan) &&
-    dueDate &&
-    !Number.isNaN(dueDate.getTime()) &&
-    dueDate >= today &&
-    dueDate <= nextSevenDays
-  );
-};
-
-const normalizeStockBalance = (row) => {
-  const product = asObject(row.products);
-  const category = asObject(product?.categories);
-  const onHandQty = Number(row.on_hand_qty ?? 0);
-  const reservedQty = Number(row.reserved_qty ?? 0);
-  const availableQty = onHandQty - reservedQty;
-
-  return {
-    id: row.stock_balance_id,
-    productId: row.product_id,
-    productName: product?.product_name ?? "Unnamed product",
-    category: category?.category_name ?? "-",
-    onHandQty,
-    reservedQty,
-    availableQty,
-    updatedAt: row.updated_at,
-  };
 };
 
 const buildHero = ({ lowStockCount, outOfStockCount, overdueLoans, activeLoans }) => {
@@ -322,49 +227,17 @@ const buildQuickActions = ({ productCount, lowStockCount, overdueLoans }) => [
   },
 ];
 
-const buildStockTrend = (movements) => {
-  const days = getLastSevenDays();
-  const dayMap = new Map(days.map((day) => [day.key, day]));
-
-  (movements ?? []).forEach((movement) => {
-    const day = dayMap.get(getDateKey(movement.created_at));
-    if (!day) return;
-
-    const qty = Number(movement.qty ?? 0);
-    const direction = getMovementDirection(movement.movement_type);
-
-    if (direction === "in") {
-      day.stockIn += qty;
-    }
-
-    if (direction === "out") {
-      day.stockOut += qty;
-    }
-  });
-
-  return days.map(({ label, stockIn, stockOut }) => ({
-    label,
-    stockIn,
-    stockOut,
-  }));
-};
-
-const assertNoError = (result) => {
-  if (result.error) {
-    throw new Error(result.error.message);
+export const fetchDashboardData = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(DASHBOARD_CACHE_KEY);
+    if (cached) return cached;
   }
-
-  return result.data ?? [];
-};
-
-export const fetchDashboardData = async () => {
   const response = await api.get('/dashboard/stats');
   const {
     products,
     balances,
     loans,
     workers,
-    movements,
     purchaseRequests,
     lowStockCount,
     outOfStockCount,
@@ -381,7 +254,7 @@ export const fetchDashboardData = async () => {
 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  return {
+  const resultData = {
     hero: buildHero({
       lowStockCount,
       outOfStockCount,
@@ -413,6 +286,9 @@ export const fetchDashboardData = async () => {
     }),
     chartData,
   };
+
+  cacheService.set(DASHBOARD_CACHE_KEY, resultData, CACHE_TTL.DASHBOARD);
+  return resultData;
 };
 
 export const fetchDashboardHero = async () => (await fetchDashboardData()).hero;

@@ -46,8 +46,12 @@
 /* icons */
 .input-wrapper .icon {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
-  color: #888;
+  color: #94a3b8;
+  pointer-events: none;
 }
 
 .input-wrapper .icon.left {
@@ -60,6 +64,7 @@
 
 .input-wrapper .icon.clickable {
   cursor: pointer;
+  pointer-events: auto;
 }
 
 /* focus */

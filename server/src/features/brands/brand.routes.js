@@ -6,7 +6,7 @@ import {
   updateBrand,
   deleteBrand
 } from './brand.controller.js';
-import { protect } from '../../middleware/auth.middleware.js';
+import { protect, restrictTo } from '../../middleware/auth.middleware.js';
 import multer from 'multer';
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -17,8 +17,8 @@ router.use(protect); // Require authentication for all brand routes
 
 router.get('/', getAllBrands);
 router.get('/:id', getBrandById);
-router.post('/', upload.single('imageFile'), createBrand);
-router.put('/:id', upload.single('imageFile'), updateBrand);
-router.delete('/:id', deleteBrand);
+router.post('/', restrictTo('admin', 'manager'), upload.single('imageFile'), createBrand);
+router.put('/:id', restrictTo('admin', 'manager'), upload.single('imageFile'), updateBrand);
+router.delete('/:id', restrictTo('admin', 'manager'), deleteBrand);
 
 export default router;

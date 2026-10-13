@@ -1,4 +1,17 @@
 import api from '../../../lib/api';
+import cacheService, { CACHE_TTL } from '../../../services/cacheService';
+
+export const CACHE_KEYS = {
+  PRODUCTS_LIST: 'products_list',
+  PRODUCT_DETAIL: (id) => `product_detail_${id}`,
+  CATEGORIES_LIST: 'categories_list',
+  BRANDS_LIST: 'brands_list',
+};
+
+export const getCachedProducts = () => cacheService.get(CACHE_KEYS.PRODUCTS_LIST);
+export const getCachedCategories = () => cacheService.get(CACHE_KEYS.CATEGORIES_LIST);
+export const getCachedBrands = () => cacheService.get(CACHE_KEYS.BRANDS_LIST);
+export const getCachedProductById = (id) => cacheService.get(CACHE_KEYS.PRODUCT_DETAIL(id));
 
 const normalizeProductRow = (row) => {
   const onHandQty = Number(row.on_hand_qty ?? 0);
@@ -34,8 +47,10 @@ const normalizeVariantRow = (row) => ({
   imageUrl: row.image_url ?? '',
   imagePreview: row.image_url ?? '',
   isActive: row.is_active,
+  other: row.other ?? '',
   attributes: row.attributes ?? {},
   attributeValues: row.attribute_values ?? [],
+  attribute_values: row.attribute_values ?? [],
 });
 
 const normalizeProductDetail = (row) => ({
@@ -44,31 +59,55 @@ const normalizeProductDetail = (row) => ({
   productAttributes: row.product_attributes ?? row.productAttributes ?? [],
 });
 
-export const fetchProducts = async () => {
+export const fetchProducts = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(CACHE_KEYS.PRODUCTS_LIST);
+    if (cached) return cached;
+  }
   const response = await api.get('/products');
-  return (response.data.data ?? []).map(normalizeProductRow);
+  const data = (response.data.data ?? []).map(normalizeProductRow);
+  cacheService.set(CACHE_KEYS.PRODUCTS_LIST, data, CACHE_TTL.PRODUCTS);
+  return data;
 };
 
-export const fetchProductById = async (id) => {
+export const fetchProductById = async (id, forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(CACHE_KEYS.PRODUCT_DETAIL(id));
+    if (cached) return cached;
+  }
   const response = await api.get(`/products/${id}`);
-  return normalizeProductDetail(response.data.data);
+  const data = normalizeProductDetail(response.data.data);
+  cacheService.set(CACHE_KEYS.PRODUCT_DETAIL(id), data, CACHE_TTL.DETAIL);
+  return data;
 };
 
-export const fetchCategories = async () => {
+export const fetchCategories = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(CACHE_KEYS.CATEGORIES_LIST);
+    if (cached) return cached;
+  }
   const response = await api.get('/categories');
-  return (response.data.data ?? []).map((item) => ({
+  const data = (response.data.data ?? []).map((item) => ({
     id: item.category_id,
     name: item.category_name,
     attributes: item.attributes || [],
   }));
+  cacheService.set(CACHE_KEYS.CATEGORIES_LIST, data, CACHE_TTL.METADATA);
+  return data;
 };
 
-export const fetchBrands = async () => {
+export const fetchBrands = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(CACHE_KEYS.BRANDS_LIST);
+    if (cached) return cached;
+  }
   const response = await api.get('/brands');
-  return (response.data.data ?? []).map((item) => ({
+  const data = (response.data.data ?? []).map((item) => ({
     id: item.brand_id,
     name: item.brand_name,
   }));
+  cacheService.set(CACHE_KEYS.BRANDS_LIST, data, CACHE_TTL.METADATA);
+  return data;
 };
 
 export const addProduct = async (data) => {
@@ -104,6 +143,10 @@ export const addProduct = async (data) => {
       'Content-Type': 'multipart/form-data',
     },
   });
+
+  cacheService.invalidate('products');
+  cacheService.invalidate('product_detail');
+  cacheService.invalidate('dashboard');
 
   return response.data.data.product_id;
 };
@@ -152,9 +195,39 @@ export const updateProduct = async (id, data) => {
     },
   });
 
+  cacheService.invalidate('products');
+  cacheService.invalidate('product_detail');
+  cacheService.invalidate(CACHE_KEYS.PRODUCT_DETAIL(id));
+  cacheService.invalidate('dashboard');
+
   return response.data.data.product_id;
 };
 
 export const deleteProduct = async (id) => {
   await api.delete(`/products/${id}`);
+  cacheService.invalidate('products');
+  cacheService.invalidate('product_detail');
+  cacheService.invalidate(CACHE_KEYS.PRODUCT_DETAIL(id));
+  cacheService.invalidate('dashboard');
 };
+
+export const bulkDeleteProducts = async (ids) => {
+  const response = await api.post('/products/bulk-delete', { ids });
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
+  if (Array.isArray(ids)) {
+    ids.forEach((id) => cacheService.invalidate(CACHE_KEYS.PRODUCT_DETAIL(id)));
+  }
+  return response.data;
+};
+
+export const bulkUpdateProductStatus = async (ids, isActive) => {
+  const response = await api.post('/products/bulk-status', { ids, isActive });
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
+  if (Array.isArray(ids)) {
+    ids.forEach((id) => cacheService.invalidate(CACHE_KEYS.PRODUCT_DETAIL(id)));
+  }
+  return response.data;
+};
+

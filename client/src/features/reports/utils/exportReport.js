@@ -240,7 +240,7 @@ const buildStockMovementExcelTable = ({
           table {
             width: 100%;
             border-collapse: collapse;
-            font-family: "Noto Sans Khmer", "Khmer OS Battambang", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Khmer OS Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
             font-size: 13px;
           }
 
@@ -412,7 +412,7 @@ const buildExcelTable = ({
         <style>
           table {
             border-collapse: collapse;
-            font-family: "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Khmer OS Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
             font-size: 12px;
           }
 
@@ -650,7 +650,7 @@ const printStockMovementPdfReport = ({
             margin: 0;
             color: #000000;
             background: #ffffff;
-            font-family: "Noto Sans Khmer", "Khmer OS Battambang", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Khmer OS Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
           }
 
           .movement-paper {
@@ -847,7 +847,7 @@ const printMonthlyUsagePdfReport = ({
             margin: 0;
             color: #000000;
             background: #ffffff;
-            font-family: "Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Khmer OS Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
           }
 
           .report-paper-usage {
@@ -1051,7 +1051,7 @@ export const printPdfReport = ({
             margin: 0;
             color: #0f172a;
             background: #ffffff;
-            font-family: "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
+            font-family: "Battambang", "Khmer OS Battambang", "Noto Sans Khmer", "Segoe UI", Arial, sans-serif;
           }
 
           .report-paper {

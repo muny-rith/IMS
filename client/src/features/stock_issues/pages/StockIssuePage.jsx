@@ -3,6 +3,7 @@ import '../../products/pages/product.css';
 import { Box, CircularProgress, Tooltip, IconButton, Snackbar, Alert, Chip } from '@mui/material';
 import AssignmentReturnOutlinedIcon from '@mui/icons-material/AssignmentReturnOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -128,7 +129,7 @@ const StockIssuePage = () => {
             <Button value="New Issue" onClick={() => setModalOpen(true)} />
             <div className="product-toolbar__search">
               <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 placeholder="Search issues..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

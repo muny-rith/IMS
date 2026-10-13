@@ -4,24 +4,28 @@ import { ROUTE_PATHS } from "../../../constants/routes";
 import { useAuth } from "../hooks/useAuth";
 import "./LoginPage.css";
 
-const getRedirectPath = (location) => {
+const getRedirectPath = (location, user) => {
   const pathname = location.state?.from?.pathname;
-  return pathname && pathname !== ROUTE_PATHS.login
-    ? pathname
-    : ROUTE_PATHS.dashboard;
+  if (pathname && pathname !== ROUTE_PATHS.login) {
+    return pathname;
+  }
+  if (user?.role === 'staff' || user?.role === 'worker') {
+    return ROUTE_PATHS.products;
+  }
+  return ROUTE_PATHS.dashboard;
 };
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, isAuthenticated, loading } = useAuth();
+  const { signIn, isAuthenticated, loading, user } = useAuth();
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   if (!loading && isAuthenticated) {
-    return <Navigate to={getRedirectPath(location)} replace />;
+    return <Navigate to={getRedirectPath(location, user)} replace />;
   }
 
   const handleSubmit = async (event) => {
@@ -30,12 +34,13 @@ function LoginPage() {
     setSubmitting(true);
 
     try {
-      await signIn({
+      const result = await signIn({
         email: loginId.trim(),
         password,
       });
 
-      navigate(getRedirectPath(location), { replace: true });
+      const loggedInUser = result?.user;
+      navigate(getRedirectPath(location, loggedInUser), { replace: true });
     } catch (err) {
       setError(err.message || "Login failed. Please check username and password.");
     } finally {

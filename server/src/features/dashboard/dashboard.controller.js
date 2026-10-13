@@ -1,7 +1,15 @@
 import pool from '../../config/db.js';
+import serverCache, { SERVER_CACHE_TTL } from '../../shared/cache/memoryCache.js';
 
 export const getDashboardData = async (req, res, next) => {
   try {
+    const cached = serverCache.get('dashboard:stats');
+    if (cached) {
+      return res.status(200).json({
+        status: "success",
+        data: cached,
+      });
+    }
     const now = new Date();
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
@@ -215,6 +223,8 @@ export const getDashboardData = async (req, res, next) => {
       ],
       chartData
     };
+
+    serverCache.set('dashboard:stats', dashboardResponse, SERVER_CACHE_TTL.DASHBOARD);
 
     res.status(200).json({
       status: "success",

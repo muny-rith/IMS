@@ -1,0 +1,38 @@
+.product-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: max-content;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-radius: var(--radius, 12px);
+  border: 1px solid #cbd5e1;
+  padding: 10px 18px;
+  background-color: #ffffff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.product-export-btn:hover:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.product-export-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.product-export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

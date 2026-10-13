@@ -7,6 +7,7 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import RemoveShoppingCartOutlinedIcon from '@mui/icons-material/RemoveShoppingCartOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 
 import Button from '../../../components/ui/Button/Button';
@@ -309,7 +310,7 @@ const StockAdjustmentPage = () => {
                 <Button value="Refresh" onClick={handleRefresh} />
                 <div className="stock-toolbar__search">
                   <Input
-                    leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                    leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search by product, category..."

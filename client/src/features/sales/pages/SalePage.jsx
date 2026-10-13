@@ -4,6 +4,7 @@ import { Box, CircularProgress, IconButton, Tooltip, Snackbar, Alert, Chip } fro
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PointOfSaleOutlinedIcon from '@mui/icons-material/PointOfSaleOutlined';
 import RequestQuoteOutlinedIcon from '@mui/icons-material/RequestQuoteOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -131,7 +132,7 @@ const SalePage = () => {
             <Button value="New Sale" onClick={() => setModalOpen(true)} />
             <div className="product-toolbar__search">
               <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 placeholder="Search sales..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

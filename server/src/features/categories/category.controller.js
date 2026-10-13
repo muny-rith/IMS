@@ -1,10 +1,21 @@
 import * as categoryModel from './category.model.js';
 import ApiError from '../../shared/errors/ApiError.js';
 import { uploadFileToSupabase, deleteFileFromSupabase } from '../../config/supabase.js';
+import serverCache, { SERVER_CACHE_TTL } from '../../shared/cache/memoryCache.js';
 
 export const getCategories = async (req, res, next) => {
   try {
+    const cached = serverCache.get('categories:list');
+    if (cached) {
+      return res.status(200).json({
+        status: 'success',
+        data: cached,
+      });
+    }
+
     const categories = await categoryModel.findAll();
+    serverCache.set('categories:list', categories, SERVER_CACHE_TTL.METADATA);
+
     res.status(200).json({
       status: 'success',
       data: categories,
@@ -42,6 +53,10 @@ export const createCategory = async (req, res, next) => {
       image_url: finalImageUrl, 
       attributes: Array.isArray(parsedAttributes) ? parsedAttributes : [] 
     });
+
+    serverCache.invalidate('categories');
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
 
     res.status(201).json({
       status: 'success',
@@ -90,6 +105,10 @@ export const updateCategory = async (req, res, next) => {
       attributes: Array.isArray(parsedAttributes) ? parsedAttributes : category.attributes 
     });
 
+    serverCache.invalidate('categories');
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
+
     res.status(200).json({
       status: 'success',
       data: updated,
@@ -118,6 +137,10 @@ export const deleteCategory = async (req, res, next) => {
     if (category.image_url) {
       await deleteFileFromSupabase(category.image_url);
     }
+
+    serverCache.invalidate('categories');
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
 
     res.status(200).json({
       status: 'success',

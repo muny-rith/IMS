@@ -1,10 +1,21 @@
 import * as productModel from './product.model.js';
 import ApiError from '../../shared/errors/ApiError.js';
 import { uploadFileToSupabase, deleteFileFromSupabase } from '../../config/supabase.js';
+import serverCache, { SERVER_CACHE_TTL } from '../../shared/cache/memoryCache.js';
 
 export const getProducts = async (req, res, next) => {
   try {
+    const cached = serverCache.get('products:list');
+    if (cached) {
+      return res.status(200).json({
+        status: 'success',
+        data: cached,
+      });
+    }
+
     const products = await productModel.findAll();
+    serverCache.set('products:list', products, SERVER_CACHE_TTL.PRODUCTS);
+
     res.status(200).json({
       status: 'success',
       data: products,
@@ -16,11 +27,22 @@ export const getProducts = async (req, res, next) => {
 
 export const getProductById = async (req, res, next) => {
   try {
+    const cacheKey = `products:${req.params.id}`;
+    const cached = serverCache.get(cacheKey);
+    if (cached) {
+      return res.status(200).json({
+        status: 'success',
+        data: cached,
+      });
+    }
+
     const product = await productModel.findById(req.params.id);
 
     if (!product) {
       return next(new ApiError(404, 'Product not found.'));
     }
+
+    serverCache.set(cacheKey, product, SERVER_CACHE_TTL.DETAIL);
 
     res.status(200).json({
       status: 'success',
@@ -80,6 +102,9 @@ export const createProduct = async (req, res, next) => {
       variants,
       product_attributes: Array.isArray(productAttributes) ? productAttributes : []
     });
+
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
 
     res.status(201).json({
       status: 'success',
@@ -169,6 +194,9 @@ export const updateProduct = async (req, res, next) => {
       await deleteFileFromSupabase(imageUrlToDelete);
     }
 
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
+
     res.status(200).json({
       status: 'success',
       data: updated,
@@ -193,6 +221,9 @@ export const deleteProduct = async (req, res, next) => {
       await deleteFileFromSupabase(existing.image_url);
     }
 
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
+
     res.status(200).json({
       status: 'success',
       data: null,
@@ -201,6 +232,59 @@ export const deleteProduct = async (req, res, next) => {
     next(err);
   }
 };
+
+export const bulkDeleteProducts = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return next(new ApiError(400, 'Array of product IDs is required.'));
+    }
+
+    const result = await productModel.bulkRemove(ids);
+
+    // Clean up Supabase images in background
+    if (result.imageUrls && result.imageUrls.length > 0) {
+      Promise.allSettled(result.imageUrls.map((url) => deleteFileFromSupabase(url))).catch(() => {});
+    }
+
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
+
+    res.status(200).json({
+      status: 'success',
+      data: result,
+      message: `Successfully deleted ${result.deletedCount} products.`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkUpdateStatus = async (req, res, next) => {
+  try {
+    const { ids, isActive } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return next(new ApiError(400, 'Array of product IDs is required.'));
+    }
+    if (isActive === undefined) {
+      return next(new ApiError(400, 'Status isActive boolean is required.'));
+    }
+
+    const result = await productModel.bulkSetStatus(ids, isActive);
+
+    serverCache.invalidate('products');
+    serverCache.invalidate('dashboard');
+
+    res.status(200).json({
+      status: 'success',
+      data: result,
+      message: `Successfully updated ${result.updatedCount} products to ${result.isActive ? 'Active' : 'Inactive'}.`,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 export const getExternalStocks = async (req, res, next) => {
   try {

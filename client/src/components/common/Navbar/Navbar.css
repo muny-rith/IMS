@@ -8,6 +8,26 @@
   padding: 0 20px;
 }
 
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.navbar__brand-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.navbar__brand-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.2px;
+}
+
 .navbar__toggle {
   width: 36px;
   height: 36px;
@@ -52,14 +72,56 @@
   flex-shrink: 0;
 }
 
+.navbar__user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .navbar__email {
   max-width: 220px;
   overflow: hidden;
-  color: #667085;
+  color: #1f2937;
   font-size: 13px;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
+}
+
+.navbar__role-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.3;
+}
+
+.navbar__role-badge--admin {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.navbar__role-badge--manager {
+  background: #ede9fe;
+  color: #7c3aed;
+  border: 1px solid #ddd6fe;
+}
+
+.navbar__role-badge--staff {
+  background: #e0f2fe;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+}
+
+.navbar__role-badge--worker {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
 }
 
 .navbar__logout {
@@ -80,6 +142,43 @@
   transform: translateY(-1px);
 }
 
+.navbar__diag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.navbar__diag-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.navbar__diag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+  animation: pulseDot 2s infinite ease-out;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @media (max-width: 640px) {
   .navbar {
     padding: 0 12px;
@@ -88,4 +187,13 @@
   .navbar__email {
     display: none;
   }
+
+  .navbar__diag-text {
+    display: none;
+  }
+
+  .navbar__diag-btn {
+    padding: 6px;
+  }
 }
+

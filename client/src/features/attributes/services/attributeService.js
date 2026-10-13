@@ -36,6 +36,11 @@ export const createAttributeValue = async (attributeId, data) => {
   return response.data.data;
 };
 
+export const updateAttributeValue = async (valueId, data) => {
+  const response = await api.put(`/attributes/values/${valueId}`, data);
+  return response.data.data;
+};
+
 export const deleteAttributeValue = async (valueId) => {
   const response = await api.delete(`/attributes/values/${valueId}`);
   return response.data;

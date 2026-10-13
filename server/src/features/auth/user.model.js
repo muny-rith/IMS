@@ -22,3 +22,9 @@ export const findById = async (id) => {
   const { rows } = await query(text, [id]);
   return rows[0];
 };
+
+export const findAll = async () => {
+  const text = 'SELECT user_id, name, email, role, created_at FROM tb_user ORDER BY user_id ASC;';
+  const { rows } = await query(text);
+  return rows;
+};

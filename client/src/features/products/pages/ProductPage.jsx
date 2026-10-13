@@ -6,7 +6,6 @@ import {
   Alert,
   Avatar,
   Box,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,12 +22,49 @@ import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import Button from '../../../components/ui/Button/Button';
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../../auth/hooks/useAuth';
 import ProductMobileCardList from '../components/ProductMobileCardList';
+import ProductExportButton from '../components/ProductExportButton';
+import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
+import ProductBulkActionsBar from '../components/ProductBulkActionsBar';
+import ProductTableSkeleton, { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
+import ProductHoverPreview from '../components/ProductHoverPreview';
+import { exportProductsToExcel } from '../utils/exportProducts';
+
+const PREVIEW_TOOLTIP_PROPS = {
+  enterDelay: 180,
+  leaveDelay: 100,
+  disableInteractive: true,
+  slotProps: {
+    popper: {
+      modifiers: [
+        {
+          name: 'offset',
+          options: {
+            offset: [0, 8],
+          },
+        },
+      ],
+    },
+    tooltip: {
+      sx: {
+        p: 0,
+        backgroundColor: 'transparent !important',
+        boxShadow: 'none !important',
+        maxWidth: 'none !important',
+        border: 'none !important',
+      },
+    },
+  },
+};
+
+
 
 const INITIAL_TOAST = {
   open: false,
@@ -41,13 +77,12 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
   currency: 'USD',
 });
 
-const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
-  <div className={`product-summary-card product-summary-card--${tone}`}>
-    <div className="product-summary-card__icon">{icon}</div>
-    <div className="product-summary-card__content">
-      <div className="product-summary-card__title">{title}</div>
-      <div className="product-summary-card__value">{value}</div>
-      <div className="product-summary-card__helper">{helper}</div>
+const StatCard = ({ icon, label, value, tone = 'default' }) => (
+  <div className={`product-stat-card product-stat-card--${tone}`}>
+    <div className="product-stat-card__icon">{icon}</div>
+    <div className="product-stat-card__info">
+      <span className="product-stat-card__label">{label}</span>
+      <span className="product-stat-card__value">{value}</span>
     </div>
   </div>
 );
@@ -58,14 +93,27 @@ const ProductPage = () => {
     categories = [],
     brands = [],
     loading,
+    submitting,
     handleDelete,
+    handleBulkDelete,
   } = useProducts();
+
+  const { user } = useAuth();
+  const userRole = user?.role || 'staff';
+  const canCreate = ['admin', 'manager', 'staff'].includes(userRole);
+  const canEdit = ['admin', 'manager', 'staff'].includes(userRole);
+  const canDelete = ['admin', 'manager'].includes(userRole);
 
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
+
 
   const showToast = useCallback((message, severity = 'success') => {
     setToast({
@@ -91,17 +139,57 @@ const ProductPage = () => {
     setDeleting(id);
   }, []);
 
+  const categoryOptions = useMemo(
+    () => categories.map((c) => ({ value: String(c.id), label: c.name })),
+    [categories]
+  );
+
+  const brandOptions = useMemo(
+    () => brands.map((b) => ({ value: String(b.id), label: b.name })),
+    [brands]
+  );
+
+
+
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase().trim();
 
-    if (!q) return rows;
+    return rows.filter((row) => {
+      if (q) {
+        const matches = [row.name, row.category, row.department, row.brand]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(q));
+        if (!matches) return false;
+      }
 
-    return rows.filter((row) =>
-      [row.name, row.category, row.department]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(q))
-    );
-  }, [rows, search]);
+      if (selectedCategories.length > 0) {
+        const rowCatId = String(row.categoryId ?? '');
+        const matchesCat = selectedCategories.some(
+          (catVal) => String(catVal) === rowCatId || catVal === row.category
+        );
+        if (!matchesCat) return false;
+      }
+
+      if (selectedBrands.length > 0) {
+        const rowBrandId = String(row.brandId ?? '');
+        const matchesBrand = selectedBrands.some(
+          (brandVal) => String(brandVal) === rowBrandId || brandVal === row.brand
+        );
+        if (!matchesBrand) return false;
+      }
+
+      return true;
+    });
+  }, [rows, search, selectedCategories, selectedBrands]);
+
+  const handleExport = useCallback(() => {
+    if (!filteredRows || filteredRows.length === 0) {
+      showToast('No products to export.', 'error');
+      return;
+    }
+    exportProductsToExcel(filteredRows);
+    showToast(`Exported ${filteredRows.length} products to Excel.`);
+  }, [filteredRows, showToast]);
 
   const stats = useMemo(() => {
     const lowStockCount = rows.filter((row) => {
@@ -154,7 +242,11 @@ const ProductPage = () => {
 
 
   const confirmDelete = async () => {
-    const result = await handleDelete(deleting);
+    const deletedId = deleting;
+    const result = await handleDelete(deletedId);
+    if (deletedId) {
+      setSelectedRowIds((prev) => prev.filter((id) => id !== deletedId));
+    }
     setDeleting(null);
 
     if (result.success) {
@@ -164,6 +256,28 @@ const ProductPage = () => {
 
     showToast(result.message || 'Delete failed.', 'error');
   };
+
+  const handleBulkExport = useCallback(() => {
+    if (selectedRowIds.length === 0) return;
+    const idSet = new Set(selectedRowIds);
+    const selectedProducts = rows.filter((r) => idSet.has(r.id));
+    if (selectedProducts.length === 0) return;
+    exportProductsToExcel(selectedProducts, 'selected-products');
+    showToast(`Exported ${selectedProducts.length} selected products to Excel.`);
+  }, [selectedRowIds, rows, showToast]);
+
+  const handleExecuteBulkDelete = async () => {
+    const count = selectedRowIds.length;
+    const result = await handleBulkDelete(selectedRowIds);
+    setConfirmBulkDelete(false);
+    if (result.success) {
+      setSelectedRowIds([]);
+      showToast(`Successfully deleted ${count} products.`);
+    } else {
+      showToast(result.message || 'Failed to delete selected products.', 'error');
+    }
+  };
+
 
   const columns = useMemo(
     () => [
@@ -176,36 +290,90 @@ const ProductPage = () => {
         align: 'center',
         headerAlign: 'center',
         renderCell: (params) => (
-          <Box className="product-avatar-cell">
-            <Avatar src={params.row.image ?? undefined} className="product-avatar">
-              {params.row.name?.[0]?.toUpperCase() ?? '?'}
-            </Avatar>
-          </Box>
+          <Tooltip
+            title={<ProductHoverPreview product={params.row} />}
+            placement="bottom-start"
+            {...PREVIEW_TOOLTIP_PROPS}
+          >
+            <Box
+              className="product-avatar-cell product-avatar-clickable"
+              onClick={(e) => {
+                e.stopPropagation();
+                openViewModal(params.row);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                  openViewModal(params.row);
+                }
+              }}
+              aria-label={`View ${params.row.name || 'product'}`}
+            >
+              <Avatar src={params.row.image ?? undefined} className="product-avatar">
+                {params.row.name?.[0]?.toUpperCase() ?? '?'}
+              </Avatar>
+            </Box>
+          </Tooltip>
         ),
       },
       {
         field: 'name',
         headerName: 'Name',
         flex: 1.35,
-        renderCell: (params) =>  params.row.name || '—'
+        renderCell: (params) => (
+          <Tooltip
+            title={<ProductHoverPreview product={params.row} />}
+            placement="bottom-start"
+            {...PREVIEW_TOOLTIP_PROPS}
+          >
+            <div
+              className="product-name-clickable"
+              onClick={(e) => {
+                e.stopPropagation();
+                openViewModal(params.row);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                  openViewModal(params.row);
+                }
+              }}
+              aria-label={`View ${params.row.name || 'product'}`}
+            >
+              <span className="product-name-clickable__text">
+                {params.row.name || '—'}
+              </span>
+            </div>
+          </Tooltip>
+        ),
       },
       {
         field: 'category',
         headerName: 'Category',
         flex: 1,
-        renderCell: (params) => params.row.category || '—',
+        renderCell: (params) => (
+          <span className="product-category-tag">{params.row.category || '—'}</span>
+        ),
       },
       {
         field: 'brand',
         headerName: 'Brand',
         flex: 1,
-        renderCell: (params) => params.row.brand || '—',
+        renderCell: (params) => (
+          <span className="product-brand-cell">{params.row.brand || '—'}</span>
+        ),
       },
       {
         field: 'department',
         headerName: 'Department',
         flex: 1.1,
-        renderCell: (params) => params.row.department || 'N/A',
+        renderCell: (params) => (
+          <span className="product-dept-cell">{params.row.department || 'N/A'}</span>
+        ),
       },
       {
         field: 'price',
@@ -268,114 +436,143 @@ const ProductPage = () => {
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Edit">
-              <IconButton
-                size="small"
-                className="product-action product-action--edit"
-                onClick={() => openEditModal(params.row)}
-              >
-                <EditIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
+            {canEdit && (
+              <Tooltip title="Edit">
+                <IconButton
+                  size="small"
+                  className="product-action product-action--edit"
+                  onClick={() => openEditModal(params.row)}
+                >
+                  <EditIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
 
-            <Tooltip title="Delete">
-              <IconButton
-                size="small"
-                className="product-action product-action--delete"
-                onClick={() => requestDelete(params.row.id)}
-              >
-                <DeleteIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
+            {canDelete && (
+              <Tooltip title="Delete">
+                <IconButton
+                  size="small"
+                  className="product-action product-action--delete"
+                  onClick={() => requestDelete(params.row.id)}
+                >
+                  <DeleteIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
           </Box>
         ),
       },
     ],
-    [openEditModal, openViewModal, requestDelete]
+    [openEditModal, openViewModal, requestDelete, canEdit, canDelete]
   );
 
   return (
     <div className="product-page">
-      <section className="product-page__hero">
-        <div>
-          <p className="product-page__eyebrow">Catalog</p>
-          <h4 className="product-page__title">Product List</h4>
-          <p className="product-page__subtitle">
-            Manage product identity, pricing, and quantity snapshots in one
-            clean admin workspace.
-          </p>
+      {/* 1. Compact Header */}
+      <div className="product-header">
+        <div className="product-header__left">
+          <h1 className="product-header__title">Products</h1>
+          <span className="product-header__badge">{rows.length} total</span>
         </div>
+        <div className="product-header__actions">
+          <ProductExportButton onClick={handleExport} />
+          {canCreate && <Button value="Add Product" onClick={openCreateModal} />}
+        </div>
+      </div>
 
-        <div className="product-page__stats">
+      {/* 2. Slim 1-row KPI Bar */}
+      {loading && rows.length === 0 ? (
+        <ProductStatsSkeleton />
+      ) : (
+        <div className="product-stats">
           {stats.map((item) => (
-            <SummaryCard
+            <StatCard
               key={item.label}
               icon={item.icon}
-              title={item.label}
+              label={item.label}
               value={item.value}
-              helper={item.helper}
               tone={item.tone}
             />
           ))}
         </div>
-      </section>
+      )}
 
+      {/* 3. Main Data Panel with integrated toolbar */}
       <section className="product-panel">
-        <section className="product-toolbar">
-          <div>
-            <h6 className="product-panel__title">Current Products</h6>
-            <p className="product-panel__subtitle">
-              Search products quickly, review pricing and stock posture, and
-              keep product actions close to the table.
-            </p>
+        <div className="product-panel__toolbar">
+          <div className="product-panel__search">
+            <Input
+              leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by name, category, brand..."
+            />
           </div>
 
-          <div className="product-toolbar__controls">
-            <Button value="Add Product" onClick={openCreateModal} />
-            <div className="product-toolbar__search">
-              <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, category..."
-              />
-            </div>
-          </div>
-        </section>
+          <div className="product-panel__filters">
+            <MultiSelect
+              label="Category"
+              placeholder="Select Category"
+              options={categoryOptions}
+              selectedValues={selectedCategories}
+              onChange={setSelectedCategories}
+              maxTagsVisible={1}
+            />
 
-        <div className="product-panel__header">
-          <div className="product-panel__meta">
-            <p className="product-panel__eyebrow">Live products</p>
-            <div className="product-panel__badge">
-              {filteredRows.length} visible
-            </div>
+            <MultiSelect
+              label="Brand"
+              placeholder="Select Brand"
+              options={brandOptions}
+              selectedValues={selectedBrands}
+              onChange={setSelectedBrands}
+              maxTagsVisible={1}
+            />
+
+
           </div>
         </div>
 
         <div className="product-panel__body">
-          {loading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" py={6}>
-              <CircularProgress size={30} />
-            </Box>
+          {loading && rows.length === 0 ? (
+            <ProductTableSkeleton rowsCount={8} />
           ) : (
+
             <>
               <div className="product-desktop-table">
-                <DataTable rows={filteredRows} columns={columns} />
+                <DataTable
+                  rows={filteredRows}
+                  columns={columns}
+                  rowSelectionModel={selectedRowIds}
+                  onRowSelectionModelChange={setSelectedRowIds}
+                />
               </div>
-              <div className='product-mobile-cards'>
+              <div className="product-mobile-cards">
                 <ProductMobileCardList
                   rows={filteredRows}
                   onView={openViewModal}
-                  onEdit={openEditModal}
-                  onDelete={requestDelete}
+                  onEdit={canEdit ? openEditModal : undefined}
+                  onDelete={canDelete ? requestDelete : undefined}
                 />  
+                <div className="product-panel__footer">
+                  <div className="product-panel__count">
+                    Showing <strong>{filteredRows.length}</strong> of {rows.length} products
+                  </div>
+                </div>
               </div>
-
             </>
           )}
         </div>
       </section>
 
+      {/* Floating Bulk Actions Bar */}
+      <ProductBulkActionsBar
+        selectedCount={selectedRowIds.length}
+        onClearSelection={() => setSelectedRowIds([])}
+        onExport={handleBulkExport}
+        onBulkDelete={() => setConfirmBulkDelete(true)}
+        isAdmin={canDelete}
+        submitting={submitting}
+      />
 
       <Dialog
         open={Boolean(deleting)}
@@ -390,6 +587,36 @@ const ProductPage = () => {
           <Button value="Delete" onClick={confirmDelete} />
         </DialogActions>
       </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog
+        open={confirmBulkDelete}
+        onClose={() => !submitting && setConfirmBulkDelete(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: '#ef4444' }}>
+          Delete {selectedRowIds.length} Products?
+        </DialogTitle>
+        <DialogContent>
+          Are you sure you want to permanently delete these {selectedRowIds.length} products?
+          Their variants, attribute associations, and stock balances will also be removed. This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button
+            value="Cancel"
+            variant="text"
+            disabled={submitting}
+            onClick={() => setConfirmBulkDelete(false)}
+          />
+          <Button
+            value={submitting ? 'Deleting...' : `Delete ${selectedRowIds.length} Items`}
+            disabled={submitting}
+            onClick={handleExecuteBulkDelete}
+          />
+        </DialogActions>
+      </Dialog>
+
 
       <Snackbar
         open={toast.open}

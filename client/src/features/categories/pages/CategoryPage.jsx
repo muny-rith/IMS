@@ -22,6 +22,7 @@ import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import ChecklistOutlinedIcon from '@mui/icons-material/ChecklistOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -336,7 +337,7 @@ const CategoryPage = () => {
             />
             <div className="category-toolbar__search">
               <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by category name or description..."

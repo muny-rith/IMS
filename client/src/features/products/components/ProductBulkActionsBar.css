@@ -1,0 +1,179 @@
+/* Frosted White Glass Floating Island - Matches Light Theme */
+.product-bulk-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1250;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 9999px;
+  box-shadow: 
+    0 20px 40px -12px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(15, 23, 42, 0.04),
+    0 4px 14px rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+  animation: bulkBarSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+}
+
+@keyframes bulkBarSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* 1. Counter section */
+.product-bulk-bar__counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 4px;
+}
+
+.product-bulk-bar__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 9999px;
+  background: #eb0029; /* Brand Crimson Red */
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(235, 0, 41, 0.3);
+}
+
+.product-bulk-bar__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.product-bulk-bar__btn-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 2px;
+}
+
+.product-bulk-bar__btn-clear:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Divider */
+.product-bulk-bar__divider {
+  width: 1px;
+  height: 22px;
+  background: #e2e8f0;
+}
+
+/* 2. Actions */
+.product-bulk-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-bulk-bar__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.product-bulk-bar__btn:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
+}
+
+.product-bulk-bar__btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.product-bulk-bar__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Export button hover */
+.product-bulk-bar__btn--export:hover:not(:disabled) {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+/* Delete button (Soft Rose Red Tint with Crimson Text) */
+.product-bulk-bar__btn--delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.product-bulk-bar__btn--delete:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive */
+@media (max-width: 640px) {
+  .product-bulk-bar {
+    bottom: 16px;
+    padding: 6px 10px;
+    gap: 8px;
+    border-radius: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .product-bulk-bar__label {
+    display: none;
+  }
+
+  .product-bulk-bar__btn span {
+    display: none;
+  }
+
+  .product-bulk-bar__btn {
+    padding: 7px 9px;
+  }
+}

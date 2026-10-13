@@ -8,23 +8,12 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import StyleOutlinedIcon from '@mui/icons-material/StyleOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import DashboardCustomizeOutlinedIcon from '@mui/icons-material/DashboardCustomizeOutlined';
-
+import SearchIcon from '@mui/icons-material/Search';
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import { useAttributes } from '../hooks/useAttributes';
 import AttributeModal from '../components/AttributeModal';
 import AttributeValuesPanel from '../components/AttributeValuesPanel';
-
-const SummaryCard = ({ icon, title, value, helper, tone = 'default' }) => (
-  <div className={'product-summary-card product-summary-card--' + tone}>
-    <div className="product-summary-card__icon">{icon}</div>
-    <div className="product-summary-card__content">
-      <div className="product-summary-card__title">{title}</div>
-      <div className="product-summary-card__value">{value}</div>
-      <div className="product-summary-card__helper">{helper}</div>
-    </div>
-  </div>
-);
 
 const AttributePage = () => {
   const { attributes, loading, handleAdd, handleUpdate, handleDelete } = useAttributes();
@@ -93,53 +82,42 @@ const AttributePage = () => {
 
   return (
     <div className="product-page attribute-page">
-      <section className="product-page__hero">
-        <div>
-          <p className="product-page__eyebrow">Variant Engine</p>
-          <h4 className="product-page__title">Attributes (EAV)</h4>
-          <p className="product-page__subtitle">
-            Manage dynamic product traits (e.g. Size, Color, Storage) to build highly customizable variants.
-          </p>
+      {/* 1. Header Bar */}
+      <div className="product-header">
+        <div className="product-header__left">
+          <h1 className="product-header__title">Attributes (EAV)</h1>
+          <span className="product-header__badge">Variant Engine</span>
         </div>
 
-        <div className="product-page__stats" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-          {stats.map((item) => (
-            <SummaryCard
-              key={item.label}
-              icon={item.icon}
-              title={item.label}
-              value={item.value}
-              helper={item.helper}
-              tone={item.tone}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="product-toolbar">
-        <div>
-          <h6 className="product-panel__title">Current Attributes</h6>
-          <p className="product-panel__subtitle">
-            Select an attribute to manage its allowed values.
-          </p>
-        </div>
-
-        <div className="product-toolbar__controls">
+        <div className="product-header__actions">
           <Button value="New Attribute" onClick={() => setModal({ open: true, mode: 'create', editRow: null })} />
-          <div className="product-toolbar__search">
+        </div>
+      </div>
+
+      {/* 2. KPI Bar */}
+      <div className="product-stats" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+        {stats.map((item) => (
+          <div key={item.label} className={`product-stat-card ${item.tone ? `product-stat-card--${item.tone}` : ''}`}>
+            <div className="product-stat-card__icon">{item.icon}</div>
+            <div className="product-stat-card__info">
+              <span className="product-stat-card__label">{item.label}</span>
+              <span className="product-stat-card__value">{item.value}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="attribute-split-pane">
+        {/* LEFT PANE - MASTER LIST */}
+        <div className="attribute-left-pane">
+          <div className="attribute-search-wrap">
             <Input
-              leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+              leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
               placeholder="Search attributes..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-        </div>
-      </section>
-
-      <div className="attribute-split-pane">
-        {/* LEFT PANE - MASTER LIST */}
-        <div className="attribute-left-pane">
           {loading ? (
             <Box display="flex" justifyContent="center" py={5}><CircularProgress /></Box>
           ) : filteredAttributes.length === 0 ? (

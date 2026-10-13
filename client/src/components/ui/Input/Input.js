@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SearchIcon from "@mui/icons-material/Search";
 import "../Form.css";
 
 const Input = ({
@@ -17,12 +18,28 @@ const Input = ({
   const inputType =
     isPasswordToggle ? (showPassword ? "text" : "password") : type;
 
+  // Resolve left icon reliably (replaces any legacy FontAwesome <i> tags with clean SVG SearchIcon)
+  const renderLeftIcon = () => {
+    if (!leftIcon) return null;
+    if (
+      (React.isValidElement(leftIcon) &&
+        typeof leftIcon.props?.className === 'string' &&
+        leftIcon.props.className.includes('fa-')) ||
+      leftIcon === 'search'
+    ) {
+      return <SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />;
+    }
+    return leftIcon;
+  };
+
+  const resolvedLeftIcon = renderLeftIcon();
+
   return (
     <div className="form-group">
       <div className={`input-wrapper ${error ? "error" : ""}`}>
         
         {/* Left Icon */}
-        {leftIcon && <span className="icon left">{leftIcon}</span>}
+        {resolvedLeftIcon && <span className="icon left">{resolvedLeftIcon}</span>}
 
         <input
           type={inputType}

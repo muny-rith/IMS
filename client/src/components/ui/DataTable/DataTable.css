@@ -1,0 +1,160 @@
+/* DataTable Modern Clean Styling (MoonPulse Aesthetic) */
+
+/* 1. Column Headers */
+.MuiDataGrid-root .MuiDataGrid-columnHeaders {
+  background-color: #fafbfd !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-columnHeaderTitle {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+  letter-spacing: 0.3px;
+}
+
+/* 2. Rows and Cells — Spacious & Legible */
+.MuiDataGrid-root .MuiDataGrid-row {
+  border-bottom: 1px solid #f1f5f9 !important;
+  transition: background-color 0.15s ease;
+}
+
+.MuiDataGrid-root .MuiDataGrid-cell {
+  cursor: default !important;
+  user-select: none;
+  font-size: 14px !important;
+  color: #1e293b;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 16px !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-cell:focus,
+.MuiDataGrid-root .MuiDataGrid-cell:focus-within,
+.MuiDataGrid-root .MuiDataGrid-columnHeader:focus,
+.MuiDataGrid-root .MuiDataGrid-columnHeader:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 3. Interactive elements keep proper pointer cursor */
+.MuiDataGrid-root .MuiDataGrid-cell button,
+.MuiDataGrid-root .MuiDataGrid-cell a,
+.MuiDataGrid-root .MuiDataGrid-cell input[type="checkbox"],
+.MuiDataGrid-root .MuiCheckbox-root,
+.MuiDataGrid-root .MuiIconButton-root,
+.MuiDataGrid-root .MuiButtonBase-root,
+.MuiDataGrid-root .product-avatar-clickable,
+.MuiDataGrid-root .product-avatar-clickable *,
+.MuiDataGrid-root .product-name-clickable,
+.MuiDataGrid-root .product-name-clickable * {
+  cursor: pointer !important;
+}
+
+/* 4. Subtle, smooth row hover */
+.MuiDataGrid-root .MuiDataGrid-row:hover {
+  background-color: #f8fafc !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-row.Mui-selected {
+  background-color: #f1f5f9 !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-row.Mui-selected:hover {
+  background-color: #e2e8f0 !important;
+}
+
+/* 5. Checkbox Styling */
+.MuiDataGrid-root .MuiCheckbox-root {
+  color: #cbd5e1;
+}
+
+.MuiDataGrid-root .MuiCheckbox-root.Mui-checked {
+  color: var(--primary-color, #eb0029) !important;
+}
+
+/* 6. Footer / Pagination Styling (MoonPulse Aesthetic) */
+.MuiDataGrid-root .MuiDataGrid-footerContainer.data-table-footer,
+.MuiDataGrid-root .MuiDataGrid-footerContainer {
+  border-top: 1px solid #f1f5f9 !important;
+  background-color: #ffffff !important;
+  min-height: 52px !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.data-table-footer__left {
+  display: flex;
+  align-items: center;
+}
+
+.data-table-footer__summary {
+  font-size: 13px !important;
+  color: #64748b !important;
+}
+
+.data-table-footer__summary strong {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-selectedRowCount {
+  font-size: 13px !important;
+  color: var(--primary-color, #eb0029) !important;
+  font-weight: 600 !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-root {
+  color: #64748b !important;
+  font-size: 13px !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-selectLabel,
+.MuiDataGrid-root .MuiTablePagination-displayedRows {
+  font-size: 13px !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+  margin-bottom: 0 !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-select {
+  font-size: 13px !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  padding-right: 24px !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-actions {
+  margin-left: 8px !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-actions button {
+  color: #64748b !important;
+  border-radius: 8px !important;
+  padding: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-actions button:hover:not([disabled]) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.MuiDataGrid-root .MuiTablePagination-actions button[disabled] {
+  opacity: 0.35 !important;
+}
+
+/* 7. Auto-height & Smooth Page Scrollability */
+.MuiDataGrid-root.MuiDataGrid-autoHeight {
+  height: auto !important;
+}
+
+.MuiDataGrid-root.MuiDataGrid-autoHeight .MuiDataGrid-virtualScroller {
+  overflow-y: hidden !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-virtualScroller {
+  overflow-x: auto;
+}

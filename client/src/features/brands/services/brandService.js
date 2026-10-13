@@ -1,4 +1,9 @@
 import api from '../../../lib/api';
+import cacheService, { CACHE_TTL } from '../../../services/cacheService';
+
+export const BRANDS_CACHE_KEY = 'brands_list';
+
+export const getCachedBrands = () => cacheService.get(BRANDS_CACHE_KEY);
 
 const normalizeBrandRow = (row) => ({
   id: row.brand_id,
@@ -9,9 +14,15 @@ const normalizeBrandRow = (row) => ({
   updatedAt: row.updated_at,
 });
 
-export const fetchBrands = async () => {
+export const fetchBrands = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(BRANDS_CACHE_KEY);
+    if (cached) return cached;
+  }
   const response = await api.get('/brands');
-  return (response.data.data ?? []).map(normalizeBrandRow);
+  const data = (response.data.data ?? []).map(normalizeBrandRow);
+  cacheService.set(BRANDS_CACHE_KEY, data, CACHE_TTL.METADATA);
+  return data;
 };
 
 export const addBrand = async (data) => {
@@ -26,6 +37,10 @@ export const addBrand = async (data) => {
   await api.post('/brands', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+
+  cacheService.invalidate('brands');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };
 
 export const updateBrand = async (id, data) => {
@@ -40,8 +55,15 @@ export const updateBrand = async (id, data) => {
   await api.put(`/brands/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+
+  cacheService.invalidate('brands');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };
 
 export const deleteBrand = async (id) => {
   await api.delete(`/brands/${id}`);
+  cacheService.invalidate('brands');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };

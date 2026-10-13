@@ -7,30 +7,40 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  bulkDeleteProducts,
+  bulkUpdateProductStatus,
+  getCachedProducts,
+  getCachedCategories,
+  getCachedBrands,
 } from '../services/productService';
 
 export const useProducts = () => {
-  const [rows, setRows] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cachedProducts = getCachedProducts();
+  const cachedCategories = getCachedCategories();
+  const cachedBrands = getCachedBrands();
+  const hasCached = !!(cachedProducts && cachedCategories && cachedBrands);
+
+  const [rows, setRows] = useState(() => cachedProducts || []);
+  const [categories, setCategories] = useState(() => cachedCategories || []);
+  const [brands, setBrands] = useState(() => cachedBrands || []);
+  const [loading, setLoading] = useState(() => !hasCached);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadProducts = useCallback(async () => {
-    const data = await fetchProducts();
+  const loadProducts = useCallback(async (force = false) => {
+    const data = await fetchProducts(force);
     setRows(data);
     return data;
   }, []);
 
-  const loadCategories = useCallback(async () => {
-    const data = await fetchCategories();
+  const loadCategories = useCallback(async (force = false) => {
+    const data = await fetchCategories(force);
     setCategories(data);
     return data;
   }, []);
 
-  const loadProductDetail = useCallback(async (id) => {
-    return fetchProductById(id);
+  const loadProductDetail = useCallback(async (id, force = false) => {
+    return fetchProductById(id, force);
   }, []);
 
   useEffect(() => {
@@ -38,7 +48,9 @@ export const useProducts = () => {
 
     const loadInitialData = async () => {
       try {
-        setLoading(true);
+        if (!hasCached) {
+          setLoading(true);
+        }
         setError(null);
 
         const [productRows, categoryRows, brandRows] = await Promise.all([
@@ -67,7 +79,7 @@ export const useProducts = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [hasCached]);
 
   const handleAdd = async (data) => {
     setSubmitting(true);
@@ -75,7 +87,7 @@ export const useProducts = () => {
 
     try {
       await addProduct(data);
-      await loadProducts();
+      await loadProducts(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to add product.';
@@ -92,7 +104,7 @@ export const useProducts = () => {
 
     try {
       await updateProduct(id, data);
-      await loadProducts();
+      await loadProducts(true);
       return { success: true };
     } catch (err) {
       const message = err.message || 'Failed to update product.';
@@ -120,6 +132,46 @@ export const useProducts = () => {
     }
   };
 
+  const handleBulkDelete = async (ids) => {
+    if (!ids || ids.length === 0) return { success: false, message: 'No items selected.' };
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await bulkDeleteProducts(ids);
+      const idSet = new Set(ids);
+      setRows((prev) => prev.filter((row) => !idSet.has(row.id)));
+      return { success: true, count: res?.data?.deletedCount ?? ids.length };
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Failed to delete selected products.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBulkStatus = async (ids, isActive) => {
+    if (!ids || ids.length === 0) return { success: false, message: 'No items selected.' };
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await bulkUpdateProductStatus(ids, isActive);
+      const idSet = new Set(ids);
+      setRows((prev) =>
+        prev.map((row) => (idSet.has(row.id) ? { ...row, isActive } : row))
+      );
+      return { success: true, count: ids.length, isActive };
+    } catch (err) {
+      const message = err.response?.data?.message || err.message || 'Failed to update product status.';
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return {
     rows,
     categories,
@@ -130,8 +182,11 @@ export const useProducts = () => {
     handleAdd,
     handleUpdate,
     handleDelete,
-    reload: loadProducts,
-    reloadCategories: loadCategories,
+    handleBulkDelete,
+    handleBulkStatus,
+    reload: (force = true) => loadProducts(force),
+    reloadCategories: (force = true) => loadCategories(force),
     fetchProductDetail: loadProductDetail,
   };
 };
+

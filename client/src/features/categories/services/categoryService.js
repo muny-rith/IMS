@@ -1,4 +1,9 @@
 import api from '../../../lib/api';
+import cacheService, { CACHE_TTL } from '../../../services/cacheService';
+
+export const CATEGORIES_CACHE_KEY = 'categories_list';
+
+export const getCachedCategories = () => cacheService.get(CATEGORIES_CACHE_KEY);
 
 const normalizeCategoryRow = (row) => ({
   id: row.category_id,
@@ -10,9 +15,15 @@ const normalizeCategoryRow = (row) => ({
   updatedAt: row.updated_at,
 });
 
-export const fetchCategories = async () => {
+export const fetchCategories = async (forceRefresh = false) => {
+  if (!forceRefresh) {
+    const cached = cacheService.get(CATEGORIES_CACHE_KEY);
+    if (cached) return cached;
+  }
   const response = await api.get('/categories');
-  return (response.data.data ?? []).map(normalizeCategoryRow);
+  const data = (response.data.data ?? []).map(normalizeCategoryRow);
+  cacheService.set(CATEGORIES_CACHE_KEY, data, CACHE_TTL.METADATA);
+  return data;
 };
 
 export const addCategory = async (data) => {
@@ -28,6 +39,10 @@ export const addCategory = async (data) => {
   await api.post('/categories', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+
+  cacheService.invalidate('categories');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };
 
 export const updateCategory = async (id, data) => {
@@ -43,8 +58,15 @@ export const updateCategory = async (id, data) => {
   await api.put(`/categories/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
+
+  cacheService.invalidate('categories');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };
 
 export const deleteCategory = async (id) => {
   await api.delete(`/categories/${id}`);
+  cacheService.invalidate('categories');
+  cacheService.invalidate('products');
+  cacheService.invalidate('dashboard');
 };

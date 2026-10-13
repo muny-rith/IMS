@@ -1,17 +1,22 @@
 import { Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Sidebar from "../../components/common/SideBar/SideBar";
+import Sidebar, { getTotalVisibleNavCount } from "../../components/common/SideBar/SideBar";
 import Navbar from "../../components/common/Navbar/Navbar";
+import { useAuth } from "../../features/auth/hooks/useAuth";
 import styles from "./MainLayout.module.css";
 
 const SIDEBAR_WIDTH = 250;
 const SIDEBAR_COLLAPSED = 80;
 
 export default function MainLayout() {
+  const { user } = useAuth();
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
+
+  const visibleNavCount = getTotalVisibleNavCount(user?.role);
+  const showSidebar = visibleNavCount > 1;
 
   useEffect(() => {
     const onResize = () => {
@@ -35,9 +40,9 @@ export default function MainLayout() {
 
   // Main content shift (desktop only)
   const mainVariants = {
-    expanded:  { marginLeft: SIDEBAR_WIDTH,     transition: { duration: 0.3, ease: "easeInOut" } },
-    collapsed: { marginLeft: SIDEBAR_COLLAPSED, transition: { duration: 0.3, ease: "easeInOut" } },
-    mobile:    { marginLeft: 0,                 transition: { duration: 0.3, ease: "easeInOut" } },
+    expanded:  { marginLeft: showSidebar ? SIDEBAR_WIDTH : 0,     transition: { duration: 0.3, ease: "easeInOut" } },
+    collapsed: { marginLeft: showSidebar ? SIDEBAR_COLLAPSED : 0, transition: { duration: 0.3, ease: "easeInOut" } },
+    mobile:    { marginLeft: 0,                                   transition: { duration: 0.3, ease: "easeInOut" } },
   };
 
   const getSidebarAnimate = () => {
@@ -54,7 +59,7 @@ export default function MainLayout() {
     <div className={styles.layout}>
 
       {/* Backdrop (mobile only) */}
-      {isMobile && mobileOpen && (
+      {showSidebar && isMobile && mobileOpen && (
         <div
           className={styles.backdrop}
           onClick={() => setMobileOpen(false)}
@@ -62,18 +67,20 @@ export default function MainLayout() {
       )}
 
       {/* Sidebar */}
-      <motion.div
-        className={styles.sidebar}
-        variants={sidebarVariants}
-        animate={getSidebarAnimate()}
-        initial={false}
-      >
-        <Sidebar
-          collapsed={collapsed && !isMobile}
-          isMobile={isMobile}
-          onClose={() => setMobileOpen(false)}
-        />
-      </motion.div>
+      {showSidebar && (
+        <motion.div
+          className={styles.sidebar}
+          variants={sidebarVariants}
+          animate={getSidebarAnimate()}
+          initial={false}
+        >
+          <Sidebar
+            collapsed={collapsed && !isMobile}
+            isMobile={isMobile}
+            onClose={() => setMobileOpen(false)}
+          />
+        </motion.div>
+      )}
 
       {/* Main */}
       <motion.div
@@ -87,6 +94,7 @@ export default function MainLayout() {
           <Navbar
             collapsed={collapsed}
             isMobile={isMobile}
+            hasSidebar={showSidebar}
             onMenuClick={() =>
               isMobile
                 ? setMobileOpen(true)

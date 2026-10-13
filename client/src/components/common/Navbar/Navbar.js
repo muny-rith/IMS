@@ -1,8 +1,11 @@
+import React, { useState } from 'react'
 import './Navbar.css'
+import logo from '../../../assets/images/logo.png'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import MenuOpenIcon from '@mui/icons-material/MenuOpen'
 import { useAuth } from '../../../features/auth/hooks/useAuth'
+import SystemDiagnosticsModal from '../SystemDiagnostics/SystemDiagnosticsModal'
 
 const getInitials = (email = '') => {
   const name = email.split('@')[0] || 'U'
@@ -10,8 +13,9 @@ const getInitials = (email = '') => {
 }
 
 // All state comes from MainLayout
-const Navbar = ({ collapsed, isMobile, onMenuClick }) => {
+const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
   const { user, signOut } = useAuth()
+  const [diagOpen, setDiagOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -19,19 +23,43 @@ const Navbar = ({ collapsed, isMobile, onMenuClick }) => {
 
   return (
     <header className="navbar">
-      <button className="navbar__toggle" onClick={onMenuClick} aria-label="Toggle sidebar">
-        {/* on desktop: show open/close icon based on collapsed */}
-        {/* on mobile: always hamburger */}
-        {!isMobile && !collapsed
-          ? <MenuOpenIcon />
-          : <MenuIcon />
-        }
-      </button>
+      {hasSidebar ? (
+        <button className="navbar__toggle" onClick={onMenuClick} aria-label="Toggle sidebar">
+          {/* on desktop: show open/close icon based on collapsed */}
+          {/* on mobile: always hamburger */}
+          {!isMobile && !collapsed
+            ? <MenuOpenIcon />
+            : <MenuIcon />
+          }
+        </button>
+      ) : (
+        <div className="navbar__brand">
+          <img src={logo} alt="Moon IMS" className="navbar__brand-logo" />
+          <span className="navbar__brand-text">Moon IMS</span>
+        </div>
+      )}
 
       <div className="navbar__right">
+        {/* Live System Diagnostics Indicator */}
+        <button
+          type="button"
+          className="navbar__diag-btn"
+          onClick={() => setDiagOpen(true)}
+          title="View system telemetry & diagnostics"
+          aria-label="System Diagnostics"
+        >
+          <span className="navbar__diag-dot" />
+          <span className="navbar__diag-text">System Live</span>
+        </button>
+
         <div className="navbar__user">
           <span className="navbar__avatar">{getInitials(user?.email)}</span>
-          <span className="navbar__email">{user?.email}</span>
+          <div className="navbar__user-info">
+            <span className="navbar__email">{user?.name || user?.email}</span>
+            <span className={`navbar__role-badge navbar__role-badge--${user?.role || 'staff'}`}>
+              {user?.role || 'staff'}
+            </span>
+          </div>
         </div>
 
         <button
@@ -44,8 +72,15 @@ const Navbar = ({ collapsed, isMobile, onMenuClick }) => {
           <LogoutIcon fontSize="small" />
         </button>
       </div>
+
+      <SystemDiagnosticsModal
+        open={diagOpen}
+        onClose={() => setDiagOpen(false)}
+        isAdmin={user?.role === 'admin'}
+      />
     </header>
   )
 }
 
 export default Navbar
+

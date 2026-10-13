@@ -10,33 +10,34 @@ router.use(protect);
 router
   .route('/')
   .get(attributeController.getAttributes)
-  .post(restrictTo('admin'), attributeController.createAttribute);
+  .post(restrictTo('admin', 'manager'), attributeController.createAttribute);
 
 router
   .route('/:id')
   .get(attributeController.getAttributeById)
-  .put(restrictTo('admin'), attributeController.updateAttribute)
-  .delete(restrictTo('admin'), attributeController.deleteAttribute);
+  .put(restrictTo('admin', 'manager'), attributeController.updateAttribute)
+  .delete(restrictTo('admin', 'manager'), attributeController.deleteAttribute);
 
 // Attribute Values
 router
   .route('/:attributeId/values')
   .get(attributeController.getAttributeValues)
-  .post(restrictTo('admin'), attributeController.createAttributeValue);
+  .post(restrictTo('admin', 'manager'), attributeController.createAttributeValue);
 
 router
   .route('/values/:valueId')
-  .delete(restrictTo('admin'), attributeController.deleteAttributeValue);
+  .put(restrictTo('admin', 'manager'), attributeController.updateAttributeValue)
+  .delete(restrictTo('admin', 'manager'), attributeController.deleteAttributeValue);
 
 // Category Attributes
 // These endpoints will be accessed via /api/attributes/category/:categoryId
 router
   .route('/category/:categoryId')
   .get(attributeController.getCategoryAttributes)
-  .post(restrictTo('admin'), attributeController.addCategoryAttribute);
+  .post(restrictTo('admin', 'manager'), attributeController.addCategoryAttribute);
 
 router
   .route('/category/:categoryId/:attributeId')
-  .delete(restrictTo('admin'), attributeController.removeCategoryAttribute);
+  .delete(restrictTo('admin', 'manager'), attributeController.removeCategoryAttribute);
 
 export default router;

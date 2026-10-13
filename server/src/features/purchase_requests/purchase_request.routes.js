@@ -17,10 +17,10 @@ router
 
 router
   .route('/:id/status')
-  .put(restrictTo('admin'), prController.updatePurchaseRequestStatus);
+  .put(restrictTo('admin', 'manager'), prController.updatePurchaseRequestStatus);
 
 router
   .route('/:id/receive')
-  .put(restrictTo('admin'), prController.receivePurchaseRequestItems);
+  .put(restrictTo('admin', 'manager'), prController.receivePurchaseRequestItems);
 
 export default router;

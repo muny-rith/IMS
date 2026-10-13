@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react'
+import React, { useState, useEffect, Fragment, useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import logo from '../../../assets/images/logo.png'
 import './SideBar.css'
@@ -18,50 +18,84 @@ import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
+import { useAuth } from '../../../features/auth/hooks/useAuth'
+
 const navSections = [
   {
     title: 'Overview',
     icon: <SpaceDashboardIcon />,
+    roles: ['admin', 'manager'],
     items: [
-      { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard' },
+      { to: '/dashboard', icon: <SpaceDashboardIcon />, label: 'Dashboard', roles: ['admin', 'manager'] },
     ]
   },
   {
     title: 'Catalog',
     icon: <StyleIcon />,
+    roles: ['admin', 'manager', 'staff', 'worker'],
     items: [
-      { to: '/products',   icon: <ShoppingCartIcon />,   label: 'Product'   },
-      { to: '/categories',  icon: <TableRowsIcon />,     label: 'Category'  },
-      { to: '/brands',      icon: <LocalOfferIcon />,    label: 'Brand'     },
-      { to: '/attributes', icon: <StyleIcon />,          label: 'Attribute' },
+      { to: '/products',   icon: <ShoppingCartIcon />,   label: 'Product',   roles: ['admin', 'manager', 'staff', 'worker'] },
+      { to: '/categories',  icon: <TableRowsIcon />,     label: 'Category',  roles: ['admin', 'manager'] },
+      { to: '/brands',      icon: <LocalOfferIcon />,    label: 'Brand',     roles: ['admin', 'manager'] },
+      { to: '/attributes', icon: <StyleIcon />,          label: 'Attribute', roles: ['admin', 'manager'] },
     ]
   },
   {
     title: 'Inventory',
     icon: <Inventory2Icon />,
+    roles: ['admin', 'manager', 'staff'],
     items: [
-      { to: '/stocks',    icon: <Inventory2Icon />,      label: 'Stock'     },
-      { to: '/loans',      icon: <PaidIcon />,           label: 'Loan'      },
-      { to: '/stock-issues', icon: <OutputIcon />,       label: 'Issue'     },
+      { to: '/stocks',    icon: <Inventory2Icon />,      label: 'Stock',     roles: ['admin', 'manager'] },
+      { to: '/loans',      icon: <PaidIcon />,           label: 'Loan',      roles: ['admin', 'manager', 'staff'] },
+      { to: '/stock-issues', icon: <OutputIcon />,       label: 'Issue',     roles: ['admin', 'manager', 'staff'] },
     ]
   },
   {
     title: 'Sales',
     icon: <PointOfSaleIcon />,
+    roles: ['admin', 'manager', 'staff'],
     items: [
-      { to: '/sales',      icon: <PointOfSaleIcon />,    label: 'Sales'     },
-      { to: '/purchase-requests', icon: <AssignmentIcon />, label: 'Request' },
+      { to: '/sales',      icon: <PointOfSaleIcon />,    label: 'Sales',   roles: ['admin', 'manager', 'staff'] },
+      { to: '/purchase-requests', icon: <AssignmentIcon />, label: 'Request', roles: ['admin', 'manager', 'staff'] },
     ]
   },
   {
-    title: 'People & Reports',
-    icon: <PersonIcon />,
+    title: 'Reports',
+    icon: <InsertDriveFileIcon />,
+    roles: ['admin', 'manager', 'staff'],
     items: [
-      { to: '/workers',    icon: <PersonIcon />,         label: 'Worker'    },
-      { to: '/reports',    icon: <InsertDriveFileIcon />, label: 'Report'   },
+      { to: '/reports',    icon: <InsertDriveFileIcon />, label: 'Report', roles: ['admin', 'manager', 'staff'] },
+    ]
+  },
+  {
+    title: 'People',
+    icon: <PersonIcon />,
+    roles: ['admin', 'manager'],
+    items: [
+      { to: '/workers',    icon: <PersonIcon />,         label: 'Worker',  roles: ['admin', 'manager'] },
     ]
   }
 ]
+
+export const getVisibleNavSections = (userRole = 'staff') => {
+  return navSections
+    .map((section) => {
+      const items = section.items.filter(
+        (item) => !item.roles || item.roles.includes(userRole)
+      );
+      return { ...section, items };
+    })
+    .filter(
+      (section) =>
+        section.items.length > 0 &&
+        (!section.roles || section.roles.includes(userRole))
+    );
+};
+
+export const getTotalVisibleNavCount = (userRole = 'staff') => {
+  const sections = getVisibleNavSections(userRole);
+  return sections.reduce((total, s) => total + s.items.length, 0);
+};
 
 const SidebarGroup = ({ section, isMobile, onClose }) => {
   const location = useLocation()
@@ -69,10 +103,10 @@ const SidebarGroup = ({ section, isMobile, onClose }) => {
   const [isOpen, setIsOpen] = useState(isActiveGroup)
 
   useEffect(() => {
-    if (isActiveGroup && !isOpen) {
+    if (isActiveGroup) {
       setIsOpen(true)
     }
-  }, [location.pathname, isActiveGroup])
+  }, [isActiveGroup])
 
   return (
     <div className="sidebar__group">
@@ -111,6 +145,13 @@ const SidebarGroup = ({ section, isMobile, onClose }) => {
 }
 
 const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {
+  const { user } = useAuth();
+  const userRole = user?.role || 'staff';
+
+  const visibleSections = useMemo(() => {
+    return getVisibleNavSections(userRole);
+  }, [userRole]);
+
   return (
     <nav className={['sidebar', collapsed ? 'sidebar--collapsed' : ''].filter(Boolean).join(' ')}>
 
@@ -122,7 +163,7 @@ const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {
       <div className="sidebar__nav">
         {!collapsed && <div className="sidebar__menu-label">Menu</div>}
         
-        {navSections.map((section, idx) => (
+        {visibleSections.map((section, idx) => (
           <Fragment key={idx}>
             {/* When expanded, show accordion group */}
             {!collapsed && (

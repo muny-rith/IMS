@@ -22,6 +22,7 @@ import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
 import ApartmentOutlinedIcon from '@mui/icons-material/ApartmentOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Button from '../../../components/ui/Button/Button';
@@ -359,7 +360,7 @@ const WorkerPage = () => {
 
             <div className="worker-toolbar__search">
               <Input
-                leftIcon={<i className="fa-solid fa-magnifying-glass" />}
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by name, code, position..."

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS tb_user (
   name          VARCHAR(100) NOT NULL,
   email         VARCHAR(100) UNIQUE NOT NULL,
   password      VARCHAR(255) NOT NULL,
-  role          VARCHAR(20) DEFAULT 'worker' CHECK (role IN ('worker', 'admin')),
+  role          VARCHAR(20) DEFAULT 'staff' CHECK (role IN ('admin', 'manager', 'staff', 'worker')),
   created_at    TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMP NOT NULL DEFAULT NOW()
 );
@@ -30,6 +30,14 @@ CREATE TABLE IF NOT EXISTS tb_user (
 INSERT INTO tb_user (name, email, password, role)
 SELECT 'Admin User', 'admin@moonims.com', '$2a$10$4MmqmYaQVbJXx.shmOkn/u1py2thSyhTyeOuf9K7qNRPqgdCvYQhq', 'admin'
 WHERE NOT EXISTS (SELECT 1 FROM tb_user WHERE email = 'admin@moonims.com');
+
+INSERT INTO tb_user (name, email, password, role)
+SELECT 'Warehouse Manager', 'manager@moonims.com', '$2a$10$4MmqmYaQVbJXx.shmOkn/u1py2thSyhTyeOuf9K7qNRPqgdCvYQhq', 'manager'
+WHERE NOT EXISTS (SELECT 1 FROM tb_user WHERE email = 'manager@moonims.com');
+
+INSERT INTO tb_user (name, email, password, role)
+SELECT 'Floor Worker', 'worker@moonims.com', '$2a$10$4MmqmYaQVbJXx.shmOkn/u1py2thSyhTyeOuf9K7qNRPqgdCvYQhq', 'worker'
+WHERE NOT EXISTS (SELECT 1 FROM tb_user WHERE email = 'worker@moonims.com');
 
 -- ------------------------------------------------------------
 -- 2. tb_category
@@ -69,6 +77,7 @@ CREATE TABLE IF NOT EXISTS tb_attribute_value (
   value_id       SERIAL PRIMARY KEY,
   attribute_id   INT NOT NULL REFERENCES tb_attribute(attribute_id) ON DELETE CASCADE,
   value          VARCHAR(50) NOT NULL,
+  other          TEXT,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
   UNIQUE (attribute_id, value)
 );
@@ -116,6 +125,7 @@ CREATE TABLE IF NOT EXISTS tb_product_variant (
   sku            VARCHAR(50) UNIQUE,
   unit_price     NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (unit_price >= 0),
   image_url      TEXT,
+  other          TEXT,
   is_active      BOOLEAN NOT NULL DEFAULT TRUE,
   created_at     TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMP NOT NULL DEFAULT NOW()
