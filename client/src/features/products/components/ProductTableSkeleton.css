@@ -89,9 +89,22 @@
   gap: 6px;
 }
 
-/* Mobile responsive */
+/* Responsive skeleton columns */
+@media (max-width: 1200px) {
+  .product-skeleton-cell--dept {
+    display: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .product-skeleton-cell--cat {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .product-skeleton-cell--dept,
+  .product-skeleton-cell--cat,
   .product-skeleton-cell--brand {
     display: none;
   }

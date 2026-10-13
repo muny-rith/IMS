@@ -23,6 +23,17 @@ export const findById = async (id) => {
   return rows[0];
 };
 
+export const updatePassword = async (userId, hashedPassword) => {
+  const text = `
+    UPDATE tb_user
+    SET password = $1, updated_at = NOW()
+    WHERE user_id = $2
+    RETURNING user_id, name, email, role, updated_at;
+  `;
+  const { rows } = await query(text, [hashedPassword, userId]);
+  return rows[0];
+};
+
 export const findAll = async () => {
   const text = 'SELECT user_id, name, email, role, created_at FROM tb_user ORDER BY user_id ASC;';
   const { rows } = await query(text);

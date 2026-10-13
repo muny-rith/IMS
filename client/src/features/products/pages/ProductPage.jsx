@@ -13,6 +13,7 @@ import {
   IconButton,
   Snackbar,
   Tooltip,
+  useMediaQuery,
 } from '@mui/material';
 
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
@@ -279,6 +280,17 @@ const ProductPage = () => {
   };
 
 
+  const isUnder1200 = useMediaQuery('(max-width: 1200px)');
+  const isUnder992 = useMediaQuery('(max-width: 992px)');
+
+  const columnVisibilityModel = useMemo(
+    () => ({
+      department: !isUnder1200,
+      category: !isUnder992,
+    }),
+    [isUnder1200, isUnder992]
+  );
+
   const columns = useMemo(
     () => [
       {
@@ -355,6 +367,8 @@ const ProductPage = () => {
         field: 'category',
         headerName: 'Category',
         flex: 1,
+        headerClassName: 'col-category',
+        cellClassName: 'col-category',
         renderCell: (params) => (
           <span className="product-category-tag">{params.row.category || '—'}</span>
         ),
@@ -371,6 +385,8 @@ const ProductPage = () => {
         field: 'department',
         headerName: 'Department',
         flex: 1.1,
+        headerClassName: 'col-department',
+        cellClassName: 'col-department',
         renderCell: (params) => (
           <span className="product-dept-cell">{params.row.department || 'N/A'}</span>
         ),
@@ -432,7 +448,7 @@ const ProductPage = () => {
                 className="product-action product-action--view"
                 onClick={() => openViewModal(params.row)}
               >
-                <VisibilityIcon sx={{ fontSize: 18 }} />
+                <VisibilityIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
               </IconButton>
             </Tooltip>
 
@@ -443,7 +459,7 @@ const ProductPage = () => {
                   className="product-action product-action--edit"
                   onClick={() => openEditModal(params.row)}
                 >
-                  <EditIcon sx={{ fontSize: 18 }} />
+                  <EditIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -455,7 +471,7 @@ const ProductPage = () => {
                   className="product-action product-action--delete"
                   onClick={() => requestDelete(params.row.id)}
                 >
-                  <DeleteIcon sx={{ fontSize: 18 }} />
+                  <DeleteIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
                 </IconButton>
               </Tooltip>
             )}
@@ -463,7 +479,7 @@ const ProductPage = () => {
         ),
       },
     ],
-    [openEditModal, openViewModal, requestDelete, canEdit, canDelete]
+    [openEditModal, openViewModal, requestDelete, canEdit, canDelete, isUnder992]
   );
 
   return (
@@ -542,6 +558,7 @@ const ProductPage = () => {
                 <DataTable
                   rows={filteredRows}
                   columns={columns}
+                  columnVisibilityModel={columnVisibilityModel}
                   rowSelectionModel={selectedRowIds}
                   onRowSelectionModelChange={setSelectedRowIds}
                 />
@@ -552,7 +569,7 @@ const ProductPage = () => {
                   onView={openViewModal}
                   onEdit={canEdit ? openEditModal : undefined}
                   onDelete={canDelete ? requestDelete : undefined}
-                />  
+                />
                 <div className="product-panel__footer">
                   <div className="product-panel__count">
                     Showing <strong>{filteredRows.length}</strong> of {rows.length} products

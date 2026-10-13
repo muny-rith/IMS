@@ -420,14 +420,14 @@ const ProductDetailPage = () => {
                       <table className="product-detail-table">
                         <thead>
                           <tr>
-                            <th style={{ width: '44px' }}>Item</th>
-                            <th>SKU Code</th>
-                            <th>Options & Attributes</th>
-                            <th>Other</th>
-                            <th style={{ textAlign: 'right' }}>Unit Price</th>
-                            <th style={{ textAlign: 'center' }}>On-Hand</th>
-                            <th style={{ textAlign: 'center' }}>Reserved</th>
-                            <th style={{ textAlign: 'center' }}>Available</th>
+                            <th className="product-detail-th--item">Item</th>
+                            <th className="product-detail-th--sku">SKU Code</th>
+                            <th className="product-detail-th--attr">Attribute</th>
+                            <th className="product-detail-th--other">Other</th>
+                            <th className="product-detail-th--price">Price</th>
+                            <th className="product-detail-th--stock">On-Hand</th>
+                            <th className="product-detail-th--stock">Reserved</th>
+                            <th className="product-detail-th--stock">Available</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -456,7 +456,7 @@ const ProductDetailPage = () => {
                                   </div>
                                 </td>
 
-                                <td>
+                                <td className="product-detail-td--sku">
                                   <div>
                                     <code className="product-detail-code">{vSku}</code>
                                     <button
@@ -477,18 +477,19 @@ const ProductDetailPage = () => {
                                 <td>
                                   <div className="product-detail-options-cell">
                                     {Array.isArray(v.attribute_values) && v.attribute_values.length > 0 ? (
-                                      <div className="product-detail-attrs-group">
+                                      <div className="product-detail-attrs-text">
                                         {v.attribute_values.map((av, avIdx) => (
-                                          <span key={av.value_id || avIdx} className="product-detail-attr-pill">
+                                          <span key={av.value_id || avIdx} className="product-detail-attr-item">
                                             {av.attribute_name && v.attribute_values.length > 1 && (
-                                              <span className="product-detail-attr-label">{av.attribute_name}:</span>
+                                              <span className="product-detail-attr-label">{av.attribute_name}: </span>
                                             )}
-                                            <span>{av.value}</span>
+                                            <span className="product-detail-attr-val">{av.value}</span>
+                                            {avIdx < v.attribute_values.length - 1 && <span className="product-detail-attr-sep">, </span>}
                                           </span>
                                         ))}
                                       </div>
                                     ) : (
-                                      <span className="product-detail-attr-pill">{optionLabel}</span>
+                                      <span className="product-detail-attr-val">{optionLabel}</span>
                                     )}
                                   </div>
                                 </td>
@@ -531,9 +532,9 @@ const ProductDetailPage = () => {
                                   </span>
                                 </td>
 
-                                <td style={{ textAlign: 'center', fontWeight: 600 }}>{vStock}</td>
-                                <td style={{ textAlign: 'center', color: '#64748b' }}>{vRes}</td>
-                                <td style={{ textAlign: 'center', fontWeight: 700, color: '#059669' }}>
+                                <td className="product-detail-td--stock" style={{ textAlign: 'center', fontWeight: 600 }}>{vStock}</td>
+                                <td className="product-detail-td--stock" style={{ textAlign: 'center', color: '#64748b' }}>{vRes}</td>
+                                <td className="product-detail-td--stock" style={{ textAlign: 'center', fontWeight: 700, color: '#059669' }}>
                                   {vAvail}
                                 </td>
                               </tr>

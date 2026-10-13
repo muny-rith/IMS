@@ -7,11 +7,11 @@ import {
   useState,
 } from "react";
 import {
-  clearSessionDay,
+  changePassword,
+  getActiveSessions,
   getCurrentSession,
-  isSessionForToday,
-  markSessionForToday,
   onAuthSessionChange,
+  revokeSession,
   signInWithEmail,
   signOutUser,
 } from "../services/authService";
@@ -39,20 +39,11 @@ export const AuthProvider = ({ children }) => {
     const initialize = async () => {
       try {
         const currentSession = await getCurrentSession();
-
         if (!active) return;
-
-        if (currentSession && !isSessionForToday()) {
-          await signOutUser();
-          setSession(null);
-          return;
-        }
-
-        if (currentSession) {
-          markSessionForToday();
-        }
-
         setSession(currentSession);
+      } catch (err) {
+        if (!active) return;
+        setSession(null);
       } finally {
         if (active) {
           setLoading(false);
@@ -65,14 +56,12 @@ export const AuthProvider = ({ children }) => {
     const {
       data: { subscription },
     } = onAuthSessionChange((event, nextSession) => {
-      if (event === "SIGNED_IN" && nextSession) {
-        markSessionForToday();
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         setSession(nextSession);
         return;
       }
 
       if (event === "SIGNED_OUT") {
-        clearSessionDay();
         setSession(null);
         return;
       }
@@ -82,21 +71,9 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       active = false;
-      subscription.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, []);
-
-  useEffect(() => {
-    if (!session) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      if (!isSessionForToday()) {
-        signOut();
-      }
-    }, 60 * 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, [session, signOut]);
 
   const value = useMemo(
     () => ({
@@ -106,6 +83,9 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated: Boolean(session?.user),
       signIn,
       signOut,
+      changePassword,
+      getActiveSessions,
+      revokeSession,
     }),
     [loading, session, signIn, signOut]
   );

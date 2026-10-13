@@ -4,13 +4,17 @@
   "description": "Inventory Management System API Server",
   "main": "server.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.42.0",
+    "@supabase/supabase-js": "^2.117.3",
     "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.2",
@@ -18,8 +22,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
     "pg": "^8.11.5",
-    "sharp": "^0.32.6",
-    "ws": "^8.21.3"
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

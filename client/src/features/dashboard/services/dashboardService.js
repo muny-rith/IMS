@@ -233,20 +233,76 @@ export const fetchDashboardData = async (forceRefresh = false) => {
     if (cached) return cached;
   }
   const response = await api.get('/dashboard/stats');
+  const raw = response.data.data;
+  if (raw.hero && Array.isArray(raw.stats)) {
+    const toneMap = {
+      'stock-on-hand': { tag: 'PR', tone: 'amber' },
+      'low-stock-alert': { tag: 'LS', tone: 'warning' },
+      'active-loans': { tag: 'LN', tone: 'violet' },
+      'overdue-loans': { tag: 'WK', tone: 'sky' }
+    };
+
+    const stats = raw.stats.map(s => {
+      const config = toneMap[s.id] || { tag: 'PR', tone: 'amber' };
+      return {
+        title: s.title,
+        value: s.value,
+        detail: s.detail || s.meta || '',
+        tag: s.tag || config.tag,
+        tone: s.tone || config.tone
+      };
+    });
+
+    const alerts = (raw.alerts && raw.alerts.length > 0)
+      ? raw.alerts.map(a => ({
+          title: a.title,
+          detail: a.detail,
+          level: a.level || (a.tone === 'danger' ? 'Critical' : a.tone === 'warning' ? 'Watch' : 'Notice')
+        }))
+      : [
+          {
+            title: "No urgent operational alerts",
+            detail: "Stock balances, active loans, and purchase requests look calm in the current snapshot.",
+            level: "Notice"
+          }
+        ];
+
+    const chartData = (raw.chartData || []).map(c => ({
+      label: c.label || c.day,
+      stockIn: c.stockIn ?? c.issued ?? 0,
+      stockOut: c.stockOut ?? c.returned ?? 0
+    }));
+
+    const resultData = {
+      hero: raw.hero,
+      stats,
+      alerts,
+      quickActions: raw.quickActions?.length ? raw.quickActions : buildQuickActions({
+        productCount: 0,
+        lowStockCount: 0,
+        overdueLoans: 0
+      }),
+      chartData
+    };
+
+    cacheService.set(DASHBOARD_CACHE_KEY, resultData, CACHE_TTL.DASHBOARD);
+    return resultData;
+  }
+
   const {
-    products,
-    balances,
-    loans,
-    workers,
-    purchaseRequests,
-    lowStockCount,
-    outOfStockCount,
-    activeLoans,
-    overdueLoans,
-    dueSoonLoans,
-    workersBorrowing,
-    chartData
-  } = response.data.data;
+    products = [],
+    balances = [],
+    loans = [],
+    workers = [],
+    purchaseRequests = [],
+    lowStockCount = 0,
+    outOfStockCount = 0,
+    activeLoans = 0,
+    overdueLoans = 0,
+    dueSoonLoans = 0,
+    workersBorrowing = 0,
+    chartData = []
+  } = raw || {};
 
   const now = new Date();
   const today = new Date(now);

@@ -1,4 +1,4 @@
-import { verifyToken } from '../shared/utils/jwtToken.js';
+import { verifyAccessToken } from '../shared/utils/jwtToken.js';
 import ApiError from '../shared/errors/ApiError.js';
 import * as userModel from '../features/auth/user.model.js';
 
@@ -22,8 +22,18 @@ export const protect = async (req, res, next) => {
       );
     }
 
-    // Verify token
-    const decoded = verifyToken(token);
+    // Verify access token
+    let decoded;
+    try {
+      decoded = verifyAccessToken(token);
+    } catch (err) {
+      return next(
+        new ApiError(
+          401,
+          "Access token expired or invalid.",
+        ),
+      );
+    }
 
     // Fetch user from DB
     const user = await userModel.findById(decoded.id);
@@ -36,7 +46,11 @@ export const protect = async (req, res, next) => {
       );
     }
 
-    req.user = user;
+    req.user = {
+      ...user,
+      id: user.user_id || user.id,
+      user_id: user.user_id || user.id,
+    };
     next();
   } catch (err) {
     next(err);
