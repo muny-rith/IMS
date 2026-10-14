@@ -329,7 +329,7 @@ const ProductFormPage = () => {
       imageUrl: formValues.imageUrl || '',
       variants: variants,
       deletedVariantIds: isEdit ? deletedVariantIds : [],
-      productAttributes: productAttributes.map(a => a.attribute_id),
+      productAttributes: productAttributes.map((a) => a.attribute_id),
     };
 
     const result = isCreate ? await handleAdd(data) : await handleUpdate(id, data);
@@ -349,15 +349,15 @@ const ProductFormPage = () => {
   // Compute category attributes
   const categoryAttributes = useMemo(() => {
     if (!selectedCategoryId) return [];
-    const cat = categories.find(c => String(c.id) === String(selectedCategoryId));
+    const cat = categories.find((c) => String(c.id) === String(selectedCategoryId));
     if (!cat || !cat.attributes || !cat.attributes.length) return [];
-    return allAttributes.filter(a => cat.attributes.includes(a.attribute_id));
+    return allAttributes.filter((a) => cat.attributes.includes(a.attribute_id));
   }, [selectedCategoryId, categories, allAttributes]);
 
   const activeAttributes = useMemo(() => {
     const combined = [...categoryAttributes];
-    productAttributes.forEach(pa => {
-      if (!combined.find(ca => ca.attribute_id === pa.attribute_id)) {
+    productAttributes.forEach((pa) => {
+      if (!combined.find((ca) => ca.attribute_id === pa.attribute_id)) {
         combined.push(pa);
       }
     });
@@ -419,35 +419,19 @@ const ProductFormPage = () => {
   };
 
   const handleVariantChange = (varId, field, value) => {
-    setVariants((current) => current.map(v => v.id === varId ? { ...v, [field]: value } : v));
+    setVariants((current) => current.map((v) => (v.id === varId ? { ...v, [field]: value } : v)));
   };
 
   const handleVariantAttrChange = (varId, attrId, value) => {
-    setVariants((current) => current.map(v => {
-      if (v.id === varId) {
-        return { ...v, attributes: { ...v.attributes, [attrId]: value } };
-      }
-      return v;
-    }));
+    setVariants((current) =>
+      current.map((v) => {
+        if (v.id === varId) {
+          return { ...v, attributes: { ...v.attributes, [attrId]: value } };
+        }
+        return v;
+      })
+    );
   };
-
-
-  useEffect(() => {
-    const updateMetrics = () => {
-      const el = document.getElementById('inspector-debug-metrics');
-      if (!el) return;
-      const inspector = document.querySelector('.product-workbench-inspector');
-      const body = document.querySelector('.product-workbench-inspector__body');
-      const hero = document.querySelector('.product-workbench-hero-grid');
-      const attr = document.querySelector('.workbench-attr-section');
-      const detail = document.querySelector('.workbench-field--detail');
-      const layout = document.querySelector('.product-workbench-layout');
-      if (!body) return;
-      el.textContent = `W=${window.innerWidth} | LayoutH=${layout?.offsetHeight}(minH=${layout ? getComputedStyle(layout).minHeight : ''}) | InspH=${inspector?.offsetHeight} | BodyH=${body.offsetHeight}(flex=${getComputedStyle(body).flex}) | HeroH=${hero?.offsetHeight} | AttrH=${attr?.offsetHeight} | DetailTop=${detail?.getBoundingClientRect().top.toFixed(0)} | HeroBottom=${hero?.getBoundingClientRect().bottom.toFixed(0)}`;
-    };
-    const t = setInterval(updateMetrics, 500);
-    return () => clearInterval(t);
-  }, []);
 
   if (loadingDetails) {
     return (
@@ -472,7 +456,9 @@ const ProductFormPage = () => {
           </button>
           <div className="product-form-header__info">
             <div className="product-form-breadcrumbs">
-              <span className="clickable" onClick={() => navigate('/products')}>Products</span>
+              <span className="clickable" onClick={() => navigate('/products')}>
+                Products
+              </span>
               <span>/</span>
               {isEdit && defaultValues?.name && (
                 <>
@@ -487,7 +473,7 @@ const ProductFormPage = () => {
               </span>
             </div>
             <h1 className="product-form-header__title">
-              {isCreate ? 'Add New Product' : (defaultValues?.name || 'Edit Product')}
+              {isCreate ? 'Add New Product' : defaultValues?.name || 'Edit Product'}
             </h1>
           </div>
         </div>
@@ -526,7 +512,6 @@ const ProductFormPage = () => {
           <div className="product-form-card">
             <h3 className="product-form-card__title">
               <span>Product Image</span>
-              <span className="product-form-card__badge">Visual Asset</span>
             </h3>
 
             <div
@@ -623,12 +608,19 @@ const ProductFormPage = () => {
                         '& .MuiSelect-select': { padding: '9px 12px' },
                         '& fieldset': { borderColor: errors.categoryId ? '#ef4444' : '#cbd5e1' },
                         '&:hover fieldset': { borderColor: '#94a3b8' },
-                        '&.Mui-focused fieldset': { borderColor: 'var(--primary-color, #eb0029)', borderWidth: '1px' },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--primary-color, #eb0029)',
+                          borderWidth: '1px',
+                        },
                       }}
                     >
-                      <MenuItem value="" disabled>Select category</MenuItem>
+                      <MenuItem value="" disabled>
+                        Select category
+                      </MenuItem>
                       {categories.map((c) => (
-                        <MenuItem key={c.id} value={String(c.id)}>{c.name}</MenuItem>
+                        <MenuItem key={c.id} value={String(c.id)}>
+                          {c.name}
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -659,12 +651,19 @@ const ProductFormPage = () => {
                         '& .MuiSelect-select': { padding: '9px 12px' },
                         '& fieldset': { borderColor: '#cbd5e1' },
                         '&:hover fieldset': { borderColor: '#94a3b8' },
-                        '&.Mui-focused fieldset': { borderColor: 'var(--primary-color, #eb0029)', borderWidth: '1px' },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'var(--primary-color, #eb0029)',
+                          borderWidth: '1px',
+                        },
                       }}
                     >
-                      <MenuItem value=""><em>None</em></MenuItem>
+                      <MenuItem value="">
+                        <em>None</em>
+                      </MenuItem>
                       {brands.map((b) => (
-                        <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
+                        <MenuItem key={b.id} value={String(b.id)}>
+                          {b.name}
+                        </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -689,7 +688,7 @@ const ProductFormPage = () => {
 
         {/* ── RIGHT COLUMN: Interactive Matrix Studio ── */}
         <div className="product-form-right-col">
-          <div className="product-form-card" style={{ padding: '20px 20px 14px 20px' }}>
+          <div className="product-form-card product-form-card--studio">
             <div className="product-matrix-header">
               <div className="product-matrix-header__left">
                 <h3 className="product-matrix-title">
@@ -700,26 +699,26 @@ const ProductFormPage = () => {
                   Manage SKU codes, pricing, inventory stock, photography, and attributes in a focused workbench.
                 </p>
               </div>
-
             </div>
 
             {/* Dynamic Custom Attributes Banner */}
             <div className="product-matrix-attrs-box">
               <div className="product-matrix-attrs-box__label">
                 <span>Add Custom Attributes</span>
-                <span className="product-matrix-attrs-box__hint">Applies options across all matrix rows</span>
               </div>
               <Autocomplete
                 multiple
                 size="small"
-                options={allAttributes.filter(a => !categoryAttributes.find(ca => ca.attribute_id === a.attribute_id))}
+                options={allAttributes.filter(
+                  (a) => !categoryAttributes.find((ca) => ca.attribute_id === a.attribute_id)
+                )}
                 getOptionLabel={(option) => option.attribute_name}
                 value={productAttributes}
                 onChange={(e, newValue) => setProductAttributes(newValue)}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder="Choose custom attributes for this product (e.g. Size, Flavor)..."
+                    placeholder="Select custom attributes (e.g. Size, Flavor)..."
                     sx={{
                       bgcolor: '#fff',
                       borderRadius: '8px',
@@ -730,7 +729,7 @@ const ProductFormPage = () => {
                         fontWeight: 600,
                         bgcolor: '#e0f2fe',
                         color: '#0369a1',
-                      }
+                      },
                     }}
                   />
                 )}
@@ -775,7 +774,7 @@ const ProductFormPage = () => {
                         const attrSummary = activeAttributes
                           .map((attr) => {
                             const val = v.attributes[attr.attribute_id];
-                            const valText = Array.isArray(val) ? val.join(', ') : (val || '');
+                            const valText = Array.isArray(val) ? val.join(', ') : val || '';
                             return valText ? `${attr.attribute_name}: ${valText}` : null;
                           })
                           .filter(Boolean)
@@ -784,7 +783,8 @@ const ProductFormPage = () => {
                         return (
                           <div
                             key={v.id}
-                            className={`product-workbench-item ${isSelected ? 'product-workbench-item--active' : ''}`}
+                            className={`product-workbench-item ${isSelected ? 'product-workbench-item--active' : ''
+                              }`}
                             onClick={() => setSelectedVariantId(v.id)}
                           >
                             <span className="product-workbench-item__num">#{idx + 1}</span>
@@ -830,7 +830,6 @@ const ProductFormPage = () => {
                             Variant #{selectedVariantIndex + 1} of {variants.length}
                           </span>
                         </div>
-                        <div id="inspector-debug-metrics" style={{ fontSize: 10, color: '#dc2626', background: '#fee2e2', padding: '2px 6px', borderRadius: 4, width: '100%', wordBreak: 'break-all' }} />
 
                         <div className="product-workbench-inspector__actions">
                           <Button
@@ -857,17 +856,6 @@ const ProductFormPage = () => {
                             Next
                           </Button>
 
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            icon={<ContentCopyIcon sx={{ fontSize: 16 }} />}
-                            onClick={() => handleDuplicateVariant(selectedVariant.id)}
-                            title="Duplicate this variant"
-                            responsiveCollapse
-                          >
-                            Duplicate
-                          </Button>
-
                           {variants.length > 1 && (
                             <Tooltip title="Delete this variant">
                               <Button
@@ -883,7 +871,7 @@ const ProductFormPage = () => {
 
                       {/* Body */}
                       <div className="product-workbench-inspector__body">
-                        {/* Hero Photo Studio & Primary Identifiers */}
+                        {/* Top Row: Variant Photo + SKU & Price */}
                         <div className="product-workbench-hero-grid">
                           <div className="workbench-photo-card">
                             <span className="workbench-photo-label">Variant Photo</span>
@@ -893,7 +881,10 @@ const ProductFormPage = () => {
                               title="Click to choose variant photo"
                             >
                               {selectedVariant.imagePreview ? (
-                                <img src={selectedVariant.imagePreview} alt={selectedVariant.sku || 'Variant'} />
+                                <img
+                                  src={selectedVariant.imagePreview}
+                                  alt={selectedVariant.sku || 'Variant'}
+                                />
                               ) : (
                                 <div className="workbench-photo-placeholder">
                                   <PhotoCameraIcon sx={{ fontSize: 28 }} />
@@ -917,15 +908,17 @@ const ProductFormPage = () => {
                           <div className="workbench-fields-grid">
                             {/* SKU */}
                             <div className="product-form-field workbench-field--sku">
-                              <label className="product-form-label">
+                              <span className="product-form-label">
                                 <span>SKU Code</span>
-                              </label>
+                              </span>
                               <input
                                 type="text"
                                 className="product-form-input matrix-input--sku"
                                 placeholder="Auto-generated"
                                 value={selectedVariant.sku}
-                                onChange={(e) => handleVariantChange(selectedVariant.id, 'sku', e.target.value)}
+                                onChange={(e) =>
+                                  handleVariantChange(selectedVariant.id, 'sku', e.target.value)
+                                }
                               />
                             </div>
 
@@ -944,67 +937,83 @@ const ProductFormPage = () => {
                                   className="product-form-input matrix-input--price"
                                   placeholder="0.00"
                                   value={selectedVariant.unit_price}
-                                  onChange={(e) => handleVariantChange(selectedVariant.id, 'unit_price', e.target.value)}
+                                  onChange={(e) =>
+                                    handleVariantChange(selectedVariant.id, 'unit_price', e.target.value)
+                                  }
                                   required
                                 />
                               </div>
                             </div>
-
-                            {/* Product Attribute */}
-                            {activeAttributes.length > 0 && (
-                              <div className="product-form-field workbench-attr-section">
-                                <div className="workbench-attr-list">
-                                  {activeAttributes.map((attr) => (
-                                    <div key={attr.attribute_id} className="product-form-field workbench-attr-item">
-                                      <span className="workbench-attr-label">
-                                        {attr.attribute_name}
-                                      </span>
-                                      <Autocomplete
-                                        multiple
-                                        freeSolo
-                                        size="small"
-                                        options={(attributeValuesMap[attr.attribute_id] || []).map((val) => val.value)}
-                                        value={
-                                          Array.isArray(selectedVariant.attributes[attr.attribute_id])
-                                            ? selectedVariant.attributes[attr.attribute_id]
-                                            : (selectedVariant.attributes[attr.attribute_id] ? [selectedVariant.attributes[attr.attribute_id]] : [])
-                                        }
-                                        onChange={(event, newValue) => handleVariantAttrChange(selectedVariant.id, attr.attribute_id, newValue)}
-                                        renderInput={(params) => (
-                                          <TextField
-                                            {...params}
-                                            placeholder={`Add ${attr.attribute_name}...`}
-                                            size="small"
-                                            sx={{
-                                              '& .MuiOutlinedInput-root': {
-                                                fontSize: '13px',
-                                                padding: '3px 8px',
-                                                bgcolor: '#fff',
-                                                borderRadius: '8px',
-                                                '& fieldset': { borderColor: '#cbd5e1' },
-                                                '&:hover fieldset': { borderColor: '#94a3b8' },
-                                                '&.Mui-focused fieldset': { borderColor: 'var(--primary-color, #eb0029)', borderWidth: '1px' },
-                                                '& .MuiChip-root': {
-                                                  height: '24px',
-                                                  fontSize: '11.5px',
-                                                  fontWeight: 600,
-                                                  bgcolor: '#f1f5f9',
-                                                  color: '#334155',
-                                                }
-                                              }
-                                            }}
-                                          />
-                                        )}
-                                      />
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
 
-                        {/* Specific Detail / Notes */}
+                        {/* Middle Row: Product Attributes (Full Width, Zero Extra Gap) */}
+                        {activeAttributes.length > 0 && (
+                          <div className="product-form-field workbench-attr-section">
+                            <div className="workbench-attr-list">
+                              {activeAttributes.map((attr) => (
+                                <div
+                                  key={attr.attribute_id}
+                                  className="product-form-field workbench-attr-item"
+                                >
+                                  <span className="workbench-attr-label">{attr.attribute_name}</span>
+                                  <Autocomplete
+                                    multiple
+                                    freeSolo
+                                    size="small"
+                                    options={(attributeValuesMap[attr.attribute_id] || []).map(
+                                      (val) => val.value
+                                    )}
+                                    value={
+                                      Array.isArray(selectedVariant.attributes[attr.attribute_id])
+                                        ? selectedVariant.attributes[attr.attribute_id]
+                                        : selectedVariant.attributes[attr.attribute_id]
+                                          ? [selectedVariant.attributes[attr.attribute_id]]
+                                          : []
+                                    }
+                                    onChange={(event, newValue) =>
+                                      handleVariantAttrChange(
+                                        selectedVariant.id,
+                                        attr.attribute_id,
+                                        newValue
+                                      )
+                                    }
+                                    renderInput={(params) => (
+                                      <TextField
+                                        {...params}
+                                        placeholder={`Add ${attr.attribute_name}...`}
+                                        size="small"
+                                        sx={{
+                                          '& .MuiOutlinedInput-root': {
+                                            fontSize: '13px',
+                                            padding: '3px 8px',
+                                            bgcolor: '#fff',
+                                            borderRadius: '8px',
+                                            '& fieldset': { borderColor: '#cbd5e1' },
+                                            '&:hover fieldset': { borderColor: '#94a3b8' },
+                                            '&.Mui-focused fieldset': {
+                                              borderColor: 'var(--primary-color, #eb0029)',
+                                              borderWidth: '1px',
+                                            },
+                                            '& .MuiChip-root': {
+                                              height: '24px',
+                                              fontSize: '11.5px',
+                                              fontWeight: 600,
+                                              bgcolor: '#f1f5f9',
+                                              color: '#334155',
+                                            },
+                                          },
+                                        }}
+                                      />
+                                    )}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Bottom Row: Specific Detail / Notes */}
                         <div className="product-form-field workbench-field--detail">
                           <label className="product-form-label">
                             <span>Specific Detail</span>
@@ -1014,7 +1023,9 @@ const ProductFormPage = () => {
                             className="product-form-input"
                             placeholder="Enter variant specific details or notes..."
                             value={selectedVariant.other || ''}
-                            onChange={(e) => handleVariantChange(selectedVariant.id, 'other', e.target.value)}
+                            onChange={(e) =>
+                              handleVariantChange(selectedVariant.id, 'other', e.target.value)
+                            }
                           />
                         </div>
                       </div>
@@ -1028,7 +1039,6 @@ const ProductFormPage = () => {
                     </div>
                   )}
                 </div>
-
               </div>
             )}
           </div>
