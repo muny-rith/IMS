@@ -378,7 +378,8 @@
   gap: 4px;
 }
 
-.product-form-label .req {
+.product-form-label .req,
+.product-form-required {
   color: #ef4444;
 }
 
@@ -1653,11 +1654,11 @@
     width: 100%;
   }
 
-  .product-image-dropzone {
+  /* .product-image-dropzone {
     max-width: 220px;
     margin: 0 auto;
     min-height: 150px;
-  }
+  } */
 
   .product-form-right-col {
     width: 100%;
@@ -1732,49 +1733,89 @@
 
   .product-workbench-inspector__body {
     padding: 12px 10px;
-    gap: 0px;
+    gap: 10px !important;
   }
 
   .product-workbench-hero-grid {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
+    display: grid !important;
+    grid-template-columns: 115px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    grid-template-areas:
+      "photo sku"
+      "photo price"
+      "attrs attrs" !important;
+    column-gap: 12px !important;
+    row-gap: 10px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
 
   .workbench-photo-card {
-    width: 40%;
-    align-items: center;
+    grid-area: photo !important;
+    width: 115px !important;
+    margin: 0 !important;
+    flex-shrink: 0;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* .workbench-photo-dropzone {
-    width: 90px;
-    height: 90px;
-  } */
+  .workbench-photo-dropzone {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 90px !important;
+    flex: 1 !important;
+    box-sizing: border-box !important;
+  }
 
   .workbench-fields-grid {
-    width: 50%;
-    flex-direction: column;
-    gap: 10px;
+    display: contents !important;
   }
 
-  .workbench-fields-grid>.product-form-field {
-    width: 100%;
-    flex: none;
+  .workbench-field--sku {
+    grid-area: sku !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .workbench-field--price {
+    grid-area: price !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
   }
 
   .workbench-attr-section {
-    width: 100%;
-    flex: none !important;
+    grid-area: attrs !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .workbench-attr-list {
-    flex-direction: column;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .workbench-attr-item {
-    width: 100%;
-    flex: none;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .workbench-field--detail {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
   }
 }

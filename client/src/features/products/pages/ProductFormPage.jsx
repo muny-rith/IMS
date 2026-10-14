@@ -432,6 +432,23 @@ const ProductFormPage = () => {
   };
 
 
+  useEffect(() => {
+    const updateMetrics = () => {
+      const el = document.getElementById('inspector-debug-metrics');
+      if (!el) return;
+      const inspector = document.querySelector('.product-workbench-inspector');
+      const body = document.querySelector('.product-workbench-inspector__body');
+      const hero = document.querySelector('.product-workbench-hero-grid');
+      const attr = document.querySelector('.workbench-attr-section');
+      const detail = document.querySelector('.workbench-field--detail');
+      const layout = document.querySelector('.product-workbench-layout');
+      if (!body) return;
+      el.textContent = `W=${window.innerWidth} | LayoutH=${layout?.offsetHeight}(minH=${layout ? getComputedStyle(layout).minHeight : ''}) | InspH=${inspector?.offsetHeight} | BodyH=${body.offsetHeight}(flex=${getComputedStyle(body).flex}) | HeroH=${hero?.offsetHeight} | AttrH=${attr?.offsetHeight} | DetailTop=${detail?.getBoundingClientRect().top.toFixed(0)} | HeroBottom=${hero?.getBoundingClientRect().bottom.toFixed(0)}`;
+    };
+    const t = setInterval(updateMetrics, 500);
+    return () => clearInterval(t);
+  }, []);
+
   if (loadingDetails) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -813,6 +830,7 @@ const ProductFormPage = () => {
                             Variant #{selectedVariantIndex + 1} of {variants.length}
                           </span>
                         </div>
+                        <div id="inspector-debug-metrics" style={{ fontSize: 10, color: '#dc2626', background: '#fee2e2', padding: '2px 6px', borderRadius: 4, width: '100%', wordBreak: 'break-all' }} />
 
                         <div className="product-workbench-inspector__actions">
                           <Button
@@ -898,7 +916,7 @@ const ProductFormPage = () => {
 
                           <div className="workbench-fields-grid">
                             {/* SKU */}
-                            <div className="product-form-field">
+                            <div className="product-form-field workbench-field--sku">
                               <label className="product-form-label">
                                 <span>SKU Code</span>
                               </label>
@@ -912,7 +930,7 @@ const ProductFormPage = () => {
                             </div>
 
                             {/* Unit Price */}
-                            <div className="product-form-field">
+                            <div className="product-form-field workbench-field--price">
                               <label className="product-form-label">
                                 <span>Unit Price</span>
                                 <span className="product-form-required">*</span>
@@ -987,7 +1005,7 @@ const ProductFormPage = () => {
                         </div>
 
                         {/* Specific Detail / Notes */}
-                        <div className="product-form-field">
+                        <div className="product-form-field workbench-field--detail">
                           <label className="product-form-label">
                             <span>Specific Detail</span>
                           </label>
