@@ -1113,17 +1113,8 @@
     gap: 12px;
   }
 
-  /* Top header actions: keep compact save icon button for quick saves, hide cancel */
+  /* Hide top header action buttons on mobile */
   .product-form-header__actions {
-    display: flex !important;
-    gap: 6px;
-  }
-
-  .product-form-header__btn--cancel {
-    display: none !important;
-  }
-
-  .product-form-header__btn--save .ui-btn__label {
     display: none !important;
   }
 
