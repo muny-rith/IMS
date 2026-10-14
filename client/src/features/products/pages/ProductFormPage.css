@@ -105,6 +105,11 @@
   flex-shrink: 0;
 }
 
+/* ── Bottom Actions (Mobile <= 576px) ── */
+.product-form-bottom-actions {
+  display: none;
+}
+
 /* ── Action Buttons ── */
 .product-form-btn {
   display: inline-flex;
@@ -1102,10 +1107,43 @@
   }
 }
 
-/* 4. Extra Small Tier (xs: <= 575px) — Mobile Phones */
-@media (max-width: 575px) {
+/* 4. Extra Small Tier (xs: <= 576px) — Mobile Phones */
+@media (max-width: 576px) {
   .product-form-page {
     gap: 12px;
+  }
+
+  /* Top header actions: keep compact save icon button for quick saves, hide cancel */
+  .product-form-header__actions {
+    display: flex !important;
+    gap: 6px;
+  }
+
+  .product-form-header__btn--cancel {
+    display: none !important;
+  }
+
+  .product-form-header__btn--save .ui-btn__label {
+    display: none !important;
+  }
+
+  /* Static Bottom Actions: natural document flow (not sticky) */
+  .product-form-bottom-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    width: 100%;
+    margin-top: 14px;
+    box-sizing: border-box;
+  }
+
+  .product-form-bottom-actions .product-form-bottom-btn {
+    flex: 1;
+    justify-content: center;
+    height: 42px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: 9px;
   }
 
   .product-form-header {

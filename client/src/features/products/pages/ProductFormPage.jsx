@@ -485,6 +485,7 @@ const ProductFormPage = () => {
             icon={<CloseIcon sx={{ fontSize: 16 }} />}
             onClick={handleClose}
             disabled={submitting}
+            className="product-form-header__btn--cancel"
             responsiveCollapse
           >
             Cancel
@@ -497,6 +498,7 @@ const ProductFormPage = () => {
             icon={<SaveIcon sx={{ fontSize: 17 }} />}
             loading={submitting}
             disabled={variants.length === 0}
+            className="product-form-header__btn--save"
             responsiveCollapse
           >
             {isCreate ? 'Create Product' : 'Save Changes'}
@@ -1044,6 +1046,32 @@ const ProductFormPage = () => {
           </div>
         </div>
       </form>
+
+      {/* ── 3. Static Bottom Actions (on screens <= 576px) ── */}
+      <div className="product-form-bottom-actions">
+        <Button
+          type="button"
+          variant="outline"
+          icon={<CloseIcon sx={{ fontSize: 16 }} />}
+          onClick={handleClose}
+          disabled={submitting}
+          className="product-form-bottom-btn"
+        >
+          Cancel
+        </Button>
+
+        <Button
+          type="submit"
+          form="product-form"
+          variant="primary"
+          icon={<SaveIcon sx={{ fontSize: 17 }} />}
+          loading={submitting}
+          disabled={variants.length === 0}
+          className="product-form-bottom-btn"
+        >
+          {isCreate ? 'Create Product' : 'Save Changes'}
+        </Button>
+      </div>
     </div>
   );
 };
