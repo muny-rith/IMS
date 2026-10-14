@@ -26,9 +26,24 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 });
 
 const TABS = [
-  { id: 'matrix', label: 'Product & Variants Matrix', icon: <Inventory2OutlinedIcon sx={{ fontSize: 16 }} /> },
-  { id: 'ledger', label: 'Stock Activity & Audit Ledger', icon: <HistoryOutlinedIcon sx={{ fontSize: 16 }} /> },
-  { id: 'procurement', label: 'Procurement & Supply Chain', icon: <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} /> },
+  {
+    id: 'matrix',
+    label: 'Product & Variants Matrix',
+    icon: <Inventory2OutlinedIcon sx={{ fontSize: 16 }} />,
+    roles: ['admin', 'manager', 'staff', 'worker'],
+  },
+  {
+    id: 'ledger',
+    label: 'Stock Activity & Audit Ledger',
+    icon: <HistoryOutlinedIcon sx={{ fontSize: 16 }} />,
+    roles: ['admin', 'manager', 'staff'],
+  },
+  {
+    id: 'procurement',
+    label: 'Procurement & Supply Chain',
+    icon: <LocalShippingOutlinedIcon sx={{ fontSize: 16 }} />,
+    roles: ['admin', 'manager', 'staff'],
+  },
 ];
 
 const ProductDetailPage = () => {
@@ -39,6 +54,10 @@ const ProductDetailPage = () => {
   const userRole = (user?.role || 'staff').toLowerCase();
   const canEdit = ['admin', 'manager', 'staff', 'worker'].includes(userRole);
 
+  const availableTabs = useMemo(() => {
+    return TABS.filter((tab) => !tab.roles || tab.roles.includes(userRole));
+  }, [userRole]);
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,6 +65,12 @@ const ProductDetailPage = () => {
   const [activeImage, setActiveImage] = useState('');
   const [copiedSku, setCopiedSku] = useState('');
   const [variantSearch, setVariantSearch] = useState('');
+
+  useEffect(() => {
+    if (!availableTabs.some((t) => t.id === activeTab)) {
+      setActiveTab(availableTabs[0]?.id || 'matrix');
+    }
+  }, [availableTabs, activeTab]);
 
   useEffect(() => {
     let mounted = true;
@@ -261,23 +286,25 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
-      {/* ── 2. Dossier Tab Navigation ── */}
-      <nav className="product-detail-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className={`product-detail-tab-btn ${activeTab === t.id ? 'product-detail-tab-btn--active' : ''}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            <span className="product-detail-tab-icon">{t.icon}</span>
-            <span>{t.label}</span>
-            {t.id === 'matrix' && (
-              <span className="product-detail-tab-badge">{variants.length}</span>
-            )}
-          </button>
-        ))}
-      </nav>
+      {/* ── 2. Dossier Tab Navigation (only shown when multiple tabs exist) ── */}
+      {availableTabs.length > 1 && (
+        <nav className="product-detail-tabs">
+          {availableTabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`product-detail-tab-btn ${activeTab === t.id ? 'product-detail-tab-btn--active' : ''}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              <span className="product-detail-tab-icon">{t.icon}</span>
+              <span>{t.label}</span>
+              {t.id === 'matrix' && (
+                <span className="product-detail-tab-badge">{variants.length}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {/* ── 4. Tab Panels ── */}
       <main className="product-detail-content">
@@ -533,7 +560,7 @@ const ProductDetailPage = () => {
         )}
 
         {/* ── TAB 2: Operational Stock Ledger & Audit Trail ── */}
-        {activeTab === 'ledger' && (
+        {activeTab === 'ledger' && availableTabs.some((t) => t.id === 'ledger') && (
           <div className="product-detail-card">
             <div className="product-detail-card-header">
               <div>
@@ -604,7 +631,7 @@ const ProductDetailPage = () => {
         )}
 
         {/* ── TAB 3: Procurement & Supply Chain ── */}
-        {activeTab === 'procurement' && (
+        {activeTab === 'procurement' && availableTabs.some((t) => t.id === 'procurement') && (
           <div className="product-detail-overview-grid">
             <div className="product-detail-card">
               <div className="product-detail-card-header">

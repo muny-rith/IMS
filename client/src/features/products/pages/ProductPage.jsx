@@ -393,24 +393,6 @@ const ProductPage = () => {
         ),
       },
       {
-        field: 'price',
-        headerName: 'Price',
-        flex: 0.9,
-        align: 'right',
-        headerAlign: 'right',
-        renderCell: (params) => {
-          const price = params.row.price;
-
-          return (
-            <Box className="product-price-cell">
-              {price != null && price !== ''
-                ? currencyFormatter.format(Number(price))
-                : '—'}
-            </Box>
-          );
-        },
-      },
-      {
         field: 'qty',
         headerName: 'Qty',
         flex: 0.7,
