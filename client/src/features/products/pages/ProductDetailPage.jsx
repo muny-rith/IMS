@@ -6,18 +6,17 @@ import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import LayersOutlinedIcon from '@mui/icons-material/LayersOutlined';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import Button from '../../../components/ui/Button/Button';
 import { useProducts } from '../hooks/useProducts';
+import { useAuth } from '../../auth/hooks/useAuth';
 import './product.css';
-import '../components/ProductExportButton.css';
 import '../../../components/ui/Form.css';
 import './ProductDetailPage.css';
 
@@ -36,6 +35,9 @@ const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { fetchProductDetail } = useProducts();
+  const { user } = useAuth();
+  const userRole = (user?.role || 'staff').toLowerCase();
+  const canEdit = ['admin', 'manager', 'staff', 'worker'].includes(userRole);
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,9 +56,11 @@ const ProductDetailPage = () => {
       .then((data) => {
         if (!mounted) return;
         setProduct(data);
-        const firstVariantImg = data.variants?.find((v) => v.imageUrl || v.imagePreview)?.imageUrl;
-        const initialImg = (data.variants && data.variants.length > 0 && firstVariantImg)
-          ? firstVariantImg
+        const variantImages = (data.variants || [])
+          .map((v) => v.imageUrl || v.imagePreview)
+          .filter(Boolean);
+        const initialImg = variantImages.length > 0
+          ? variantImages[0]
           : (data.imageUrl || data.image || '');
         setActiveImage(initialImg);
         setLoading(false);
@@ -129,22 +133,17 @@ const ProductDetailPage = () => {
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const set = new Set();
-    const hasVariants = variants && variants.length > 0;
+    const variantImages = variants
+      .map((v) => v.imageUrl || v.imagePreview)
+      .filter(Boolean);
 
-    // When the product has variants, never show product's own image in the gallery
-    if (!hasVariants) {
+    // If variants have their own images, the gallery thumbnails show ONLY the variant images
+    if (variantImages.length > 0) {
+      variantImages.forEach((img) => set.add(img));
+    } else {
+      // Fallback: If no variant images (or product without variants), show the product's own image
       const mainImg = product.imageUrl || product.image;
       if (mainImg) set.add(mainImg);
-    } else {
-      variants.forEach((v) => {
-        const vImg = v.imageUrl || v.imagePreview;
-        if (vImg) set.add(vImg);
-      });
-      // Fallback only if no variants have any image uploaded
-      if (set.size === 0) {
-        const mainImg = product.imageUrl || product.image;
-        if (mainImg) set.add(mainImg);
-      }
     }
 
     return Array.from(set);
@@ -197,13 +196,12 @@ const ProductDetailPage = () => {
           <ErrorOutlineOutlinedIcon sx={{ fontSize: 48, color: '#dc2626' }} />
           <h2>Product Dossier Not Found</h2>
           <p>{error || 'The requested product could not be located in workspace.'}</p>
-          <button
-            type="button"
-            className="product-detail-btn product-detail-btn--primary"
+          <Button
+            variant="primary"
             onClick={() => navigate('/products')}
           >
             Back to Catalog
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -240,77 +238,30 @@ const ProductDetailPage = () => {
         </div>
 
         <div className="product-header__actions">
-          <button
-            type="button"
-            className="product-export-btn"
+          <Button
+            variant="outline"
+            icon={<PrintOutlinedIcon sx={{ fontSize: 18 }} />}
             onClick={handlePrint}
             title="Print official product spec sheet (A4 PDF)"
+            responsiveCollapse
           >
-            <PrintOutlinedIcon sx={{ fontSize: 18 }} />
-            <span>Print Sheet</span>
-          </button>
+            Print Sheet
+          </Button>
 
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => navigate(`/products/edit/${product.id}`)}
-          >
-            <EditIcon sx={{ fontSize: 18 }} />
-            <span>Edit Product</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 2. Slim 1-row KPI Bar (Matching ProductPage Style) ── */}
-      <div className="product-stats">
-        <div className="product-stat-card product-stat-card--info" title={brandName}>
-          <div className="product-stat-card__icon">
-            <LocalOfferOutlinedIcon fontSize="small" />
-          </div>
-          <div className="product-stat-card__info">
-            <span className="product-stat-card__label">Brand</span>
-            <span
-              className="product-stat-card__value"
-              style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          {canEdit && (
+            <Button
+              variant="primary"
+              icon={<EditIcon sx={{ fontSize: 18 }} />}
+              onClick={() => navigate(`/products/edit/${product.id}`)}
+              responsiveCollapse
             >
-              {brandName}
-            </span>
-          </div>
-        </div>
-        <div className={`product-stat-card ${stats.totalOnHand <= 0 ? 'product-stat-card--warning' : ''}`}>
-          <div className="product-stat-card__icon">
-            <Inventory2OutlinedIcon fontSize="small" />
-          </div>
-          <div className="product-stat-card__info">
-            <span className="product-stat-card__label">On-Hand Stock</span>
-            <span className="product-stat-card__value">{stats.totalOnHand}</span>
-          </div>
-        </div>
-
-
-
-        <div className="product-stat-card product-stat-card--success">
-          <div className="product-stat-card__icon">
-            <PaymentsOutlinedIcon fontSize="small" />
-          </div>
-          <div className="product-stat-card__info">
-            <span className="product-stat-card__label">Inventory Worth</span>
-            <span className="product-stat-card__value">{currencyFormatter.format(stats.totalValue)}</span>
-          </div>
-        </div>
-
-        <div className="product-stat-card">
-          <div className="product-stat-card__icon">
-            <LayersOutlinedIcon fontSize="small" />
-          </div>
-          <div className="product-stat-card__info">
-            <span className="product-stat-card__label">Active Variants</span>
-            <span className="product-stat-card__value">{stats.variantCount}</span>
-          </div>
+              Edit Product
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* ── 3. Dossier Tab Navigation ── */}
+      {/* ── 2. Dossier Tab Navigation ── */}
       <nav className="product-detail-tabs">
         {TABS.map((t) => (
           <button
@@ -348,7 +299,7 @@ const ProductDetailPage = () => {
                   )}
                 </div>
 
-                {galleryImages.length > 1 && (
+                {galleryImages.length > 0 && (
                   <div className="product-detail-thumbs">
                     {galleryImages.map((img, idx) => (
                       <button
@@ -711,22 +662,20 @@ const ProductDetailPage = () => {
                 )}
 
                 <div className="product-detail-reorder-actions">
-                  <button
-                    type="button"
-                    className="product-detail-btn product-detail-btn--primary"
+                  <Button
+                    variant="primary"
+                    icon={<Inventory2OutlinedIcon sx={{ fontSize: 18 }} />}
                     onClick={() => navigate('/purchase-requests')}
                   >
-                    <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />
-                    <span>Create Purchase Request</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="product-detail-btn product-detail-btn--secondary"
+                    Create Purchase Request
+                  </Button>
+                  <Button
+                    variant="outline"
+                    icon={<LayersOutlinedIcon sx={{ fontSize: 18 }} />}
                     onClick={() => navigate('/stocks')}
                   >
-                    <LayersOutlinedIcon sx={{ fontSize: 18 }} />
-                    <span>Adjust Stock Count</span>
-                  </button>
+                    Adjust Stock Count
+                  </Button>
                 </div>
               </div>
             </div>

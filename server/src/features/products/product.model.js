@@ -158,19 +158,13 @@ export const findAll = async () => {
       p.brand_id,
       p.department,
       p.is_active,
-      COALESCE(
-        (
-          SELECT pv2.image_url 
-          FROM tb_product_variant pv2 
-          WHERE pv2.product_id = p.product_id AND pv2.image_url IS NOT NULL AND pv2.is_active = true 
-          ORDER BY pv2.variant_id ASC 
-          LIMIT 1
-        ),
-        CASE 
-          WHEN EXISTS (SELECT 1 FROM tb_product_variant pv3 WHERE pv3.product_id = p.product_id AND pv3.is_active = true) THEN NULL 
-          ELSE p.image_url 
-        END
-      ) AS image_url,
+      COALESCE(p.image_url, (
+        SELECT pv2.image_url 
+        FROM tb_product_variant pv2 
+        WHERE pv2.product_id = p.product_id AND pv2.image_url IS NOT NULL AND pv2.is_active = true 
+        ORDER BY pv2.variant_id ASC 
+        LIMIT 1
+      )) AS image_url,
       p.created_at,
       p.updated_at,
       c.category_name,
@@ -178,7 +172,9 @@ export const findAll = async () => {
       COALESCE(SUM(sb.on_hand_qty), 0)::INTEGER AS on_hand_qty,
       COALESCE(SUM(sb.reserved_qty), 0)::INTEGER AS reserved_qty,
       COALESCE(MIN(pv.unit_price), 0)::NUMERIC AS unit_price,
-      COALESCE(MIN(pv.variant_id), 0)::INTEGER AS default_variant_id
+      COALESCE(MIN(pv.variant_id), 0)::INTEGER AS default_variant_id,
+      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS sku,
+      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS product_code
     FROM tb_product p
     LEFT JOIN tb_category c ON p.category_id = c.category_id
     LEFT JOIN tb_brand b ON p.brand_id = b.brand_id
@@ -208,7 +204,9 @@ export const findById = async (id) => {
       COALESCE(SUM(sb.on_hand_qty), 0)::INTEGER AS on_hand_qty,
       COALESCE(SUM(sb.reserved_qty), 0)::INTEGER AS reserved_qty,
       COALESCE(MIN(pv.unit_price), 0)::NUMERIC AS unit_price,
-      COALESCE(MIN(pv.variant_id), 0)::INTEGER AS default_variant_id
+      COALESCE(MIN(pv.variant_id), 0)::INTEGER AS default_variant_id,
+      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS sku,
+      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS product_code
     FROM tb_product p
     LEFT JOIN tb_category c ON p.category_id = c.category_id
     LEFT JOIN tb_brand b ON p.brand_id = b.brand_id
@@ -279,13 +277,6 @@ export const findById = async (id) => {
     };
   });
 
-  // Optimize: When that product has variants, it will never show its own image.
-  // Instead, use the first variant's image (if available) or null.
-  if (product.variants && product.variants.length > 0) {
-    const firstVariantWithImage = product.variants.find((v) => v.image_url);
-    product.image_url = firstVariantWithImage ? firstVariantWithImage.image_url : null;
-  }
-
   return product;
 };
 
@@ -294,14 +285,13 @@ export const createProductWithBalance = async ({ product_name, category_id, bran
   try {
     await client.query('BEGIN');
 
-    // 1. Insert product (when product has variants, it will never store its own image)
-    const finalProductImageUrl = (Array.isArray(variants) && variants.length > 0) ? null : image_url;
+    // 1. Insert product
     const prodText = `
       INSERT INTO tb_product (product_name, category_id, brand_id, department, image_url)
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
     `;
-    const prodValues = [product_name, category_id, brand_id || null, department, finalProductImageUrl];
+    const prodValues = [product_name, category_id, brand_id || null, department, image_url];
     const prodRes = await client.query(prodText, prodValues);
     const product = prodRes.rows[0];
 
@@ -410,16 +400,14 @@ export const update = async (
   try {
     await client.query('BEGIN');
 
-    // 1. Update product base (when product has variants, it will never store its own image)
-    const hasVariants = Array.isArray(variants) ? variants.length > 0 : false;
-    const finalProductImageUrl = hasVariants ? null : image_url;
+    // 1. Update product base
     const text = `
       UPDATE tb_product
       SET product_name = $1, category_id = $2, brand_id = $3, department = $4, image_url = $5, is_active = $6, updated_at = CURRENT_TIMESTAMP
       WHERE product_id = $7
       RETURNING *;
     `;
-    const { rows } = await client.query(text, [product_name, category_id, brand_id, department, finalProductImageUrl, is_active, id]);
+    const { rows } = await client.query(text, [product_name, category_id, brand_id, department, image_url, is_active, id]);
     const product = rows[0];
 
     if (Array.isArray(product_attributes)) {

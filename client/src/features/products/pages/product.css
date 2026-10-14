@@ -437,6 +437,7 @@
 
 /* Screen <= 992px: Hide Category column & make action buttons/icons smaller */
 @media (max-width: 992px) {
+
   .col-category,
   .MuiDataGrid-columnHeader[data-field="category"],
   .MuiDataGrid-cell[data-field="category"],

@@ -23,6 +23,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
+import Button from '../../../components/ui/Button/Button';
 import { fetchAttributes, fetchAttributeValues } from '../../attributes/services/attributeService';
 import { useProducts } from '../hooks/useProducts';
 import './ProductFormPage.css';
@@ -475,34 +476,28 @@ const ProductFormPage = () => {
         </div>
 
         <div className="product-form-header__actions">
-          <button
+          <Button
             type="button"
-            className="product-form-btn product-form-btn--secondary"
+            variant="outline"
+            icon={<CloseIcon sx={{ fontSize: 16 }} />}
             onClick={handleClose}
             disabled={submitting}
+            responsiveCollapse
           >
-            <CloseIcon sx={{ fontSize: 16 }} />
-            <span>Cancel</span>
-          </button>
+            Cancel
+          </Button>
 
-          <button
+          <Button
             type="submit"
             form="product-form"
-            className="product-form-btn product-form-btn--primary"
-            disabled={submitting || variants.length === 0}
+            variant="primary"
+            icon={<SaveIcon sx={{ fontSize: 17 }} />}
+            loading={submitting}
+            disabled={variants.length === 0}
+            responsiveCollapse
           >
-            {submitting ? (
-              <>
-                <CircularProgress size={16} color="inherit" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <SaveIcon sx={{ fontSize: 17 }} />
-                <span>{isCreate ? 'Create Product' : 'Save Changes'}</span>
-              </>
-            )}
-          </button>
+            {isCreate ? 'Create Product' : 'Save Changes'}
+          </Button>
         </div>
       </div>
 
@@ -689,14 +684,6 @@ const ProductFormPage = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="product-form-btn product-form-btn--outline"
-                onClick={handleAddVariant}
-              >
-                <AddIcon sx={{ fontSize: 16 }} />
-                <span>Add Variant</span>
-              </button>
             </div>
 
             {/* Dynamic Custom Attributes Banner */}
@@ -737,14 +724,13 @@ const ProductFormPage = () => {
             {variants.length === 0 ? (
               <div className="product-matrix-empty">
                 <p>No variants defined for this product.</p>
-                <button
-                  type="button"
-                  className="product-form-btn product-form-btn--outline"
+                <Button
+                  variant="outline"
+                  icon={<AddIcon sx={{ fontSize: 16 }} />}
                   onClick={handleAddVariant}
                 >
-                  <AddIcon sx={{ fontSize: 16 }} />
-                  <span>Create First Variant</span>
-                </button>
+                  Create First Variant
+                </Button>
               </div>
             ) : (
               <div className="product-workbench-container">
@@ -756,14 +742,14 @@ const ProductFormPage = () => {
                         <span>Variants List</span>
                         <span className="product-form-card__badge">{variants.length}</span>
                       </span>
-                      <button
-                        type="button"
-                        className="product-workbench-sidebar__add-btn"
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        icon={<AddIcon sx={{ fontSize: 14 }} />}
                         onClick={handleAddVariant}
                       >
-                        <AddIcon sx={{ fontSize: 14 }} />
-                        <span>Add</span>
-                      </button>
+                        Add
+                      </Button>
                     </div>
 
                     <div className="product-workbench-list">
@@ -826,53 +812,52 @@ const ProductFormPage = () => {
                           <span className="product-workbench-inspector__badge">
                             Variant #{selectedVariantIndex + 1} of {variants.length}
                           </span>
-                          <h4 className="product-workbench-inspector__title">
-                            {selectedVariant.sku ? `SKU: ${selectedVariant.sku}` : `Variant #${selectedVariantIndex + 1}`}
-                          </h4>
                         </div>
 
                         <div className="product-workbench-inspector__actions">
-                          <button
-                            type="button"
-                            className="workbench-action-btn"
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            icon={<NavigateBeforeIcon sx={{ fontSize: 18 }} />}
                             disabled={selectedVariantIndex <= 0}
                             onClick={handlePrevVariant}
                             title="Previous Variant"
+                            responsiveCollapse
                           >
-                            <NavigateBeforeIcon sx={{ fontSize: 18 }} />
-                            <span>Prev</span>
-                          </button>
+                            Prev
+                          </Button>
 
-                          <button
-                            type="button"
-                            className="workbench-action-btn"
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            endIcon={<NavigateNextIcon sx={{ fontSize: 18 }} />}
                             disabled={selectedVariantIndex >= variants.length - 1}
                             onClick={handleNextVariant}
                             title="Next Variant"
+                            responsiveCollapse
                           >
-                            <span>Next</span>
-                            <NavigateNextIcon sx={{ fontSize: 18 }} />
-                          </button>
+                            Next
+                          </Button>
 
-                          <button
-                            type="button"
-                            className="workbench-action-btn"
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            icon={<ContentCopyIcon sx={{ fontSize: 16 }} />}
                             onClick={() => handleDuplicateVariant(selectedVariant.id)}
                             title="Duplicate this variant"
+                            responsiveCollapse
                           >
-                            <ContentCopyIcon sx={{ fontSize: 16 }} />
-                            <span>Duplicate</span>
-                          </button>
+                            Duplicate
+                          </Button>
 
                           {variants.length > 1 && (
                             <Tooltip title="Delete this variant">
-                              <button
-                                type="button"
-                                className="workbench-action-btn workbench-action-btn--delete"
+                              <Button
+                                size="sm"
+                                variant="danger-outline"
+                                icon={<DeleteIcon sx={{ fontSize: 17 }} />}
                                 onClick={() => handleRemoveVariant(selectedVariant.id)}
-                              >
-                                <DeleteIcon sx={{ fontSize: 17 }} />
-                              </button>
+                              />
                             </Tooltip>
                           )}
                         </div>
@@ -916,7 +901,6 @@ const ProductFormPage = () => {
                             <div className="product-form-field">
                               <label className="product-form-label">
                                 <span>SKU Code</span>
-                                <span className="product-form-label-hint">Leave blank for auto-generation</span>
                               </label>
                               <input
                                 type="text"
@@ -950,11 +934,11 @@ const ProductFormPage = () => {
 
                             {/* Product Attribute */}
                             {activeAttributes.length > 0 && (
-                              <div className="product-form-field" style={{ gridColumn: 'span 2' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: activeAttributes.length === 1 ? '1fr' : 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                              <div className="product-form-field workbench-attr-section">
+                                <div className="workbench-attr-list">
                                   {activeAttributes.map((attr) => (
-                                    <div key={attr.attribute_id} className="product-form-field" style={{ margin: 0 }}>
-                                      <span style={{ fontSize: '11.5px', fontWeight: 600, color: '#475569', marginBottom: '4px', display: 'block' }}>
+                                    <div key={attr.attribute_id} className="product-form-field workbench-attr-item">
+                                      <span className="workbench-attr-label">
                                         {attr.attribute_name}
                                       </span>
                                       <Autocomplete
@@ -1022,28 +1006,6 @@ const ProductFormPage = () => {
                         <span className="product-workbench-inspector__footer-hint">
                           Editing <strong>#{selectedVariantIndex + 1}</strong> of {variants.length}
                         </span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {selectedVariantIndex < variants.length - 1 ? (
-                            <button
-                              type="button"
-                              className="product-workbench-inspector__footer-btn"
-                              onClick={handleNextVariant}
-                            >
-                              <span>Next Variant</span>
-                              <NavigateNextIcon sx={{ fontSize: 18 }} />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="product-workbench-inspector__footer-btn"
-                              onClick={handleAddVariant}
-                            >
-                              <AddIcon sx={{ fontSize: 16 }} />
-                              <span>Add Next Variant</span>
-                            </button>
-                          )}
-                        </div>
                       </div>
                     </div>
                   )}

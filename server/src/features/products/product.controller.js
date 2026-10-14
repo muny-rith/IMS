@@ -42,11 +42,6 @@ export const getProductById = async (req, res, next) => {
       return next(new ApiError(404, 'Product not found.'));
     }
 
-    if (product.variants && product.variants.length > 0) {
-      const firstVariantWithImage = product.variants.find((v) => v.image_url);
-      product.image_url = firstVariantWithImage ? firstVariantWithImage.image_url : null;
-    }
-
     serverCache.set(cacheKey, product, SERVER_CACHE_TTL.DETAIL);
 
     res.status(200).json({
@@ -96,11 +91,6 @@ export const createProduct = async (req, res, next) => {
       if (variantFile) {
         variants[i].image_url = await uploadFileToSupabase(variantFile.buffer, variantFile.originalname, variantFile.mimetype);
       }
-    }
-
-    // When product has variants, it will never show or store its own image
-    if (variants.length > 0) {
-      finalImageUrl = null;
     }
 
     const product = await productModel.createProductWithBalance({
@@ -184,16 +174,13 @@ export const updateProduct = async (req, res, next) => {
       }
     }
 
-    const hasVariants = variants !== null ? variants.length > 0 : (existing.variants?.length > 0);
-    const resolvedProductImageUrl = hasVariants ? null : (finalImageUrl !== undefined ? finalImageUrl : existing.image_url);
-
     const updated = await productModel.update(productId, {
       product_name: name ? name.trim() : existing.product_name,
       category_id: categoryId ? Number(categoryId) : existing.category_id,
       brand_id: brandId !== undefined ? (brandId ? Number(brandId) : null) : existing.brand_id,
       department: department !== undefined ? department?.trim() : existing.department,
       unit_price: price !== undefined ? Number(price) : existing.unit_price,
-      image_url: resolvedProductImageUrl,
+      image_url: finalImageUrl !== undefined ? finalImageUrl : existing.image_url,
       is_active: isActive !== undefined ? (isActive === 'true' || isActive === true) : existing.is_active,
       variants,
       deleted_variant_ids: deletedVariantIds,

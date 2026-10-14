@@ -36,14 +36,16 @@ function AppRoutes() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomeRedirect />} />
 
-          {/* 1. Routes accessible by Worker (and all roles): Only Product Catalog & Detail View */}
+          {/* 1. Routes accessible by Worker (and all roles): Product Catalog, Detail View, & Product Edit */}
           <Route path={ROUTE_SEGMENTS.products} element={<ProductPage />} />
           <Route path={ROUTE_SEGMENTS.product_view} element={<ProductDetailPage />} />
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'manager', 'staff', 'worker']} />}>
+            <Route path={ROUTE_SEGMENTS.product_edit} element={<ProductFormPage />} />
+          </Route>
 
           {/* 2. Routes accessible by Admin, Manager, and Staff (operational workflow) */}
           <Route element={<ProtectedRoute allowedRoles={['admin', 'manager', 'staff']} />}>
             <Route path={ROUTE_SEGMENTS.product_new} element={<ProductFormPage />} />
-            <Route path={ROUTE_SEGMENTS.product_edit} element={<ProductFormPage />} />
             <Route path={ROUTE_SEGMENTS.sales} element={<SalePage />} />
             <Route path={ROUTE_SEGMENTS.loans} element={<LoanPage />} />
             <Route path={ROUTE_SEGMENTS.stock_issues} element={<StockIssuePage />} />

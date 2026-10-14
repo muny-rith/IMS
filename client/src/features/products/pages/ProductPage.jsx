@@ -24,14 +24,15 @@ import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
 
 import Button from '../../../components/ui/Button/Button';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../../auth/hooks/useAuth';
 import ProductMobileCardList from '../components/ProductMobileCardList';
-import ProductExportButton from '../components/ProductExportButton';
 import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
 import ProductBulkActionsBar from '../components/ProductBulkActionsBar';
 import ProductTableSkeleton, { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
@@ -102,7 +103,7 @@ const ProductPage = () => {
   const { user } = useAuth();
   const userRole = user?.role || 'staff';
   const canCreate = ['admin', 'manager', 'staff'].includes(userRole);
-  const canEdit = ['admin', 'manager', 'staff'].includes(userRole);
+  const canEdit = ['admin', 'manager', 'staff', 'worker'].includes(userRole);
   const canDelete = ['admin', 'manager'].includes(userRole);
 
   const navigate = useNavigate();
@@ -491,8 +492,23 @@ const ProductPage = () => {
           <span className="product-header__badge">{rows.length} total</span>
         </div>
         <div className="product-header__actions">
-          <ProductExportButton onClick={handleExport} />
-          {canCreate && <Button value="Add Product" onClick={openCreateModal} />}
+          <Button
+            variant="outline"
+            icon={<FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />}
+            responsiveCollapse
+            onClick={handleExport}
+            title="Export product list to Excel"
+          >
+            Export
+          </Button>
+          {canCreate && (
+            <Button
+              value="Add Product"
+              icon={<AddIcon sx={{ fontSize: 18 }} />}
+              responsiveCollapse
+              onClick={openCreateModal}
+            />
+          )}
         </div>
       </div>
 
@@ -601,7 +617,7 @@ const ProductPage = () => {
         <DialogContent>This action cannot be undone.</DialogContent>
         <DialogActions>
           <Button value="Cancel" variant="text" onClick={() => setDeleting(null)} />
-          <Button value="Delete" onClick={confirmDelete} />
+          <Button value="Delete" variant="danger" onClick={confirmDelete} />
         </DialogActions>
       </Dialog>
 
@@ -628,6 +644,8 @@ const ProductPage = () => {
           />
           <Button
             value={submitting ? 'Deleting...' : `Delete ${selectedRowIds.length} Items`}
+            variant="danger"
+            loading={submitting}
             disabled={submitting}
             onClick={handleExecuteBulkDelete}
           />

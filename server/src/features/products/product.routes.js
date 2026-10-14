@@ -19,7 +19,7 @@ router.route('/')
 
 router.route('/:id')
   .get(productController.getProductById)
-  .put(upload.any(), restrictTo('admin', 'manager', 'staff'), productController.updateProduct)
+  .put(upload.any(), restrictTo('admin', 'manager', 'staff', 'worker'), productController.updateProduct)
   .delete(restrictTo('admin', 'manager'), productController.deleteProduct);
 
 export default router;
