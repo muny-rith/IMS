@@ -4,6 +4,23 @@ import * as userModel from '../features/auth/user.model.js';
 
 export const protect = async (req, res, next) => {
   try {
+    // 1. Check for Machine-to-Machine API Key (Service integration)
+    const apiKey = req.headers['x-api-key'] || req.headers['x-service-key'];
+    const validKey = process.env.INTERNAL_SERVICE_KEY || 'ims_sk_live_moonpulse_7f8a9b2c3d4e5f6';
+
+    if (apiKey && apiKey === validKey) {
+      req.user = {
+        id: 'service-moonpulse',
+        user_id: 'service-moonpulse',
+        name: 'MoonPulse M2M Service',
+        email: 'service@moonpulse.local',
+        role: 'staff',
+        isService: true,
+      };
+      return next();
+    }
+
+    // 2. Human user JWT verification
     let token;
 
     if (
@@ -59,6 +76,16 @@ export const protect = async (req, res, next) => {
 
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
+    // Defense-in-depth: Machine-to-Machine API Key is strictly read-only
+    if (req.user?.isService && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+      return next(
+        new ApiError(
+          403,
+          "Access denied. Service API Key only has read-only permissions.",
+        ),
+      );
+    }
+
     if (!req.user || !roles.includes(req.user.role)) {
       return next(
         new ApiError(
@@ -70,3 +97,4 @@ export const restrictTo = (...roles) => {
     next();
   };
 };
+
