@@ -210,6 +210,9 @@ const MultiSelect = ({
   const handleClearAll = (e) => {
     e.stopPropagation();
     onChange([]);
+    setSearchQuery('');
+    setActiveTab('all');
+    searchInputRef.current?.focus();
   };
 
   const visibleOptions = useMemo(() => {
@@ -297,6 +300,21 @@ const MultiSelect = ({
                     }
                   }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="multiselect__search-cancel"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    title="Clear search text"
+                    aria-label="Clear search text"
+                  >
+                    <CloseIcon sx={{ fontSize: 14 }} />
+                  </button>
+                )}
               </div>
             )
           ) : (
