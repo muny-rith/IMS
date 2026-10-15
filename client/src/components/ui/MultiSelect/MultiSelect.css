@@ -161,6 +161,64 @@
 }
 
 
+.multiselect__trigger-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.multiselect__search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  animation: multiselectFadeIn 0.18s ease-out;
+}
+
+.multiselect__search-btn:hover,
+.multiselect__search-btn:active {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  transform: scale(1.05);
+}
+
+.multiselect__search-view--mobile {
+  background-color: #f8fafc;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.multiselect__search-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.multiselect__search-cancel:hover,
+.multiselect__search-cancel:active {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
 .multiselect__arrow {
   display: inline-flex;
   align-items: center;
