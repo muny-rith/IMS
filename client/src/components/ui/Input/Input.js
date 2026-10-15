@@ -3,7 +3,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Skeleton from "../Skeleton/Skeleton";
 import "../Form.css";
 
-export const InputSkeleton = ({ label, className = '', fullWidth = false }) => (
+export const InputSkeleton = ({ label, className = '', fullWidth = true }) => (
   <div
     className={`form-group form-group--skeleton ${className}`.trim()}
     style={{ width: fullWidth ? '100%' : undefined }}
@@ -20,15 +20,17 @@ export const InputSkeleton = ({ label, className = '', fullWidth = false }) => (
         alignItems: 'center',
         padding: '0 12px',
         height: '42px',
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
+        border: '1px solid #cbd5e1',
         borderRadius: '8px',
+        boxSizing: 'border-box',
       }}
     >
       <Skeleton variant="text" width="60%" height={18} />
     </div>
   </div>
 );
+
 
 const Input = forwardRef(({
   label,

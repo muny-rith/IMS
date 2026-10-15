@@ -14,7 +14,7 @@ import '../Form.css';
 import './Select.css';
 
 export const SelectSkeleton = ({ label, className = '' }) => (
-  <div className={`ui-select-container ui-select-container--skeleton ${className}`.trim()}>
+  <div className={`ui-select-container ui-select-container--skeleton ${className}`.trim()} style={{ width: '100%' }}>
     {label && (
       <div style={{ marginBottom: '6px' }}>
         <Skeleton variant="text" width={75} height={15} />
@@ -28,9 +28,10 @@ export const SelectSkeleton = ({ label, className = '' }) => (
         justifyContent: 'space-between',
         padding: '0 12px',
         height: '42px',
-        backgroundColor: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        backgroundColor: '#ffffff',
+        border: '1px solid #cbd5e1',
         borderRadius: '8px',
+        boxSizing: 'border-box',
       }}
     >
       <Skeleton variant="text" width="55%" height={18} />
@@ -38,6 +39,7 @@ export const SelectSkeleton = ({ label, className = '' }) => (
     </div>
   </div>
 );
+
 
 /**
  * Enterprise Single Select Component

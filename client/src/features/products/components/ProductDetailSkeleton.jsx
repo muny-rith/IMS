@@ -1,8 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
+import EditIcon from '@mui/icons-material/Edit';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
+import Button from '../../../components/ui/Button/Button';
 import '../pages/ProductDetailPage.css';
 
 export const ProductDetailSkeleton = () => {
+  const navigate = useNavigate();
+
   return (
     <div
       className="product-detail-page product-detail-page--skeleton"
@@ -12,38 +19,49 @@ export const ProductDetailSkeleton = () => {
       {/* ── 1. Compact Header Bar ── */}
       <div className="product-header">
         <div className="product-header__left">
-          <Skeleton
-            variant="rounded"
-            width={34}
-            height={34}
-            style={{ borderRadius: '9px', flexShrink: 0 }}
-          />
+          <button
+            type="button"
+            className="product-detail-back-btn"
+            onClick={() => navigate('/products')}
+            title="Back to Products"
+            aria-label="Back to Products"
+          >
+            <ArrowBackIcon sx={{ fontSize: 20 }} />
+          </button>
 
-          <div className="product-detail-header__info" style={{ gap: '6px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Skeleton variant="text" width={60} height={14} />
-              <span style={{ color: '#cbd5e1' }}>/</span>
-              <Skeleton variant="text" width={120} height={14} />
+          <div className="product-detail-header__info">
+            <div className="product-detail-breadcrumbs">
+              <span className="clickable" onClick={() => navigate('/products')}>Products</span>
+              <span>/</span>
+              <Skeleton variant="text" width={140} height={14} style={{ display: 'inline-block' }} />
             </div>
-            <Skeleton variant="text" width={240} height={26} />
+            <h1 className="product-header__title" style={{ marginTop: 2 }}>
+              <Skeleton variant="text" width={240} height={28} />
+            </h1>
           </div>
         </div>
 
         <div className="product-header__actions">
-          <Skeleton
-            variant="rounded"
-            width={100}
-            height={36}
-            style={{ borderRadius: '8px' }}
-          />
-          <Skeleton
-            variant="rounded"
-            width={110}
-            height={36}
-            style={{ borderRadius: '8px' }}
-          />
+          <Button
+            variant="outline"
+            icon={<PrintOutlinedIcon sx={{ fontSize: 18 }} />}
+            disabled
+            responsiveCollapse
+          >
+            Print Sheet
+          </Button>
+
+          <Button
+            variant="primary"
+            icon={<EditIcon sx={{ fontSize: 18 }} />}
+            disabled
+            responsiveCollapse
+          >
+            Edit Product
+          </Button>
         </div>
       </div>
+
 
       {/* ── 2. Tabs Navigation ── */}
       <div className="product-detail-tabs" style={{ display: 'flex', gap: '8px', padding: '4px' }}>

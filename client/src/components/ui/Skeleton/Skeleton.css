@@ -1,7 +1,7 @@
 /* ── Modern Universal Shimmer Skeleton ── */
 .ui-skeleton {
   display: block;
-  background-color: #f1f5f9;
+  background-color: #e2e8f0;
   position: relative;
   overflow: hidden;
 }
@@ -38,13 +38,14 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.6) 40%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(255, 255, 255, 0.6) 60%,
+    rgba(255, 255, 255, 0.4) 30%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.4) 70%,
     transparent 100%
   );
   animation: uiSkeletonWave 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
+
 
 /* Pulse Animation */
 .ui-skeleton--pulse {
