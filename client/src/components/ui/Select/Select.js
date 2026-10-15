@@ -58,6 +58,7 @@ const Select = forwardRef(
     const triggerRef = useRef(null);
     const searchInputRef = useRef(null);
     const listRef = useRef(null);
+    const isKeyboardDismissingRef = useRef(false);
 
     // Responsive device detection
     const [isMobile, setIsMobile] = useState(() => {
@@ -137,6 +138,7 @@ const Select = forwardRef(
     // Close when clicking outside or pressing Escape
     useEffect(() => {
       const handleClickOutside = (e) => {
+        if (isKeyboardDismissingRef.current) return;
         if (containerRef.current && !containerRef.current.contains(e.target)) {
           setIsOpen(false);
           setMobileStep(0);
@@ -243,16 +245,17 @@ const Select = forwardRef(
     // 2nd click: Closes menu
     const handleTriggerClick = (e) => {
       if (disabled) return;
-      if (
-        e.target.closest('.ui-select-search-view') ||
-        e.target.closest('.ui-select-search-input') ||
-        e.target.closest('.ui-select-search-clear') ||
-        e.target.closest('.ui-select-clear-btn')
-      ) {
-        return;
-      }
 
       if (!isMobile) {
+        // Desktop: clicking inside search input or clear button should not toggle/close
+        if (
+          e.target.closest('.ui-select-search-input') ||
+          e.target.closest('.ui-select-search-clear') ||
+          e.target.closest('.ui-select-clear-btn')
+        ) {
+          return;
+        }
+
         // Desktop: toggle
         if (isOpen) {
           setIsOpen(false);
@@ -266,9 +269,18 @@ const Select = forwardRef(
       }
 
       // Mobile Phone sequence:
-      // Click 1: Show menu (mobileStep 1)
-      // Click 2: Type text / search (mobileStep 2, focus keyboard)
-      // Click 3: Close menu (mobileStep 0, isOpen false)
+      // Clicking clear button only clears text, doesn't cycle/close steps
+      if (
+        e.target.closest('.ui-select-search-clear') ||
+        e.target.closest('.ui-select-clear-btn')
+      ) {
+        return;
+      }
+
+      // Mobile 3-Step Sequence:
+      // Click 1: Show menu (mobileStep 1, options scrollable, keyboard hidden)
+      // Click 2: Type text / search (mobileStep 2, virtual keyboard focused)
+      // Click 3: Close menu! (mobileStep 0, isOpen false)
       if (!isOpen || mobileStep === 0) {
         // 1st click: Show menu
         setIsOpen(true);
@@ -461,18 +473,13 @@ const Select = forwardRef(
                   {selectedOption ? selectedOption.label : placeholder}
                 </span>
               ) : (
-                <div
-                  className="ui-select-search-view ui-select-search-view--mobile"
-                  onClick={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
+                <div className="ui-select-search-view ui-select-search-view--mobile">
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="ui-select-search-input ui-select-search-input--mobile"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
                     placeholder={
                       selectedOption
                         ? selectedOption.label
@@ -490,7 +497,11 @@ const Select = forwardRef(
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         e.stopPropagation();
+                        isKeyboardDismissingRef.current = true;
                         e.currentTarget.blur();
+                        setTimeout(() => {
+                          isKeyboardDismissingRef.current = false;
+                        }, 400);
                       }
                       if (e.key === 'Escape') {
                         e.stopPropagation();

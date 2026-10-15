@@ -42,6 +42,7 @@ const MultiSelect = ({
 
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
+  const isKeyboardDismissingRef = useRef(false);
 
   // Responsive device detection
   const [isMobile, setIsMobile] = useState(() => {
@@ -60,6 +61,7 @@ const MultiSelect = ({
   // Close dropdown on click outside or Escape key
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (isKeyboardDismissingRef.current) return;
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false);
         setMobileStep(0);
@@ -123,17 +125,16 @@ const MultiSelect = ({
   // 1st click: Opens menu & focuses search immediately (original pattern)
   // Click arrow or outside: Closes menu
   const handleTriggerClick = (e) => {
-    // If clicking inside search input or clear button, do not toggle/close
-    if (
-      e.target.closest('.multiselect__search-view') ||
-      e.target.closest('.multiselect__search-input') ||
-      e.target.closest('.multiselect__search-cancel') ||
-      e.target.closest('.multiselect__tag-remove')
-    ) {
-      return;
-    }
-
     if (!isMobile) {
+      // Desktop: If clicking inside search input or clear button, do not toggle/close
+      if (
+        e.target.closest('.multiselect__search-input') ||
+        e.target.closest('.multiselect__search-cancel') ||
+        e.target.closest('.multiselect__tag-remove')
+      ) {
+        return;
+      }
+
       // Desktop: toggle
       if (isOpen) {
         setIsOpen(false);
@@ -145,9 +146,18 @@ const MultiSelect = ({
     }
 
     // Mobile Phone sequence:
-    // Click 1: Show menu (mobileStep 1)
-    // Click 2: Type text / search (mobileStep 2, focus keyboard)
-    // Click 3: Close menu (mobileStep 0, isOpen false)
+    // If clicking cancel/clear/tag-remove buttons, don't advance/close step
+    if (
+      e.target.closest('.multiselect__search-cancel') ||
+      e.target.closest('.multiselect__tag-remove')
+    ) {
+      return;
+    }
+
+    // Mobile 3-Step Sequence:
+    // Click 1: Show menu (mobileStep 1, options scrollable, keyboard hidden)
+    // Click 2: Type text / search (mobileStep 2, virtual keyboard focused)
+    // Click 3: Close menu! (mobileStep 0, isOpen false)
     if (!isOpen || mobileStep === 0) {
       // 1st click: Show menu
       setIsOpen(true);
@@ -383,18 +393,13 @@ const MultiSelect = ({
                 )}
               </div>
             ) : (
-              <div
-                className="multiselect__search-view multiselect__search-view--mobile"
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-              >
+              <div className="multiselect__search-view multiselect__search-view--mobile">
                 <input
                   ref={searchInputRef}
                   type="text"
                   className="multiselect__search-input multiselect__search-input--mobile"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search...'}
                   autoComplete="off"
                   enterKeyHint="search"
@@ -402,7 +407,11 @@ const MultiSelect = ({
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       e.stopPropagation();
+                      isKeyboardDismissingRef.current = true;
                       e.currentTarget.blur();
+                      setTimeout(() => {
+                        isKeyboardDismissingRef.current = false;
+                      }, 400);
                     }
                     if (e.key === 'Escape') {
                       e.stopPropagation();
@@ -418,6 +427,20 @@ const MultiSelect = ({
                     }
                   }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="multiselect__search-cancel"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    title="Clear search text"
+                  >
+                    <CloseIcon sx={{ fontSize: 13 }} />
+                  </button>
+                )}
               </div>
             )
           )}
