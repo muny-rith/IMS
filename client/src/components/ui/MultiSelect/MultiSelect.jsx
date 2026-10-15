@@ -32,11 +32,18 @@ const MultiSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'selected'
   const [searchQuery, setSearchQuery] = useState('');
-  const [mobileSearchActive, setMobileSearchActive] = useState(false);
+
+  // Mobile 3-step state cycle:
+  // 0: Closed
+  // 1: Menu Open (scrollable options, no keyboard) - 1st click
+  // 2: Search Active (keyboard focused, live filter) - 2nd click
+  // -> 3rd click resets back to 0 (Closed)
+  const [mobileStep, setMobileStep] = useState(0);
+
   const containerRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  // Responsive device detection (reactive on resize)
+  // Responsive device detection
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth <= 768;
@@ -55,7 +62,7 @@ const MultiSelect = ({
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsOpen(false);
-        setMobileSearchActive(false);
+        setMobileStep(0);
         setSearchQuery('');
       }
     };
@@ -63,7 +70,7 @@ const MultiSelect = ({
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setIsOpen(false);
-        setMobileSearchActive(false);
+        setMobileStep(0);
         setSearchQuery('');
       }
     };
@@ -81,7 +88,7 @@ const MultiSelect = ({
   }, [isOpen]);
 
   // Desktop: Auto-focus search input immediately on 1st click (original pattern)
-  // Mobile: DO NOT auto-focus on 1st click so keyboard does not pop up
+  // Mobile: Handled explicitly by mobileStep (focuses only on 2nd click)
   useEffect(() => {
     if (isOpen) {
       if (!isMobile) {
@@ -93,27 +100,81 @@ const MultiSelect = ({
       }
     } else {
       setSearchQuery('');
-      setMobileSearchActive(false);
+      setMobileStep(0);
     }
   }, [isOpen, isMobile]);
 
-  // Toggle dropdown on trigger click
+  // Trigger click handler with exact flow requested by user:
+  // On Phone (Mobile):
+  // 1st click: Shows menu (mobileStep 1)
+  // 2nd click: Gives search / opens virtual keyboard (mobileStep 2)
+  // 3rd click: Closes menu (mobileStep 0)
+  //
+  // On Desktop:
+  // 1st click: Opens menu & focuses search immediately (original pattern)
+  // Click arrow or outside: Closes menu
+  // Trigger click handler:
+  // On Phone (Mobile):
+  // 1st click: Shows menu (mobileStep 1)
+  // 2nd click: Gives search / opens virtual keyboard (mobileStep 2)
+  // Inside search mode: Clicking search input allows typing/focusing (does not close menu)
+  // Arrow ▲ or outside click: Closes menu
   const handleTriggerClick = (e) => {
-    // If mobile search is active and user taps the search input, allow typing
-    if (isMobile && mobileSearchActive && e.target.closest('.multiselect__search-input')) {
+    // If clicking clear '✕' button in search mode, handled by clear button
+    if (e.target.closest('.multiselect__search-cancel')) {
       return;
     }
 
-    // Toggle behavior:
-    // If open -> clicking again CLOSES it! ("ចុចម្តងទៀត អោយបិទ")
-    // If closed -> clicking opens it!
+    // In mobile search mode (mobileStep 2): tapping search input allows typing/focusing!
+    // Must NOT close the menu so user can continue searching even after picking items!
+    if (isMobile && mobileStep === 2 && e.target.closest('.multiselect__search-view')) {
+      searchInputRef.current?.focus();
+      return;
+    }
+
+    if (!isMobile) {
+      // Desktop: toggle
+      if (isOpen) {
+        setIsOpen(false);
+        setSearchQuery('');
+      } else {
+        setIsOpen(true);
+      }
+      return;
+    }
+
+    // Mobile Phone sequence:
+    if (!isOpen || mobileStep === 0) {
+      // 1st click: Show menu
+      setIsOpen(true);
+      setMobileStep(1);
+      setSearchQuery('');
+    } else if (mobileStep === 1) {
+      // 2nd click: Give search
+      setMobileStep(2);
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    } else {
+      // If clicking outside search input in step 2: close menu
+      setIsOpen(false);
+      setMobileStep(0);
+      setSearchQuery('');
+    }
+  };
+
+  // Arrow icon click: directly toggles open/close
+  const handleArrowClick = (e) => {
+    e.stopPropagation();
     if (isOpen) {
       setIsOpen(false);
-      setMobileSearchActive(false);
+      setMobileStep(0);
       setSearchQuery('');
     } else {
       setIsOpen(true);
-      setMobileSearchActive(false);
+      if (isMobile) {
+        setMobileStep(1);
+      }
     }
   };
 
@@ -175,7 +236,7 @@ const MultiSelect = ({
         ...style,
       }}
     >
-      {/* Trigger Box: Directly contains label, tags, and embedded search input */}
+      {/* Trigger Box */}
       <div
         className={`multiselect__trigger ${isOpen ? 'multiselect__trigger--open' : ''} ${
           selectedCount > 0 ? 'multiselect__trigger--active' : ''
@@ -184,7 +245,7 @@ const MultiSelect = ({
       >
         <div className="multiselect__trigger-content">
           {!isMobile ? (
-            // Desktop View: Original pattern
+            // ==================== DESKTOP VIEW ====================
             !isOpen ? (
               <div className="multiselect__tags-view">
                 {label && <span className="multiselect__trigger-label">{label}:</span>}
@@ -233,15 +294,17 @@ const MultiSelect = ({
               </div>
             )
           ) : (
-            // Mobile View:
-            // When not searching: show tags/label (clicking anywhere on trigger toggles open/close)
-            // When searching: show active search input with clear/exit button
-            !mobileSearchActive ? (
+            // ==================== MOBILE PHONE VIEW ====================
+            // mobileStep 0 or 1: Show label/tags + search hint
+            // mobileStep 2: Show active search input
+            mobileStep !== 2 ? (
               <div className="multiselect__tags-view">
                 {label && <span className="multiselect__trigger-label">{label}:</span>}
 
                 {selectedCount === 0 ? (
-                  <span className="multiselect__placeholder">All</span>
+                  <span className="multiselect__placeholder">
+                    {isOpen ? 'Tap to search...' : 'All'}
+                  </span>
                 ) : (
                   <>
                     {visibleTags.map((val) => {
@@ -272,6 +335,10 @@ const MultiSelect = ({
                   className="multiselect__search-input multiselect__search-input--mobile"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.currentTarget.focus();
+                  }}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search...'}
                   autoComplete="off"
                   enterKeyHint="search"
@@ -281,49 +348,44 @@ const MultiSelect = ({
                     }
                     if (e.key === 'Escape') {
                       e.stopPropagation();
-                      setMobileSearchActive(false);
+                      setIsOpen(false);
+                      setMobileStep(0);
+                      setSearchQuery('');
                     }
                   }}
                 />
-                <button
-                  type="button"
-                  className="multiselect__search-cancel"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSearchQuery('');
-                    setMobileSearchActive(false);
-                  }}
-                  title="Exit search"
-                  aria-label="Exit search"
-                >
-                  <CloseIcon sx={{ fontSize: 14 }} />
-                </button>
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="multiselect__search-cancel"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    title="Clear search"
+                    aria-label="Clear search"
+                  >
+                    <CloseIcon sx={{ fontSize: 14 }} />
+                  </button>
+                )}
               </div>
             )
           )}
         </div>
 
         <div className="multiselect__trigger-actions">
-          {/* On Mobile when open and NOT searching: show 🔍 button to activate keyboard search */}
-          {isMobile && isOpen && !mobileSearchActive && (
-            <button
-              type="button"
-              className="multiselect__search-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMobileSearchActive(true);
-                setTimeout(() => searchInputRef.current?.focus(), 50);
-              }}
-              title={`Search ${label || 'options'}`}
-              aria-label={`Search ${label || 'options'}`}
-            >
-              <SearchIcon sx={{ fontSize: 16 }} />
-            </button>
+          {/* On Mobile when in Step 1: show subtle search icon indicator */}
+          {isMobile && isOpen && mobileStep === 1 && (
+            <span className="multiselect__search-hint-icon" title="Tap to search">
+              <SearchIcon sx={{ fontSize: 16, color: '#2563eb' }} />
+            </span>
           )}
 
           <span
             className={`multiselect__arrow ${isOpen ? 'multiselect__arrow--open' : ''}`}
             title={isOpen ? 'Close menu' : 'Open menu'}
+            onClick={handleArrowClick}
           >
             <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
           </span>
