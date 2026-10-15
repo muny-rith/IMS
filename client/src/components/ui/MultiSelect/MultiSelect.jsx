@@ -116,19 +116,15 @@ const MultiSelect = ({
   // Trigger click handler:
   // On Phone (Mobile):
   // 1st click: Shows menu (mobileStep 1)
-  // 2nd click: Gives search / opens virtual keyboard (mobileStep 2)
-  // Inside search mode: Clicking search input allows typing/focusing (does not close menu)
-  // Arrow ▲ or outside click: Closes menu
+  // 2nd click: Type text (mobileStep 2, focus virtual keyboard)
+  // 3rd click: Closes menu (mobileStep 0, isOpen false)
+  //
+  // On Desktop:
+  // 1st click: Opens menu & focuses search immediately (original pattern)
+  // Click arrow or outside: Closes menu
   const handleTriggerClick = (e) => {
     // If clicking clear '✕' button in search mode, handled by clear button
     if (e.target.closest('.multiselect__search-cancel')) {
-      return;
-    }
-
-    // In mobile search mode (mobileStep 2): tapping search input allows typing/focusing!
-    // Must NOT close the menu so user can continue searching even after picking items!
-    if (isMobile && mobileStep === 2 && e.target.closest('.multiselect__search-view')) {
-      searchInputRef.current?.focus();
       return;
     }
 
@@ -144,19 +140,22 @@ const MultiSelect = ({
     }
 
     // Mobile Phone sequence:
+    // Click 1: Show menu (mobileStep 1)
+    // Click 2: Type text / search (mobileStep 2, focus keyboard)
+    // Click 3: Close menu (mobileStep 0, isOpen false)
     if (!isOpen || mobileStep === 0) {
       // 1st click: Show menu
       setIsOpen(true);
       setMobileStep(1);
       setSearchQuery('');
     } else if (mobileStep === 1) {
-      // 2nd click: Give search
+      // 2nd click: Type text
       setMobileStep(2);
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 50);
     } else {
-      // If clicking outside search input in step 2: close menu
+      // 3rd click: Close menu!
       setIsOpen(false);
       setMobileStep(0);
       setSearchQuery('');
@@ -199,6 +198,13 @@ const MultiSelect = ({
     }
 
     onChange(nextValues);
+
+    // Keep search input focused on mobile so keyboard stays open and user can continue typing
+    if (isMobile && mobileStep === 2) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 10);
+    }
   };
 
   const handleClearAll = (e) => {
@@ -335,10 +341,6 @@ const MultiSelect = ({
                   className="multiselect__search-input multiselect__search-input--mobile"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.currentTarget.focus();
-                  }}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search...'}
                   autoComplete="off"
                   enterKeyHint="search"
@@ -472,7 +474,14 @@ const MultiSelect = ({
                     className={`multiselect__item ${
                       isChecked ? 'multiselect__item--checked' : ''
                     }`}
-                    onClick={() => handleToggle(opt.value)}
+                    onMouseDown={(e) => {
+                      // Prevent focus loss from search input when picking options
+                      e.preventDefault();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggle(opt.value);
+                    }}
                     title={opt.label}
                   >
                     <div
