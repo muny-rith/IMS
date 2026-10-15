@@ -1,21 +1,467 @@
-import React from "react";
-import "../Form.css";
+import React, {
+  forwardRef,
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckIcon from '@mui/icons-material/Check';
+import '../Form.css';
+import './Select.css';
 
-const Select = ({ label, options = [], error, ...props }) => {
-  return (
-    <div className="form-group">
-      <select className={`select ${error ? "error" : ""}`} required {...props}>
-        <option value="" disabled hidden></option>
-        {options.map((opt, index) => (
-          <option key={index} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      <label className="label">{label}</label>
-      {error && <span className="error-text">{error}</span>}
-    </div>
-  );
-};
+/**
+ * Enterprise Single Select Component
+ *
+ * Search input is embedded DIRECTLY inside the trigger box (matching MultiSelect pattern).
+ * The popover menu directly displays the options list without duplicate search headers.
+ *
+ * Props:
+ * - label: optional string
+ * - placeholder: string (default: "Select...")
+ * - options: Array<{ value, label } | { id, name } | string>
+ * - value: string | number
+ * - onChange: (e: { target: { name, value } }) => void
+ * - onBlur: () => void
+ * - error: string
+ * - name: string
+ * - disabled: boolean
+ * - required: boolean
+ * - isClearable: boolean
+ * - className: string
+ */
+const Select = forwardRef(
+  (
+    {
+      label,
+      placeholder = 'Select...',
+      options = [],
+      error,
+      value,
+      onChange,
+      onBlur,
+      name,
+      className = '',
+      disabled = false,
+      required = false,
+      isClearable,
+      ...props
+    },
+    ref
+  ) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+    const containerRef = useRef(null);
+    const triggerRef = useRef(null);
+    const searchInputRef = useRef(null);
+    const listRef = useRef(null);
+
+    // Normalize options into consistent { value: string, label: string, original }
+    const normalizedOptions = useMemo(() => {
+      if (!Array.isArray(options)) return [];
+      return options.map((opt) => {
+        if (typeof opt === 'object' && opt !== null) {
+          const val =
+            opt.value !== undefined
+              ? opt.value
+              : opt.id !== undefined
+              ? opt.id
+              : opt.category_id !== undefined
+              ? opt.category_id
+              : opt.brand_id !== undefined
+              ? opt.brand_id
+              : '';
+          const lbl =
+            opt.label !== undefined
+              ? opt.label
+              : opt.name !== undefined
+              ? opt.name
+              : opt.category_name !== undefined
+              ? opt.category_name
+              : opt.brand_name !== undefined
+              ? opt.brand_name
+              : String(val);
+
+          return {
+            value: String(val ?? ''),
+            label: String(lbl ?? ''),
+            original: opt,
+          };
+        }
+
+        return {
+          value: String(opt ?? ''),
+          label: String(opt ?? ''),
+          original: opt,
+        };
+      });
+    }, [options]);
+
+    // Find currently selected option
+    const selectedOption = useMemo(() => {
+      if (value === undefined || value === null || value === '') return null;
+      return (
+        normalizedOptions.find((opt) => String(opt.value) === String(value)) ||
+        null
+      );
+    }, [normalizedOptions, value]);
+
+    // Filtered options based on search query
+    const filteredOptions = useMemo(() => {
+      if (!searchQuery.trim()) {
+        return normalizedOptions;
+      }
+      const q = searchQuery.toLowerCase().trim();
+      return normalizedOptions.filter((opt) =>
+        opt.label.toLowerCase().includes(q)
+      );
+    }, [normalizedOptions, searchQuery]);
+
+    // Close when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (containerRef.current && !containerRef.current.contains(e.target)) {
+          setIsOpen(false);
+          setSearchQuery('');
+          if (onBlur) onBlur();
+        }
+      };
+
+      if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside, {
+          passive: true,
+        });
+      }
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
+      };
+    }, [isOpen, onBlur]);
+
+    // Auto-focus the search input inside trigger when opened
+    useEffect(() => {
+      if (isOpen) {
+        const timer = setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 30);
+        return () => clearTimeout(timer);
+      } else {
+        setSearchQuery('');
+      }
+    }, [isOpen]);
+
+    // Set highlighted index when opened
+    useEffect(() => {
+      if (isOpen) {
+        const idx = filteredOptions.findIndex(
+          (opt) => String(opt.value) === String(value)
+        );
+        setHighlightedIndex(idx >= 0 ? idx : 0);
+      }
+    }, [isOpen, filteredOptions, value]);
+
+    // Scroll highlighted item into view
+    useEffect(() => {
+      if (isOpen && listRef.current && highlightedIndex >= 0) {
+        const item = listRef.current.children[highlightedIndex];
+        if (item) {
+          item.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    }, [isOpen, highlightedIndex]);
+
+    // Emit selection change with synthetic event compatible with standard forms and RHF
+    const handleSelect = useCallback(
+      (optValue) => {
+        if (onChange) {
+          onChange({
+            target: {
+              name,
+              value: optValue,
+            },
+          });
+        }
+        setIsOpen(false);
+        setSearchQuery('');
+        triggerRef.current?.focus();
+      },
+      [name, onChange]
+    );
+
+    const handleClear = useCallback(
+      (e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        handleSelect('');
+      },
+      [handleSelect]
+    );
+
+    const handleTriggerClick = (e) => {
+      if (disabled) return;
+      if (
+        e.target.closest('.ui-select-search-clear') ||
+        e.target.closest('.ui-select-clear-btn')
+      ) {
+        return;
+      }
+
+      if (isOpen) {
+        setIsOpen(false);
+        setSearchQuery('');
+        if (onBlur) onBlur();
+      } else {
+        setIsOpen(true);
+        setSearchQuery('');
+      }
+    };
+
+    const handleArrowClick = (e) => {
+      e.stopPropagation();
+      if (disabled) return;
+      if (isOpen) {
+        setIsOpen(false);
+        setSearchQuery('');
+        if (onBlur) onBlur();
+      } else {
+        setIsOpen(true);
+        setSearchQuery('');
+      }
+    };
+
+    // Keyboard navigation
+    const handleKeyDown = (e) => {
+      if (disabled) return;
+
+      if (!isOpen) {
+        if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(e.key)) {
+          e.preventDefault();
+          setIsOpen(true);
+        }
+        return;
+      }
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev < filteredOptions.length - 1 ? prev + 1 : 0
+          );
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setHighlightedIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredOptions.length - 1
+          );
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (filteredOptions[highlightedIndex]) {
+            handleSelect(filteredOptions[highlightedIndex].value);
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          setIsOpen(false);
+          setSearchQuery('');
+          triggerRef.current?.focus();
+          break;
+        case 'Tab':
+          setIsOpen(false);
+          setSearchQuery('');
+          break;
+        default:
+          break;
+      }
+    };
+
+    const canClear =
+      (isClearable || (!required && placeholder === 'None')) &&
+      Boolean(value) &&
+      !disabled;
+
+    const listboxId = name
+      ? `select-${name}-listbox`
+      : `ui-select-listbox-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
+
+    return (
+      <div
+        ref={containerRef}
+        className={`ui-select-container ${className}`.trim()}
+      >
+        {label && <label className="ui-select-label">{label}</label>}
+
+        {/* Hidden Input for Form Submissions & RHF ref binding */}
+        <input
+          type="hidden"
+          ref={ref}
+          name={name}
+          value={value ?? ''}
+          {...props}
+        />
+
+        {/* Trigger Field (Houses direct search input when open) */}
+        <div
+          ref={triggerRef}
+          role="combobox"
+          aria-expanded={isOpen}
+          aria-controls={listboxId}
+          aria-haspopup="listbox"
+          tabIndex={disabled ? -1 : 0}
+          onClick={handleTriggerClick}
+          onKeyDown={handleKeyDown}
+          className={`ui-select-trigger ${
+            isOpen ? 'ui-select-trigger--open' : ''
+          } ${error ? 'ui-select-trigger--error' : ''} ${
+            disabled ? 'ui-select-trigger--disabled' : ''
+          }`}
+        >
+          <div className="ui-select-trigger-content">
+            {!isOpen ? (
+              <span
+                className={`ui-select-value ${
+                  !selectedOption ? 'ui-select-placeholder' : ''
+                }`}
+              >
+                {selectedOption ? selectedOption.label : placeholder}
+              </span>
+            ) : (
+              <div className="ui-select-search-view">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="ui-select-search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    selectedOption
+                      ? selectedOption.label
+                      : placeholder &&
+                        placeholder !== 'Select...' &&
+                        placeholder !== 'None'
+                      ? `Search ${placeholder
+                          .toLowerCase()
+                          .replace(/^select\s+/, '')}...`
+                      : 'Search...'
+                  }
+                  autoComplete="off"
+                  onKeyDown={handleKeyDown}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="ui-select-search-clear"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    title="Clear search text"
+                  >
+                    <CloseIcon sx={{ fontSize: 13 }} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="ui-select-actions">
+            {!isOpen && canClear && (
+              <button
+                type="button"
+                className="ui-select-clear-btn"
+                onClick={handleClear}
+                title="Clear selection"
+                tabIndex={-1}
+              >
+                <CloseIcon sx={{ fontSize: 14 }} />
+              </button>
+            )}
+
+            <span
+              className={`ui-select-arrow ${
+                isOpen ? 'ui-select-arrow--open' : ''
+              }`}
+              aria-hidden="true"
+              onClick={handleArrowClick}
+            >
+              <KeyboardArrowDownIcon sx={{ fontSize: 18 }} />
+            </span>
+          </div>
+        </div>
+
+        {/* Popover Menu: Starts DIRECTLY with Options List, NO duplicate search box */}
+        {isOpen && (
+          <div id={listboxId} className="ui-select-popover" role="listbox">
+            <div ref={listRef} className="ui-select-list">
+              {/* Optional "None" Option */}
+              {(placeholder === 'None' || isClearable) &&
+                !required &&
+                !searchQuery && (
+                  <div
+                    role="option"
+                    aria-selected={!value}
+                    className={`ui-select-option ui-select-option--none ${
+                      !value ? 'ui-select-option--selected' : ''
+                    }`}
+                    onClick={() => handleSelect('')}
+                  >
+                    <span className="ui-select-option-label">None</span>
+                    {!value && (
+                      <CheckIcon
+                        sx={{ fontSize: 16 }}
+                        className="ui-select-check"
+                      />
+                    )}
+                  </div>
+                )}
+
+              {filteredOptions.length === 0 ? (
+                <div className="ui-select-empty">No options found</div>
+              ) : (
+                filteredOptions.map((opt, index) => {
+                  const isSelected = String(opt.value) === String(value);
+                  const isHighlighted = index === highlightedIndex;
+
+                  return (
+                    <div
+                      key={opt.value || index}
+                      role="option"
+                      aria-selected={isSelected}
+                      className={`ui-select-option ${
+                        isSelected ? 'ui-select-option--selected' : ''
+                      } ${
+                        isHighlighted ? 'ui-select-option--highlighted' : ''
+                      }`}
+                      onClick={() => handleSelect(opt.value)}
+                      onMouseEnter={() => setHighlightedIndex(index)}
+                    >
+                      <span className="ui-select-option-label">{opt.label}</span>
+                      {isSelected && (
+                        <CheckIcon
+                          sx={{ fontSize: 16 }}
+                          className="ui-select-check"
+                        />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Validation Error Message */}
+        {error && <span className="error-text">{error}</span>}
+      </div>
+    );
+  }
+);
+
+Select.displayName = 'Select';
 
 export default Select;

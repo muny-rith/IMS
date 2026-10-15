@@ -9,16 +9,22 @@
 /* input */
 .input-wrapper .input {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #ccc;
-  border-radius: var(--radius);
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius, 8px);
   outline: none;
-  transition: 0.25s;
+  font-size: 13.5px;
+  background-color: #ffffff;
+  color: #0f172a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* add space for icons */
-.input-wrapper .input {
+/* add space for icons when present */
+.input-wrapper.has-left-icon .input {
   padding-left: 40px;
+}
+
+.input-wrapper.has-right-icon .input {
   padding-right: 40px;
 }
 

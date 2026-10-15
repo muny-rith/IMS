@@ -463,30 +463,13 @@
 }
 
 .product-detail-table-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  padding: 7px 12px;
-  width: 250px;
-  transition: all 0.15s ease;
+  width: min(100%, 280px);
+  min-width: 0;
 }
 
-.product-detail-table-search:focus-within {
-  border-color: #eb0029;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(235, 0, 41, 0.1);
-}
-
-.product-detail-table-search input {
-  border: none;
-  background: transparent;
-  font-size: 13px;
-  outline: none;
+.product-detail-table-search .form-group {
+  margin: 0;
   width: 100%;
-  color: #0f172a;
 }
 
 .product-detail-empty-state {

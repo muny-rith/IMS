@@ -423,6 +423,12 @@
   font-weight: 500;
 }
 
+.product-form-group .form-group,
+.product-form-field .form-group {
+  margin: 0;
+  width: 100%;
+}
+
 /* ── 4. Right Column: Variants Matrix Studio ── */
 .product-matrix-header {
   display: flex;

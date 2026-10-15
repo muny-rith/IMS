@@ -19,7 +19,7 @@ import './MultiSelect.css';
  */
 const MultiSelect = ({
   label,
-  placeholder = 'Select an option',
+  placeholder = 'All',
   options = [],
   selectedValues = [],
   onChange,
@@ -260,7 +260,7 @@ const MultiSelect = ({
                 {label && <span className="multiselect__trigger-label">{label}:</span>}
 
                 {selectedCount === 0 ? (
-                  <span className="multiselect__placeholder">All</span>
+                  <span className="multiselect__placeholder">{placeholder || 'All'}</span>
                 ) : (
                   <>
                     {visibleTags.map((val) => {
@@ -326,7 +326,7 @@ const MultiSelect = ({
                 {label && <span className="multiselect__trigger-label">{label}:</span>}
 
                 {selectedCount === 0 ? (
-                  <span className="multiselect__placeholder">All</span>
+                  <span className="multiselect__placeholder">{placeholder || 'All'}</span>
                 ) : (
                   <>
                     {visibleTags.map((val) => {
@@ -394,7 +394,10 @@ const MultiSelect = ({
           role="listbox"
           style={
             popoverWidth
-              ? { width: typeof popoverWidth === 'number' ? `${popoverWidth}px` : popoverWidth }
+              ? {
+                  width: typeof popoverWidth === 'number' ? `${popoverWidth}px` : popoverWidth,
+                  maxWidth: '100%',
+                }
               : undefined
           }
         >

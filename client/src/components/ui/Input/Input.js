@@ -1,8 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, forwardRef } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import "../Form.css";
 
-const Input = ({
+const Input = forwardRef(({
   label,
   type = "text",
   value,
@@ -18,8 +18,9 @@ const Input = ({
   onTouchStart,
   onClick,
   onBlur,
+  className = "",
   ...props
-}) => {
+}, forwardedRef) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const inputType =
@@ -51,14 +52,27 @@ const Input = ({
     }
   };
 
-  const inputRef = useRef(null);
+  const internalRef = useRef(null);
+  const inputRef = internalRef;
+
+  const setRef = (node) => {
+    internalRef.current = node;
+    if (typeof forwardedRef === 'function') {
+      forwardedRef(node);
+    } else if (forwardedRef) {
+      forwardedRef.current = node;
+    }
+  };
+
   const wasFocusedRef = useRef(false);
   const lastInteractionRef = useRef(0);
 
   const isSearch =
     type === 'search' ||
+    enterKeyHint === 'search' ||
     (typeof props.placeholder === 'string' &&
-      props.placeholder.toLowerCase().includes('search'));
+      (props.placeholder.toLowerCase().includes('search') ||
+        props.placeholder.toLowerCase().includes('filter')));
 
   const resolvedEnterKeyHint =
     enterKeyHint || (isSearch ? 'search' : 'done');
@@ -105,15 +119,22 @@ const Input = ({
     }
   };
 
-  return (
-    <div className="form-group">
-      <div className={`input-wrapper ${error ? "error" : ""}`}>
+    const hasLeftIcon = Boolean(resolvedLeftIcon);
+    const hasRightIcon = Boolean(rightIcon || isPasswordToggle);
+
+    return (
+      <div className={`form-group ${className}`.trim()}>
+        <div
+          className={`input-wrapper ${error ? "error" : ""} ${
+            hasLeftIcon ? "has-left-icon" : ""
+          } ${hasRightIcon ? "has-right-icon" : ""}`.trim()}
+        >
         
         {/* Left Icon */}
         {resolvedLeftIcon && <span className="icon left">{resolvedLeftIcon}</span>}
 
         <input
-          ref={inputRef}
+          ref={setRef}
           type={inputType}
           className="input"
           value={value}
@@ -129,7 +150,7 @@ const Input = ({
           {...props}
         />
 
-        <label className="floating-label">{label}</label>
+        {Boolean(label) && <label className="floating-label">{label}</label>}
 
         {/* Right Icon OR Password Toggle */}
         {isPasswordToggle ? (
@@ -147,6 +168,8 @@ const Input = ({
       {error && <span className="error-text">{error}</span>}
     </div>
   );
-};
+});
+
+Input.displayName = "Input";
 
 export default Input;

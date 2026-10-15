@@ -12,8 +12,11 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import { IconButton } from '@mui/material';
 import Button from '../../../components/ui/Button/Button';
+import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../../auth/hooks/useAuth';
 import './product.css';
@@ -392,12 +395,28 @@ const ProductDetailPage = () => {
 
                   {/* Inline Variant Search / Filter */}
                   <div className="product-detail-table-search">
-                    <SearchOutlinedIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
-                    <input
+                    <Input
                       type="text"
-                      placeholder="Filter by SKU or option..."
+                      enterKeyHint="search"
+                      leftIcon={<SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }} />}
+                      rightIcon={
+                        variantSearch ? (
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setVariantSearch('');
+                            }}
+                            sx={{ padding: '2px', color: '#94a3b8' }}
+                            aria-label="Clear filter"
+                          >
+                            <CloseIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        ) : null
+                      }
                       value={variantSearch}
                       onChange={(e) => setVariantSearch(e.target.value)}
+                      placeholder="Filter by SKU or option..."
                     />
                   </div>
                 </div>
