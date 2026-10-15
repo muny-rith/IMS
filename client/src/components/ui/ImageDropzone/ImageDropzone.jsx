@@ -2,7 +2,29 @@ import React, { useRef, useState } from 'react';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import DeleteIcon from '@mui/icons-material/Delete';
+import Skeleton from '../Skeleton/Skeleton';
 import './ImageDropzone.css';
+
+export const ImageDropzoneSkeleton = ({
+  size = 'default',
+  className = '',
+  style = {},
+}) => {
+  return (
+    <div
+      className={`image-dropzone ${size === 'compact' ? 'image-dropzone--compact' : ''} ${className}`.trim()}
+      style={{ cursor: 'default', pointerEvents: 'none', ...style }}
+      role="status"
+      aria-label="Loading image dropzone"
+    >
+      <div className="image-dropzone__empty">
+        <Skeleton variant="circular" width={44} height={44} style={{ marginBottom: 4 }} />
+        <Skeleton variant="text" width={110} height={16} />
+        <Skeleton variant="text" width={80} height={12} />
+      </div>
+    </div>
+  );
+};
 
 const ImageDropzone = ({
   imagePreview,
@@ -15,9 +37,16 @@ const ImageDropzone = ({
   accept = 'image/jpeg,image/png,image/webp',
   className = '',
   disabled = false,
+  loading = false,
+  style = {},
 }) => {
   const fileInputRef = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
+
+  if (loading) {
+    return <ImageDropzoneSkeleton size={size} className={className} style={style} />;
+  }
+
 
   const handleClick = () => {
     if (disabled) return;
@@ -124,4 +153,8 @@ const ImageDropzone = ({
   );
 };
 
+ImageDropzone.Skeleton = ImageDropzoneSkeleton;
+
 export default ImageDropzone;
+
+

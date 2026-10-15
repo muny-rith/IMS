@@ -1,0 +1,73 @@
+/* ── Modern Universal Shimmer Skeleton ── */
+.ui-skeleton {
+  display: block;
+  background-color: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+}
+
+.ui-skeleton--text {
+  height: 16px;
+  border-radius: 4px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.ui-skeleton--circular {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ui-skeleton--rounded {
+  border-radius: 8px;
+}
+
+.ui-skeleton--rectangular {
+  border-radius: 0;
+}
+
+/* Wave Animation */
+.ui-skeleton--wave::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 40%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.6) 60%,
+    transparent 100%
+  );
+  animation: uiSkeletonWave 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Pulse Animation */
+.ui-skeleton--pulse {
+  animation: uiSkeletonPulse 1.5s ease-in-out 0.5s infinite;
+}
+
+@keyframes uiSkeletonWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%, 100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes uiSkeletonPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  100% {
+    opacity: 1;
+  }
+}

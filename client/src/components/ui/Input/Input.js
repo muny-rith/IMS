@@ -1,6 +1,34 @@
 import React, { useState, useRef, forwardRef } from "react";
 import SearchIcon from "@mui/icons-material/Search";
+import Skeleton from "../Skeleton/Skeleton";
 import "../Form.css";
+
+export const InputSkeleton = ({ label, className = '', fullWidth = false }) => (
+  <div
+    className={`form-group form-group--skeleton ${className}`.trim()}
+    style={{ width: fullWidth ? '100%' : undefined }}
+  >
+    {label && (
+      <div style={{ marginBottom: '6px' }}>
+        <Skeleton variant="text" width={80} height={15} />
+      </div>
+    )}
+    <div
+      className="form-input-wrapper form-input-wrapper--skeleton"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 12px',
+        height: '42px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+      }}
+    >
+      <Skeleton variant="text" width="60%" height={18} />
+    </div>
+  </div>
+);
 
 const Input = forwardRef(({
   label,
@@ -19,9 +47,19 @@ const Input = forwardRef(({
   onClick,
   onBlur,
   className = "",
+  loading = false,
   ...props
 }, forwardedRef) => {
   const [showPassword, setShowPassword] = useState(false);
+
+  const internalRef = useRef(null);
+  const inputRef = internalRef;
+  const wasFocusedRef = useRef(false);
+  const lastInteractionRef = useRef(0);
+
+  if (loading) {
+    return <InputSkeleton label={label} className={className} />;
+  }
 
   const inputType =
     isPasswordToggle ? (showPassword ? "text" : "password") : type;
@@ -52,9 +90,6 @@ const Input = forwardRef(({
     }
   };
 
-  const internalRef = useRef(null);
-  const inputRef = internalRef;
-
   const setRef = (node) => {
     internalRef.current = node;
     if (typeof forwardedRef === 'function') {
@@ -64,8 +99,6 @@ const Input = forwardRef(({
     }
   };
 
-  const wasFocusedRef = useRef(false);
-  const lastInteractionRef = useRef(0);
 
   const isSearch =
     type === 'search' ||
@@ -170,5 +203,6 @@ const Input = forwardRef(({
 });
 
 Input.displayName = "Input";
+Input.Skeleton = InputSkeleton;
 
 export default Input;

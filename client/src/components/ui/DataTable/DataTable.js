@@ -11,6 +11,7 @@ import {
   gridRowSelectionCountSelector,
 } from '@mui/x-data-grid';
 import { Box, Typography } from '@mui/material';
+import Skeleton from '../Skeleton/Skeleton';
 import './DataTable.css';
 
 const CustomTableFooter = () => {
@@ -40,9 +41,139 @@ const CustomTableFooter = () => {
   );
 };
 
+export const DataTableSkeleton = ({
+  columns,
+  rowsCount = 8,
+  checkboxSelection = true,
+  className = '',
+}) => {
+  const defaultCols = [
+    { field: 'photo', headerName: 'Photo', width: 70 },
+    { field: 'name', headerName: 'Name', flex: 1.4 },
+    { field: 'category', headerName: 'Category', flex: 1 },
+    { field: 'brand', headerName: 'Brand', flex: 1 },
+    { field: 'department', headerName: 'Department', flex: 1 },
+    { field: 'price', headerName: 'Price', flex: 0.9 },
+    { field: 'qty', headerName: 'Qty', flex: 0.7 },
+    { field: 'actions', headerName: 'Actions', flex: 0.9 },
+  ];
+
+  const cols = columns && columns.length > 0 ? columns : defaultCols;
+
+  return (
+    <div
+      className={`data-table-skeleton ${className}`.trim()}
+      role="status"
+      aria-label="Loading table data"
+    >
+      {/* Header */}
+      <div className="data-table-skeleton__header">
+        {checkboxSelection && (
+          <div className="data-table-skeleton__cell--checkbox">
+            <Skeleton variant="rounded" width={18} height={18} />
+          </div>
+        )}
+        {cols.map((col, i) => (
+          <div
+            key={col.field || i}
+            className="data-table-skeleton__header-cell"
+            style={{
+              flex: col.flex || (col.width ? undefined : 1),
+              width: col.width,
+              minWidth: col.minWidth || 60,
+            }}
+          >
+            {col.headerName ? (
+              col.headerName
+            ) : (
+              <Skeleton variant="text" width="60%" height={16} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Rows */}
+      <div className="data-table-skeleton__body">
+        {Array.from({ length: rowsCount }).map((_, rIdx) => (
+          <div key={rIdx} className="data-table-skeleton__row">
+            {checkboxSelection && (
+              <div className="data-table-skeleton__cell--checkbox">
+                <Skeleton variant="rounded" width={18} height={18} />
+              </div>
+            )}
+            {cols.map((col, cIdx) => {
+              const fieldName = String(col.field || '').toLowerCase();
+              const isAvatar =
+                fieldName.includes('avatar') ||
+                fieldName.includes('photo') ||
+                fieldName.includes('image');
+              const isBadge =
+                fieldName.includes('status') ||
+                fieldName.includes('qty') ||
+                fieldName.includes('role');
+              const isAction = fieldName.includes('action');
+
+              return (
+                <div
+                  key={col.field || cIdx}
+                  className="data-table-skeleton__cell"
+                  style={{
+                    flex: col.flex || (col.width ? undefined : 1),
+                    width: col.width,
+                    minWidth: col.minWidth || 60,
+                  }}
+                >
+                  {isAvatar ? (
+                    <Skeleton variant="circular" width={34} height={34} />
+                  ) : isBadge ? (
+                    <Skeleton
+                      variant="rounded"
+                      width={64}
+                      height={24}
+                      style={{ borderRadius: '999px' }}
+                    />
+                  ) : isAction ? (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <Skeleton variant="circular" width={26} height={26} />
+                      <Skeleton variant="circular" width={26} height={26} />
+                    </div>
+                  ) : (
+                    <Skeleton
+                      variant="text"
+                      width={`${50 + ((rIdx + cIdx) % 4) * 15}%`}
+                      height={20}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="data-table-skeleton__footer">
+        <Skeleton variant="text" width={180} height={18} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Skeleton
+            variant="rounded"
+            width={75}
+            height={26}
+            style={{ borderRadius: '6px' }}
+          />
+          <Skeleton variant="circular" width={28} height={28} />
+          <Skeleton variant="circular" width={28} height={28} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DataTable = ({
   rows,
   columns,
+  loading = false,
+  rowsCount = 8,
   pageSize = 25,
   pageSizeOptions = [10, 25, 50, 100],
   rowHeight = 70,
@@ -71,6 +202,18 @@ const DataTable = ({
     }
     return rowSelectionModel;
   }, [rowSelectionModel]);
+
+  if (loading) {
+    return (
+      <DataTableSkeleton
+        columns={columns}
+        rowsCount={rowsCount}
+        checkboxSelection={rest.checkboxSelection !== false}
+        className={rest.className}
+      />
+    );
+  }
+
 
   const handleSelectionChange = (newModel, details) => {
     if (!onRowSelectionModelChange) return;
@@ -137,5 +280,6 @@ const DataTable = ({
   );
 };
 
+DataTable.Skeleton = DataTableSkeleton;
 
 export default DataTable;

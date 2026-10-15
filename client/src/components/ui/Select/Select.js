@@ -9,8 +9,35 @@ import React, {
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
+import Skeleton from '../Skeleton/Skeleton';
 import '../Form.css';
 import './Select.css';
+
+export const SelectSkeleton = ({ label, className = '' }) => (
+  <div className={`ui-select-container ui-select-container--skeleton ${className}`.trim()}>
+    {label && (
+      <div style={{ marginBottom: '6px' }}>
+        <Skeleton variant="text" width={75} height={15} />
+      </div>
+    )}
+    <div
+      className="ui-select-trigger ui-select-trigger--skeleton"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 12px',
+        height: '42px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+      }}
+    >
+      <Skeleton variant="text" width="55%" height={18} />
+      <Skeleton variant="rounded" width={16} height={16} style={{ borderRadius: '4px' }} />
+    </div>
+  </div>
+);
 
 /**
  * Enterprise Single Select Component
@@ -39,12 +66,14 @@ const Select = forwardRef(
       disabled = false,
       required = false,
       isClearable,
+      loading = false,
       ...props
     },
     ref
   ) => {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
     // Mobile 3-step state cycle:
@@ -374,7 +403,12 @@ const Select = forwardRef(
       ? `select-${name}-listbox`
       : `ui-select-listbox-${placeholder.replace(/\s+/g, '-').toLowerCase()}`;
 
+    if (loading) {
+      return <SelectSkeleton label={label} className={className} />;
+    }
+
     return (
+
       <div
         ref={containerRef}
         className={`ui-select-container ${className}`.trim()}
@@ -631,5 +665,6 @@ const Select = forwardRef(
 );
 
 Select.displayName = 'Select';
+Select.Skeleton = SelectSkeleton;
 
 export default Select;

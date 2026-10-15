@@ -1,14 +1,76 @@
-import './MobileCard.css'
+import React from 'react';
+import Skeleton from '../Skeleton/Skeleton';
+import './MobileCard.css';
+
+export const MobileCardSkeleton = ({
+  hasAvatar = true,
+  metaCount = 3,
+  count = 1,
+  className = '',
+}) => {
+  const cards = Array.from({ length: count });
+
+  return (
+    <>
+      {cards.map((_, idx) => (
+        <article
+          key={idx}
+          className={`mobile-card mobile-card--skeleton ${className}`.trim()}
+          role="status"
+          aria-label="Loading card"
+        >
+          <div className="mobile-card__top">
+            {hasAvatar && (
+              <div className="mobile-card__avatar">
+                <Skeleton variant="circular" width={42} height={42} />
+              </div>
+            )}
+            <div className="mobile-card__main" style={{ width: '100%' }}>
+              <Skeleton variant="text" width="60%" height={20} />
+              <Skeleton variant="text" width="40%" height={16} />
+            </div>
+            <div className="mobile-card__right">
+              <Skeleton
+                variant="rounded"
+                width={50}
+                height={20}
+                style={{ borderRadius: '6px' }}
+              />
+            </div>
+          </div>
+
+          <div className="mobile-card__meta">
+            {Array.from({ length: metaCount }).map((_, mIdx) => (
+              <div className="mobile-card__meta-item" key={mIdx}>
+                <Skeleton variant="text" width={45} height={14} />
+                <Skeleton variant="text" width={65} height={18} />
+              </div>
+            ))}
+          </div>
+        </article>
+      ))}
+    </>
+  );
+};
 
 const MobileCard = ({
-    avatar,
-    title,
-    subtitle,
-    rightContent,
-    meta = [],
-    actions = [],
-    actionsPlacement = 'bottom',
+  avatar,
+  title,
+  subtitle,
+  rightContent,
+  meta = [],
+  actions = [],
+  actionsPlacement = 'bottom',
+  loading = false,
 }) => {
+  if (loading) {
+    return (
+      <MobileCardSkeleton
+        hasAvatar={Boolean(avatar)}
+        metaCount={meta.length || 3}
+      />
+    );
+  }
     return (
         <article className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''}`}>
             <div className="mobile-card__top">
@@ -80,4 +142,8 @@ const MobileCard = ({
     );
 };
 
+MobileCard.Skeleton = MobileCardSkeleton;
+
 export default MobileCard;
+
+

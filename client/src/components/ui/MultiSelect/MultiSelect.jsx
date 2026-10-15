@@ -4,7 +4,43 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import CheckIcon from '@mui/icons-material/Check';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import Skeleton from '../Skeleton/Skeleton';
 import './MultiSelect.css';
+
+export const MultiSelectSkeleton = ({
+  label,
+  width,
+  style = {},
+  className = '',
+}) => (
+  <div
+    className={`multiselect multiselect--skeleton ${className}`.trim()}
+    style={{
+      ...(width ? { width: typeof width === 'number' ? `${width}px` : width } : {}),
+      ...style,
+    }}
+  >
+    <div
+      className="multiselect__trigger multiselect__trigger--skeleton"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 12px',
+        height: '42px',
+        backgroundColor: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
+        {label && <Skeleton variant="text" width={55} height={16} />}
+        <Skeleton variant="rounded" width={80} height={24} style={{ borderRadius: '6px' }} />
+      </div>
+      <Skeleton variant="rounded" width={16} height={16} style={{ borderRadius: '4px' }} />
+    </div>
+  </div>
+);
 
 /**
  * MultiSelect - Enterprise Multi-selection Dropdown with tabs and tags
@@ -28,10 +64,12 @@ const MultiSelect = ({
   popoverWidth,
   className = '',
   style = {},
+  loading = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'selected'
   const [searchQuery, setSearchQuery] = useState('');
+
 
   // Mobile 3-step state cycle:
   // 0: Closed
@@ -244,7 +282,19 @@ const MultiSelect = ({
 
   const overflowCount = selectedCount - maxTagsVisible;
 
+  if (loading) {
+    return (
+      <MultiSelectSkeleton
+        label={label}
+        width={width}
+        style={style}
+        className={className}
+      />
+    );
+  }
+
   return (
+
     <div
       className={`multiselect ${className}`.trim()}
       ref={containerRef}
@@ -564,5 +614,8 @@ const MultiSelect = ({
     </div>
   );
 };
+
+MultiSelect.Skeleton = MultiSelectSkeleton;
+
 
 export default MultiSelect;

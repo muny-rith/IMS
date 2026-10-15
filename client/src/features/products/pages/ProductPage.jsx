@@ -31,14 +31,17 @@ import Button from '../../../components/ui/Button/Button';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
+import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../../auth/hooks/useAuth';
 import ProductMobileCardList from '../components/ProductMobileCardList';
 import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
 import ProductBulkActionsBar from '../components/ProductBulkActionsBar';
-import ProductTableSkeleton, { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
+import { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
 import ProductHoverPreview from '../components/ProductHoverPreview';
 import { exportProductsToExcel } from '../utils/exportProducts';
+
+
 
 const PREVIEW_TOOLTIP_PROPS = {
   enterDelay: 180,
@@ -472,8 +475,15 @@ const ProductPage = () => {
       <div className="product-header">
         <div className="product-header__left">
           <h1 className="product-header__title">Products</h1>
-          <span className="product-header__badge">{rows.length} total</span>
+          <span className="product-header__badge">
+            {loading && rows.length === 0 ? (
+              <Skeleton variant="rounded" width={48} height={18} style={{ borderRadius: '999px' }} />
+            ) : (
+              `${rows.length} total`
+            )}
+          </span>
         </div>
+
         <div className="product-header__actions">
           <Button
             variant="outline"
@@ -558,6 +568,7 @@ const ProductPage = () => {
               selectedValues={selectedCategories}
               onChange={setSelectedCategories}
               maxTagsVisible={1}
+              loading={loading && categoryOptions.length === 0}
             />
 
             <MultiSelect
@@ -567,56 +578,55 @@ const ProductPage = () => {
               selectedValues={selectedBrands}
               onChange={setSelectedBrands}
               maxTagsVisible={1}
+              loading={loading && brandOptions.length === 0}
             />
-
-
           </div>
+
         </div>
 
         <div className="product-panel__body">
-          {loading && rows.length === 0 ? (
-            <ProductTableSkeleton rowsCount={8} />
-          ) : (
-
-            <>
-              <div className="product-desktop-table">
-                <DataTable
-                  rows={filteredRows}
-                  columns={columns}
-                  columnVisibilityModel={columnVisibilityModel}
-                  rowSelectionModel={selectedRowIds}
-                  onRowSelectionModelChange={setSelectedRowIds}
-                />
-              </div>
-              <div
-                className="product-mobile-cards"
-                onTouchStart={() => {
-                  if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                    document.activeElement.blur();
-                  }
-                }}
-                onTouchMove={() => {
-                  if (document.activeElement && document.activeElement.tagName === 'INPUT') {
-                    document.activeElement.blur();
-                  }
-                }}
-              >
-                <ProductMobileCardList
-                  rows={filteredRows}
-                  onView={openViewModal}
-                  onEdit={canEdit ? openEditModal : undefined}
-                  onDelete={canDelete ? requestDelete : undefined}
-                />
-                <div className="product-panel__footer">
-                  <div className="product-panel__count">
-                    Showing <strong>{filteredRows.length}</strong> of {rows.length} products
-                  </div>
+          <div className="product-desktop-table">
+            <DataTable
+              loading={loading && rows.length === 0}
+              rowsCount={8}
+              rows={filteredRows}
+              columns={columns}
+              columnVisibilityModel={columnVisibilityModel}
+              rowSelectionModel={selectedRowIds}
+              onRowSelectionModelChange={setSelectedRowIds}
+            />
+          </div>
+          <div
+            className="product-mobile-cards"
+            onTouchStart={() => {
+              if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.blur();
+              }
+            }}
+            onTouchMove={() => {
+              if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.blur();
+              }
+            }}
+          >
+            <ProductMobileCardList
+              loading={loading && rows.length === 0}
+              rows={filteredRows}
+              onView={openViewModal}
+              onEdit={canEdit ? openEditModal : undefined}
+              onDelete={canDelete ? requestDelete : undefined}
+            />
+            {(!loading || rows.length > 0) && (
+              <div className="product-panel__footer">
+                <div className="product-panel__count">
+                  Showing <strong>{filteredRows.length}</strong> of {rows.length} products
                 </div>
               </div>
-            </>
-          )}
+            )}
+          </div>
         </div>
       </section>
+
 
       {/* Floating Bulk Actions Bar */}
       <ProductBulkActionsBar

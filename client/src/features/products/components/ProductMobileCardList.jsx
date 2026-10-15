@@ -17,10 +17,19 @@ const getQtyLabel = (qty) => {
     return 'In stock';
 };
 
-const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
+const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onDelete }) => {
+    if (loading) {
+        return (
+            <div className="product-mobile-cards-skeleton">
+                <MobileCard.Skeleton count={6} hasAvatar={true} metaCount={3} />
+            </div>
+        );
+    }
+
     if (!rows.length) {
         return <div className="mobile-card-empty">No products match this search.</div>;
     }
+
 
     return (
         <div>

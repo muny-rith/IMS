@@ -1,6 +1,36 @@
 import React from 'react';
+import Skeleton from '../Skeleton/Skeleton';
 import './Button.css';
 import '../Form.css';
+
+export const ButtonSkeleton = ({
+  size = 'md',
+  width,
+  fullWidth = false,
+  className = '',
+}) => {
+  const heightMap = { sm: 32, md: 40, lg: 46 };
+  const h = heightMap[size] || 40;
+
+  return (
+    <div
+      className={`ui-btn-skeleton ${fullWidth ? 'ui-btn-skeleton--full-width' : ''} ${className}`.trim()}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: fullWidth ? '100%' : width || 90,
+      }}
+    >
+      <Skeleton
+        variant="rounded"
+        width={fullWidth ? '100%' : width || 90}
+        height={h}
+        style={{ borderRadius: '8px' }}
+      />
+    </div>
+  );
+};
 
 /**
  * Unified Button Component (components/ui/Button)
@@ -13,6 +43,7 @@ import '../Form.css';
  * @param {React.ReactNode} [startIcon] - Alias for icon
  * @param {React.ReactNode} [endIcon] - Trailing icon (rendered after label)
  * @param {boolean} [loading=false] - Shows loading spinner
+ * @param {boolean} [skeleton=false] - Renders skeleton placeholder
  * @param {boolean} [fullWidth=false] - Makes button 100% width
  * @param {boolean} [disabled=false] - Disables the button
  * @param {boolean} [responsiveCollapse=false] - Collapses text on mobile (<=576px) if an icon is present
@@ -28,6 +59,7 @@ const Button = ({
   startIcon,
   endIcon,
   loading = false,
+  skeleton = false,
   fullWidth = false,
   disabled = false,
   responsiveCollapse = false,
@@ -35,6 +67,10 @@ const Button = ({
   className = '',
   ...props
 }) => {
+  if (skeleton) {
+    return <ButtonSkeleton size={size} fullWidth={fullWidth} className={className} />;
+  }
+
   const content = children !== undefined ? children : value;
   const leadingIcon = startIcon || icon;
   const hasIcon = Boolean(leadingIcon || endIcon);
@@ -88,5 +124,7 @@ const Button = ({
     </button>
   );
 };
+
+Button.Skeleton = ButtonSkeleton;
 
 export default Button;
