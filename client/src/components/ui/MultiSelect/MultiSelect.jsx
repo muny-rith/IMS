@@ -402,7 +402,7 @@ const MultiSelect = ({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search...'}
                   autoComplete="off"
-                  enterKeyHint="search"
+                  enterKeyHint="done"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();

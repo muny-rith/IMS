@@ -492,7 +492,7 @@ const Select = forwardRef(
                         : 'Search...'
                     }
                     autoComplete="off"
-                    enterKeyHint="search"
+                    enterKeyHint="done"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
