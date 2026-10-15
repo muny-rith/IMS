@@ -525,7 +525,7 @@ const ProductPage = () => {
               style={{ width: '100%', margin: 0 }}
             >
               <Input
-                type="search"
+                type="text"
                 enterKeyHint="search"
                 leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
                 rightIcon={

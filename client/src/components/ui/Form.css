@@ -22,6 +22,16 @@
   padding-right: 40px;
 }
 
+/* Hide native browser search cancel button to prevent duplicate X icons */
+.input-wrapper .input::-webkit-search-cancel-button,
+.input-wrapper .input::-webkit-search-decoration,
+.input-wrapper .input::-webkit-search-results-button,
+.input-wrapper .input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 /* floating label */
 .floating-label {
   position: absolute;
