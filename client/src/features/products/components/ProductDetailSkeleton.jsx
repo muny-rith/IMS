@@ -53,7 +53,9 @@ export const ProductDetailSkeleton = () => {
       </div>
 
       {/* ── 3. Split Content (Sidebar + Workspace) ── */}
-      <div className="product-detail-split">
+      <main className="product-detail-content">
+        <div className="product-detail-split">
+
         {/* Left Sidebar */}
         <aside className="product-detail-sidebar">
           <div className="product-detail-card product-detail-hub-card">
@@ -197,8 +199,10 @@ export const ProductDetailSkeleton = () => {
           </div>
         </main>
       </div>
-    </div>
-  );
+    </main>
+  </div>
+);
+
 };
 
 export default ProductDetailSkeleton;

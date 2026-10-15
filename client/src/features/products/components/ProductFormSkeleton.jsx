@@ -38,88 +38,178 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
         </div>
       </div>
 
-      {/* ── 2. Form Two-Column Layout ── */}
-      <div className="product-form-layout">
-        {/* Left Column: General Information & Photo */}
+      {/* ── 2. Split Workspace (Matching exact class .product-form-split) ── */}
+      <div className="product-form-split">
+        {/* ── LEFT COLUMN: Core Registry ── */}
         <div className="product-form-left-col">
-          <div className="product-form-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Skeleton variant="text" width={150} height={20} />
+          <div className="product-form-card">
+            <h3 className="product-form-card__title">
+              <Skeleton variant="text" width={150} height={20} />
+            </h3>
 
             {/* Product Image Dropzone */}
             <div className="product-form-group">
-              <Skeleton variant="text" width={100} height={14} style={{ marginBottom: '8px' }} />
+              <label className="product-form-label">
+                <Skeleton variant="text" width={100} height={14} />
+              </label>
               <ImageDropzone.Skeleton />
             </div>
 
             {/* Name */}
-            <Input.Skeleton label="Product Name" />
+            <div className="product-form-group">
+              <Input.Skeleton label="Product Name" />
+            </div>
 
             {/* Category */}
-            <Select.Skeleton label="Category" />
+            <div className="product-form-group">
+              <Select.Skeleton label="Category" />
+            </div>
 
             {/* Brand */}
-            <Select.Skeleton label="Brand" />
+            <div className="product-form-group">
+              <Select.Skeleton label="Brand" />
+            </div>
 
             {/* Department */}
-            <Input.Skeleton label="Department" />
+            <div className="product-form-group">
+              <Input.Skeleton label="Department" />
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Attributes & Variants Studio */}
+        {/* ── RIGHT COLUMN: Interactive Matrix Studio ── */}
         <div className="product-form-right-col">
-          {/* Card 1: Product Attributes */}
-          <div className="product-form-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <Skeleton variant="text" width={160} height={20} />
-              <Skeleton variant="rounded" width={80} height={22} style={{ borderRadius: '999px' }} />
-            </div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {[100, 80, 110, 95].map((w, i) => (
-                <Skeleton key={i} variant="rounded" width={w} height={32} style={{ borderRadius: '8px' }} />
-              ))}
-            </div>
-          </div>
-
-          {/* Card 2: Variants Matrix Studio */}
-          <div className="product-form-card product-form-card--studio" style={{ flex: 1 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <Skeleton variant="text" width={140} height={20} />
-                <Skeleton variant="text" width={220} height={14} style={{ marginTop: '4px' }} />
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Skeleton variant="rounded" width={110} height={34} style={{ borderRadius: '8px' }} />
-                <Skeleton variant="rounded" width={120} height={34} style={{ borderRadius: '8px' }} />
+          <div className="product-form-card product-form-card--studio">
+            {/* Header */}
+            <div className="product-matrix-header">
+              <div className="product-matrix-header__left">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Skeleton variant="text" width={140} height={20} />
+                  <Skeleton
+                    variant="rounded"
+                    width={70}
+                    height={20}
+                    style={{ borderRadius: '999px' }}
+                  />
+                </div>
+                <Skeleton variant="text" width={340} height={14} style={{ marginTop: '4px' }} />
               </div>
             </div>
 
-            {/* Variant Navigation Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'hidden' }}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} variant="rounded" width={110} height={36} style={{ borderRadius: '8px' }} />
-              ))}
+            {/* Dynamic Custom Attributes Banner */}
+            <div className="product-matrix-attrs-box">
+              <span className="product-matrix-attrs-box__label">
+                <Skeleton variant="text" width={140} height={14} />
+              </span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
+                {[90, 110, 85, 100].map((w, idx) => (
+                  <Skeleton
+                    key={idx}
+                    variant="rounded"
+                    width={w}
+                    height={30}
+                    style={{ borderRadius: '8px' }}
+                  />
+                ))}
+              </div>
             </div>
 
-            {/* Active Variant Editor Box */}
-            <div
-              style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-              }}
-            >
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-                <Input.Skeleton label="Variant SKU" />
-                <Input.Skeleton label="Price ($)" />
-                <Input.Skeleton label="Opening Stock" />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-                <Input.Skeleton label="Attribute Values" />
-                <Input.Skeleton label="Variant Note" />
+            {/* Variants Studio: Master-Detail Split Workbench */}
+            <div className="product-workbench-container" style={{ flex: 1, display: 'flex' }}>
+              <div className="product-workbench-layout" style={{ width: '100%', flex: 1 }}>
+                {/* Left Sidebar: Variant List */}
+                <div className="product-workbench-sidebar">
+                  <div className="product-workbench-sidebar__header">
+                    <span className="product-workbench-sidebar__title">
+                      <Skeleton variant="text" width={90} height={16} />
+                    </span>
+                    <Skeleton
+                      variant="rounded"
+                      width={52}
+                      height={28}
+                      style={{ borderRadius: '6px' }}
+                    />
+                  </div>
+
+                  <div className="product-workbench-list">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className={`product-workbench-item ${i === 1 ? 'product-workbench-item--active' : ''}`}
+                      >
+                        <span className="product-workbench-item__num" style={{ color: '#94a3b8' }}>
+                          #{i}
+                        </span>
+
+                        <div className="product-workbench-item__thumb">
+                          <Skeleton
+                            variant="rounded"
+                            width={32}
+                            height={32}
+                            style={{ borderRadius: '6px' }}
+                          />
+                        </div>
+
+                        <div className="product-workbench-item__info">
+                          <Skeleton variant="text" width="75%" height={14} />
+                          <Skeleton variant="text" width="55%" height={12} style={{ marginTop: 2 }} />
+                        </div>
+
+                        <div className="product-workbench-item__meta">
+                          <Skeleton variant="text" width={42} height={14} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right Inspector: Focused Variant Canvas */}
+                <div className="product-workbench-inspector" style={{ padding: '16px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '18px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid #f1f5f9',
+                    }}
+                  >
+                    <Skeleton
+                      variant="rounded"
+                      width={130}
+                      height={24}
+                      style={{ borderRadius: '999px' }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Skeleton
+                        variant="rounded"
+                        width={60}
+                        height={30}
+                        style={{ borderRadius: '6px' }}
+                      />
+                      <Skeleton
+                        variant="rounded"
+                        width={60}
+                        height={30}
+                        style={{ borderRadius: '6px' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Inspector Fields Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                    <Input.Skeleton label="Variant SKU" />
+                    <Input.Skeleton label="Unit Price ($)" />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                    <Input.Skeleton label="Opening Stock" />
+                    <Input.Skeleton label="Opening Note" />
+                  </div>
+                  <div style={{ marginBottom: '14px' }}>
+                    <Input.Skeleton label="Additional Notes" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
