@@ -179,6 +179,27 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
+.navbar__pwa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid #fee2e2;
+  background: #fff5f5;
+  color: #eb0029;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.navbar__pwa-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
 @media (max-width: 640px) {
   .navbar {
     padding: 0 12px;
@@ -193,6 +214,14 @@
   }
 
   .navbar__diag-btn {
+    padding: 6px;
+  }
+
+  .navbar__pwa-text {
+    display: none;
+  }
+
+  .navbar__pwa-btn {
     padding: 6px;
   }
 }

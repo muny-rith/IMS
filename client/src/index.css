@@ -1,0 +1,21 @@
+/* PWA Standalone Fullscreen Polish */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* Eliminate tap highlight box on touch devices */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Native-like touch and feel when running in standalone PWA app mode */
+@media all and (display-mode: standalone) {
+  body {
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

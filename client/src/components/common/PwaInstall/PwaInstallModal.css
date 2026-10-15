@@ -1,0 +1,147 @@
+.pwa-modal-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px 0 0;
+}
+
+.pwa-modal-body {
+  padding: 0 16px 20px 16px !important;
+}
+
+.pwa-modal-app-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 16px;
+}
+
+.pwa-modal-app-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.pwa-modal-app-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.pwa-modal-app-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.pwa-modal-app-sub {
+  font-size: 12px;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.pwa-modal-desc {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #334155;
+  margin-bottom: 18px;
+}
+
+.pwa-modal-action-box {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.pwa-modal-install-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #eb0029 0%, #c40022 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(235, 0, 41, 0.35);
+  transition: all 0.2s ease;
+}
+
+.pwa-modal-install-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(235, 0, 41, 0.45);
+}
+
+.pwa-modal-ios-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f1f5f9;
+  padding: 14px;
+  border-radius: 12px;
+}
+
+.pwa-step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pwa-step-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.pwa-step-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.pwa-step-icon {
+  color: #2563eb;
+  font-size: 20px !important;
+}
+
+.pwa-step-icon--green {
+  color: #10b981;
+}
+
+.pwa-modal-generic-steps {
+  font-size: 13px;
+  color: #334155;
+  background: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.pwa-generic-list {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
