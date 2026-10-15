@@ -89,14 +89,13 @@ const Input = forwardRef(({
   };
 
   const handleClick = (e) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
     const hasSelection =
       typeof window !== 'undefined' &&
       window.getSelection &&
       window.getSelection().toString().length > 0;
 
     // Toggle close (blur): If input was already focused when interaction started, clicking it again blurs/closes
-    if (wasFocusedRef.current && (isMobile || isSearch) && !hasSelection) {
+    if (wasFocusedRef.current && !hasSelection) {
       e.currentTarget.blur();
       wasFocusedRef.current = false;
       lastInteractionRef.current = 0;

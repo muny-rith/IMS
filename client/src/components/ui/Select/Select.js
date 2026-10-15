@@ -15,22 +15,14 @@ import './Select.css';
 /**
  * Enterprise Single Select Component
  *
- * Search input is embedded DIRECTLY inside the trigger box (matching MultiSelect pattern).
- * The popover menu directly displays the options list without duplicate search headers.
- *
- * Props:
- * - label: optional string
- * - placeholder: string (default: "Select...")
- * - options: Array<{ value, label } | { id, name } | string>
- * - value: string | number
- * - onChange: (e: { target: { name, value } }) => void
- * - onBlur: () => void
- * - error: string
- * - name: string
- * - disabled: boolean
- * - required: boolean
- * - isClearable: boolean
- * - className: string
+ * Implements the exact same responsive 3-step cycle as MultiSelect:
+ * - Desktop:
+ *   1st click: Opens menu & focuses search input immediately.
+ *   2nd click: Closes menu.
+ * - Mobile Phone (<= 768px):
+ *   1st click: Shows menu (scrollable options, no keyboard covering screen - mobileStep 1).
+ *   2nd click: Activates search mode & focuses virtual keyboard (mobileStep 2).
+ *   3rd click: Closes menu (mobileStep 0).
  */
 const Select = forwardRef(
   (
@@ -55,10 +47,31 @@ const Select = forwardRef(
     const [searchQuery, setSearchQuery] = useState('');
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
+    // Mobile 3-step state cycle:
+    // 0: Closed
+    // 1: Menu Open (scrollable options, no keyboard) - 1st click
+    // 2: Search Active (keyboard focused, live filter) - 2nd click
+    // -> 3rd click resets back to 0 (Closed)
+    const [mobileStep, setMobileStep] = useState(0);
+
     const containerRef = useRef(null);
     const triggerRef = useRef(null);
     const searchInputRef = useRef(null);
     const listRef = useRef(null);
+
+    // Responsive device detection
+    const [isMobile, setIsMobile] = useState(() => {
+      if (typeof window === 'undefined') return false;
+      return window.innerWidth <= 768;
+    });
+
+    useEffect(() => {
+      const handleResize = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Normalize options into consistent { value: string, label: string, original }
     const normalizedOptions = useMemo(() => {
@@ -121,13 +134,23 @@ const Select = forwardRef(
       );
     }, [normalizedOptions, searchQuery]);
 
-    // Close when clicking outside
+    // Close when clicking outside or pressing Escape
     useEffect(() => {
       const handleClickOutside = (e) => {
         if (containerRef.current && !containerRef.current.contains(e.target)) {
           setIsOpen(false);
+          setMobileStep(0);
           setSearchQuery('');
           if (onBlur) onBlur();
+        }
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setIsOpen(false);
+          setMobileStep(0);
+          setSearchQuery('');
+          triggerRef.current?.focus();
         }
       };
 
@@ -136,24 +159,31 @@ const Select = forwardRef(
         document.addEventListener('touchstart', handleClickOutside, {
           passive: true,
         });
+        document.addEventListener('keydown', handleKeyDown);
       }
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
         document.removeEventListener('touchstart', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
       };
     }, [isOpen, onBlur]);
 
-    // Auto-focus the search input inside trigger when opened
+    // Desktop: Auto-focus search input immediately on 1st click
+    // Mobile: Handled explicitly by mobileStep (focuses only on 2nd click)
     useEffect(() => {
       if (isOpen) {
-        const timer = setTimeout(() => {
-          searchInputRef.current?.focus();
-        }, 30);
-        return () => clearTimeout(timer);
+        if (!isMobile) {
+          setSearchQuery('');
+          const timer = setTimeout(() => {
+            searchInputRef.current?.focus();
+          }, 50);
+          return () => clearTimeout(timer);
+        }
       } else {
         setSearchQuery('');
+        setMobileStep(0);
       }
-    }, [isOpen]);
+    }, [isOpen, isMobile]);
 
     // Set highlighted index when opened
     useEffect(() => {
@@ -187,8 +217,9 @@ const Select = forwardRef(
           });
         }
         setIsOpen(false);
+        setMobileStep(0);
         setSearchQuery('');
-        triggerRef.current?.focus();
+        triggerRef.current?.blur();
       },
       [name, onChange]
     );
@@ -201,6 +232,15 @@ const Select = forwardRef(
       [handleSelect]
     );
 
+    // Trigger click handler with exact flow matching MultiSelect:
+    // On Phone (Mobile):
+    // 1st click: Shows menu (mobileStep 1, options scrollable, no keyboard)
+    // 2nd click: Type text / search (mobileStep 2, virtual keyboard focused)
+    // 3rd click: Closes menu (mobileStep 0, isOpen false)
+    //
+    // On Desktop:
+    // 1st click: Opens menu & focuses search immediately
+    // 2nd click: Closes menu
     const handleTriggerClick = (e) => {
       if (disabled) return;
       if (
@@ -210,13 +250,40 @@ const Select = forwardRef(
         return;
       }
 
-      if (isOpen) {
+      if (!isMobile) {
+        // Desktop: toggle
+        if (isOpen) {
+          setIsOpen(false);
+          setSearchQuery('');
+          triggerRef.current?.blur();
+          if (onBlur) onBlur();
+        } else {
+          setIsOpen(true);
+        }
+        return;
+      }
+
+      // Mobile Phone sequence:
+      // Click 1: Show menu (mobileStep 1)
+      // Click 2: Type text / search (mobileStep 2, focus keyboard)
+      // Click 3: Close menu (mobileStep 0, isOpen false)
+      if (!isOpen || mobileStep === 0) {
+        // 1st click: Show menu
+        setIsOpen(true);
+        setMobileStep(1);
+        setSearchQuery('');
+      } else if (mobileStep === 1) {
+        // 2nd click: Type text
+        setMobileStep(2);
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 50);
+      } else {
+        // 3rd click: Close menu!
         setIsOpen(false);
+        setMobileStep(0);
         setSearchQuery('');
         if (onBlur) onBlur();
-      } else {
-        setIsOpen(true);
-        setSearchQuery('');
       }
     };
 
@@ -225,11 +292,14 @@ const Select = forwardRef(
       if (disabled) return;
       if (isOpen) {
         setIsOpen(false);
+        setMobileStep(0);
         setSearchQuery('');
         if (onBlur) onBlur();
       } else {
         setIsOpen(true);
-        setSearchQuery('');
+        if (isMobile) {
+          setMobileStep(1);
+        }
       }
     };
 
@@ -267,11 +337,13 @@ const Select = forwardRef(
         case 'Escape':
           e.preventDefault();
           setIsOpen(false);
+          setMobileStep(0);
           setSearchQuery('');
           triggerRef.current?.focus();
           break;
         case 'Tab':
           setIsOpen(false);
+          setMobileStep(0);
           setSearchQuery('');
           break;
         default:
@@ -321,51 +393,115 @@ const Select = forwardRef(
           }`}
         >
           <div className="ui-select-trigger-content">
-            {!isOpen ? (
-              <span
-                className={`ui-select-value ${
-                  !selectedOption ? 'ui-select-placeholder' : ''
-                }`}
-              >
-                {selectedOption ? selectedOption.label : placeholder}
-              </span>
+            {!isMobile ? (
+              // ==================== DESKTOP VIEW ====================
+              !isOpen ? (
+                <span
+                  className={`ui-select-value ${
+                    !selectedOption ? 'ui-select-placeholder' : ''
+                  }`}
+                >
+                  {selectedOption ? selectedOption.label : placeholder}
+                </span>
+              ) : (
+                <div className="ui-select-search-view">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    className="ui-select-search-input"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={
+                      selectedOption
+                        ? selectedOption.label
+                        : placeholder &&
+                          placeholder !== 'Select...' &&
+                          placeholder !== 'None'
+                        ? `Search ${placeholder
+                            .toLowerCase()
+                            .replace(/^select\s+/, '')}...`
+                        : 'Search...'
+                    }
+                    autoComplete="off"
+                    onKeyDown={handleKeyDown}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className="ui-select-search-clear"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearchQuery('');
+                        searchInputRef.current?.focus();
+                      }}
+                      title="Clear search text"
+                    >
+                      <CloseIcon sx={{ fontSize: 13 }} />
+                    </button>
+                  )}
+                </div>
+              )
             ) : (
-              <div className="ui-select-search-view">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className="ui-select-search-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={
-                    selectedOption
-                      ? selectedOption.label
-                      : placeholder &&
-                        placeholder !== 'Select...' &&
-                        placeholder !== 'None'
-                      ? `Search ${placeholder
-                          .toLowerCase()
-                          .replace(/^select\s+/, '')}...`
-                      : 'Search...'
-                  }
-                  autoComplete="off"
-                  onKeyDown={handleKeyDown}
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="ui-select-search-clear"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSearchQuery('');
-                      searchInputRef.current?.focus();
+              // ==================== MOBILE PHONE VIEW ====================
+              // mobileStep 0 or 1: Show label/value (no keyboard covering screen)
+              // mobileStep 2: Show active search input (virtual keyboard focused)
+              mobileStep !== 2 ? (
+                <span
+                  className={`ui-select-value ${
+                    !selectedOption ? 'ui-select-placeholder' : ''
+                  }`}
+                >
+                  {selectedOption ? selectedOption.label : placeholder}
+                </span>
+              ) : (
+                <div className="ui-select-search-view ui-select-search-view--mobile">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    className="ui-select-search-input ui-select-search-input--mobile"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={
+                      selectedOption
+                        ? selectedOption.label
+                        : placeholder &&
+                          placeholder !== 'Select...' &&
+                          placeholder !== 'None'
+                        ? `Search ${placeholder
+                            .toLowerCase()
+                            .replace(/^select\s+/, '')}...`
+                        : 'Search...'
+                    }
+                    autoComplete="off"
+                    enterKeyHint="search"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                      if (e.key === 'Escape') {
+                        e.stopPropagation();
+                        setIsOpen(false);
+                        setMobileStep(0);
+                        setSearchQuery('');
+                      }
                     }}
-                    title="Clear search text"
-                  >
-                    <CloseIcon sx={{ fontSize: 13 }} />
-                  </button>
-                )}
-              </div>
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      className="ui-select-search-clear"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearchQuery('');
+                        searchInputRef.current?.focus();
+                      }}
+                      title="Clear search text"
+                    >
+                      <CloseIcon sx={{ fontSize: 13 }} />
+                    </button>
+                  )}
+                </div>
+              )
             )}
           </div>
 
