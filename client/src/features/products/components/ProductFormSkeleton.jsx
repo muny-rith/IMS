@@ -1,21 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloseIcon from '@mui/icons-material/Close';
-import SaveIcon from '@mui/icons-material/Save';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
-
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import ImageDropzone from '../../../components/ui/ImageDropzone/ImageDropzone';
 import Input from '../../../components/ui/Input/Input';
 import Select from '../../../components/ui/Select/Select';
-import Button from '../../../components/ui/Button/Button';
 import '../pages/ProductFormPage.css';
 
-export const ProductFormSkeleton = ({ isEdit = false }) => {
-  const navigate = useNavigate();
-
+export const ProductFormSkeleton = () => {
   return (
     <div
       className="product-form-page product-form-page--skeleton"
@@ -25,54 +15,31 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
       {/* ── 1. Top Header & Breadcrumbs ── */}
       <div className="product-form-header">
         <div className="product-form-header__left">
-          <button
-            type="button"
-            className="product-form-back-btn"
-            onClick={() => navigate('/products')}
-            title="Back to products"
-          >
-            <ArrowBackIcon fontSize="small" />
-          </button>
+          <Skeleton
+            variant="rounded"
+            width={36}
+            height={36}
+            style={{ borderRadius: '9px', flexShrink: 0 }}
+          />
 
           <div className="product-form-header__info">
-            <div className="product-form-breadcrumbs">
-              <span className="clickable" onClick={() => navigate('/products')}>
-                Products
-              </span>
-              <span>/</span>
-              <Skeleton variant="text" width={110} height={14} style={{ display: 'inline-block' }} />
-              <span>/</span>
-              <span className="product-form-breadcrumbs__current">
-                {isEdit ? 'Edit Product' : 'Add Product'}
-              </span>
+            <div className="product-form-breadcrumbs" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Skeleton variant="text" width={55} height={14} />
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <Skeleton variant="text" width={110} height={14} />
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <Skeleton variant="text" width={80} height={14} />
             </div>
 
-            <h1 className="product-form-header__title" style={{ marginTop: 2 }}>
-              <Skeleton variant="text" width={240} height={28} />
-            </h1>
+            <div style={{ marginTop: 4 }}>
+              <Skeleton variant="text" width={220} height={28} />
+            </div>
           </div>
         </div>
 
         <div className="product-form-header__actions">
-          <Button
-            type="button"
-            variant="outline"
-            icon={<CloseIcon sx={{ fontSize: 16 }} />}
-            onClick={() => navigate('/products')}
-            disabled
-          >
-            Cancel
-          </Button>
-
-          <Button
-            type="button"
-            variant="primary"
-            icon={<SaveIcon sx={{ fontSize: 17 }} />}
-            loading
-            disabled
-          >
-            Save Changes
-          </Button>
+          <Skeleton variant="rounded" width={88} height={36} style={{ borderRadius: '9px' }} />
+          <Skeleton variant="rounded" width={130} height={36} style={{ borderRadius: '9px' }} />
         </div>
       </div>
 
@@ -81,51 +48,37 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
         {/* ── LEFT COLUMN: Core Registry ── */}
         <div className="product-form-left-col">
           <div className="product-form-card">
-            <h3 className="product-form-card__title">
-              <span>General Information</span>
-            </h3>
+            <div style={{ marginBottom: 16 }}>
+              <Skeleton variant="text" width={140} height={20} />
+            </div>
 
             {/* Product Image Dropzone */}
             <div className="product-form-group">
-              <label className="product-form-label">
-                <span>Product Image</span>
-              </label>
+              <Skeleton variant="text" width={90} height={14} style={{ marginBottom: 8 }} />
               <ImageDropzone.Skeleton />
             </div>
 
             {/* Product Name */}
             <div className="product-form-group">
-              <label className="product-form-label">
-                <span>Product Name</span>
-                <span className="req">*</span>
-              </label>
+              <Skeleton variant="text" width={100} height={14} style={{ marginBottom: 8 }} />
               <Input.Skeleton fullWidth />
             </div>
 
             {/* Category */}
             <div className="product-form-group">
-              <label className="product-form-label">
-                <span>Category</span>
-                <span className="req">*</span>
-              </label>
+              <Skeleton variant="text" width={70} height={14} style={{ marginBottom: 8 }} />
               <Select.Skeleton fullWidth />
             </div>
 
             {/* Brand */}
             <div className="product-form-group">
-              <label className="product-form-label">
-                <span>Brand</span>
-                <span style={{ fontSize: '11px', color: '#94a3b8' }}>(Optional)</span>
-              </label>
+              <Skeleton variant="text" width={85} height={14} style={{ marginBottom: 8 }} />
               <Select.Skeleton fullWidth />
             </div>
 
             {/* Department */}
             <div className="product-form-group">
-              <label className="product-form-label">
-                <span>Department</span>
-                <span className="req">*</span>
-              </label>
+              <Skeleton variant="text" width={80} height={14} style={{ marginBottom: 8 }} />
               <Input.Skeleton fullWidth />
             </div>
           </div>
@@ -137,29 +90,25 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
             {/* Header */}
             <div className="product-matrix-header">
               <div className="product-matrix-header__left">
-                <h3 className="product-matrix-title">
-                  <span>Variants Studio</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Skeleton variant="text" width={130} height={20} />
                   <Skeleton
                     variant="rounded"
-                    width={68}
+                    width={64}
                     height={20}
                     style={{ borderRadius: '999px' }}
                   />
-                </h3>
-                <p className="product-matrix-subtitle">
-                  Manage SKU codes, pricing, inventory stock, photography, and attributes in a focused workbench.
-                </p>
+                </div>
+                <Skeleton variant="text" width={380} height={14} style={{ marginTop: 6 }} />
               </div>
             </div>
 
             {/* Dynamic Custom Attributes Banner */}
             <div className="product-matrix-attrs-box">
-              <span className="product-matrix-attrs-box__label">
-                ADD CUSTOM ATTRIBUTES
-              </span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
-                <Skeleton variant="rounded" width={80} height={32} style={{ borderRadius: '6px' }} />
-                <Skeleton variant="rounded" width={90} height={32} style={{ borderRadius: '6px' }} />
+              <Skeleton variant="text" width={150} height={12} style={{ marginBottom: 6 }} />
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <Skeleton variant="rounded" width={75} height={30} style={{ borderRadius: '6px' }} />
+                <Skeleton variant="rounded" width={85} height={30} style={{ borderRadius: '6px' }} />
               </div>
             </div>
 
@@ -169,14 +118,14 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
                 {/* Left Sidebar: Variant List */}
                 <div className="product-workbench-sidebar">
                   <div className="product-workbench-sidebar__header">
-                    <span className="product-workbench-sidebar__title">
-                      <span>Variants List</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Skeleton variant="text" width={80} height={15} />
                       <Skeleton variant="rounded" width={22} height={18} style={{ borderRadius: '999px' }} />
-                    </span>
+                    </div>
                     <Skeleton
                       variant="rounded"
-                      width={58}
-                      height={28}
+                      width={52}
+                      height={26}
                       style={{ borderRadius: '6px' }}
                     />
                   </div>
@@ -187,7 +136,7 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
                         key={i}
                         className={`product-workbench-item ${i === 1 ? 'product-workbench-item--active' : ''}`}
                       >
-                        <span className="product-workbench-item__num">#{i}</span>
+                        <Skeleton variant="text" width={16} height={14} />
 
                         <div className="product-workbench-item__thumb">
                           <Skeleton
@@ -199,14 +148,12 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
                         </div>
 
                         <div className="product-workbench-item__info">
-                          <Skeleton variant="text" width={70} height={14} />
-                          <Skeleton variant="text" width={90} height={12} style={{ marginTop: 2 }} />
+                          <Skeleton variant="text" width="65%" height={14} />
+                          <Skeleton variant="text" width="45%" height={12} style={{ marginTop: 4 }} />
                         </div>
 
                         <div className="product-workbench-item__meta">
-                          <span style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8' }}>
-                            $0.00
-                          </span>
+                          <Skeleton variant="text" width={38} height={14} />
                         </div>
                       </div>
                     ))}
@@ -217,28 +164,12 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
                 <div className="product-workbench-inspector">
                   <div className="product-workbench-inspector__header">
                     <div className="product-workbench-inspector__title-box">
-                      <span className="product-workbench-inspector__badge">
-                        Variant #1 of 5
-                      </span>
+                      <Skeleton variant="rounded" width={110} height={24} style={{ borderRadius: '999px' }} />
                     </div>
 
                     <div className="product-workbench-inspector__actions">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        icon={<NavigateBeforeIcon sx={{ fontSize: 18 }} />}
-                        disabled
-                      >
-                        Prev
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        endIcon={<NavigateNextIcon sx={{ fontSize: 18 }} />}
-                        disabled
-                      >
-                        Next
-                      </Button>
+                      <Skeleton variant="rounded" width={56} height={28} style={{ borderRadius: '6px' }} />
+                      <Skeleton variant="rounded" width={56} height={28} style={{ borderRadius: '6px' }} />
                     </div>
                   </div>
 
@@ -246,24 +177,18 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
                   <div className="product-workbench-inspector__body">
                     <div className="product-workbench-hero-grid">
                       <div className="workbench-photo-card">
-                        <label className="product-form-label" style={{ marginBottom: 6 }}>
-                          <span>Variant Photo</span>
-                        </label>
+                        <Skeleton variant="text" width={85} height={14} style={{ marginBottom: 6 }} />
                         <ImageDropzone.Skeleton size="compact" />
                       </div>
 
                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
                         <div className="product-form-group">
-                          <label className="product-form-label">
-                            <span>SKU Code</span>
-                          </label>
+                          <Skeleton variant="text" width={65} height={14} style={{ marginBottom: 6 }} />
                           <Input.Skeleton fullWidth />
                         </div>
 
                         <div className="product-form-group">
-                          <label className="product-form-label">
-                            <span>Unit Price ($)</span>
-                          </label>
+                          <Skeleton variant="text" width={85} height={14} style={{ marginBottom: 6 }} />
                           <Input.Skeleton fullWidth />
                         </div>
                       </div>
@@ -271,24 +196,18 @@ export const ProductFormSkeleton = ({ isEdit = false }) => {
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                       <div className="product-form-group">
-                        <label className="product-form-label">
-                          <span>Attribute 1</span>
-                        </label>
+                        <Skeleton variant="text" width={65} height={14} style={{ marginBottom: 6 }} />
                         <Select.Skeleton fullWidth />
                       </div>
 
                       <div className="product-form-group">
-                        <label className="product-form-label">
-                          <span>Attribute 2</span>
-                        </label>
+                        <Skeleton variant="text" width={65} height={14} style={{ marginBottom: 6 }} />
                         <Select.Skeleton fullWidth />
                       </div>
                     </div>
 
                     <div className="product-form-group">
-                      <label className="product-form-label">
-                        <span>Specific Detail</span>
-                      </label>
+                      <Skeleton variant="text" width={95} height={14} style={{ marginBottom: 6 }} />
                       <Input.Skeleton fullWidth />
                     </div>
                   </div>
