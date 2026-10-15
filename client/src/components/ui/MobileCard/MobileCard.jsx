@@ -7,9 +7,10 @@ const MobileCard = ({
     rightContent,
     meta = [],
     actions = [],
+    actionsPlacement = 'bottom',
 }) => {
     return (
-        <article className="mobile-card">
+        <article className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''}`}>
             <div className="mobile-card__top">
 
                 {avatar && (
@@ -23,11 +24,26 @@ const MobileCard = ({
                     {subtitle && <span>{subtitle}</span>}
                 </div>
 
-
-
                 {rightContent && (
                     <div className="mobile-card__right">
                         {rightContent}
+                    </div>
+                )}
+
+                {actionsPlacement === 'top-right' && actions.length > 0 && (
+                    <div className="mobile-card__top-actions">
+                        {actions.map((action) => (
+                            <button
+                                key={action.label}
+                                type="button"
+                                onClick={action.onClick}
+                                className={`mobile-card__icon-btn ${action.className || ''}`}
+                                title={action.label}
+                                aria-label={action.label}
+                            >
+                                {action.icon}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
@@ -45,7 +61,7 @@ const MobileCard = ({
                 </div>
             )}
 
-            {actions.length > 0 && (
+            {actionsPlacement !== 'top-right' && actions.length > 0 && (
                 <div className="mobile-card__actions">
                     {actions.map((action) => (
                         <button

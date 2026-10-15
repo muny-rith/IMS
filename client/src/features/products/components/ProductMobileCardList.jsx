@@ -7,11 +7,6 @@ import MobileCard from '../../../components/ui/MobileCard/MobileCard';
 
 import './ProductMobileCardList.css'
 
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-});
-
 const getInitial = (name) => name?.[0]?.toUpperCase() ?? '?';
 
 const getQtyLabel = (qty) => {
@@ -33,6 +28,7 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                 const qty = Number(row.qty ?? 0);
                 return (
                     <MobileCard
+                        key={row.id}
                         avatar={
                             <div
                                 onClick={() => onView?.(row)}
@@ -56,19 +52,15 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                             </span>
                         }
                         subtitle={row.code ? `SKU ${row.code}` : 'No code'}
-                        rightContent={
-                            row.price != null && row.price !== ''
-                                ? currencyFormatter.format(Number(row.price))
-                                : '—'
-                        }
+                        actionsPlacement="top-right"
                         meta={[
                             {
                                 label: 'Category',
                                 value: row.category || '—',
                             },
                             {
-                                label: 'Department',
-                                value: row.department || 'N/A',
+                                label: 'Brand',
+                                value: row.brand || '—',
                             },
                             {
                                 label: 'Qty',
@@ -82,16 +74,22 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                             },
                         ]}
                         actions={[
-                            {
-                                label: 'View',
-                                icon: <VisibilityIcon fontSize="small" />,
-                                onClick: () => onView(row),
-                            },
-                            {
-                                label: 'Edit',
-                                icon: <EditIcon fontSize="small" />,
-                                onClick: () => onEdit(row),
-                            },
+                            ...(onView
+                                ? [{
+                                    label: 'View',
+                                    icon: <VisibilityIcon fontSize="small" />,
+                                    onClick: () => onView(row),
+                                    className: 'mobile-card__action--view',
+                                }]
+                                : []),
+                            ...(onEdit
+                                ? [{
+                                    label: 'Edit',
+                                    icon: <EditIcon fontSize="small" />,
+                                    onClick: () => onEdit(row),
+                                    className: 'mobile-card__action--edit',
+                                }]
+                                : []),
                             ...(onDelete
                                 ? [{
                                     label: 'Delete',
@@ -102,11 +100,9 @@ const ProductMobileCardList = ({ rows = [], onView, onEdit, onDelete }) => {
                                 : []),
                         ]}
                     />
-                )
+                );
             })}
         </div>
-
-
     );
 };
 

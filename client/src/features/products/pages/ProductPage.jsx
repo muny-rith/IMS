@@ -24,6 +24,7 @@ import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 
 import Button from '../../../components/ui/Button/Button';
@@ -515,12 +516,38 @@ const ProductPage = () => {
       <section className="product-panel">
         <div className="product-panel__toolbar">
           <div className="product-panel__search">
-            <Input
-              leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, category, brand..."
-            />
+            <form
+              action=""
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.currentTarget.querySelector('input')?.blur();
+              }}
+              style={{ width: '100%', margin: 0 }}
+            >
+              <Input
+                type="search"
+                enterKeyHint="search"
+                leftIcon={<SearchIcon sx={{ fontSize: 19, color: '#94a3b8' }} />}
+                rightIcon={
+                  search ? (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearch('');
+                      }}
+                      sx={{ padding: '2px', color: '#94a3b8' }}
+                      aria-label="Clear search"
+                    >
+                      <CloseIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  ) : null
+                }
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, category, brand..."
+              />
+            </form>
           </div>
 
           <div className="product-panel__filters">
@@ -561,7 +588,19 @@ const ProductPage = () => {
                   onRowSelectionModelChange={setSelectedRowIds}
                 />
               </div>
-              <div className="product-mobile-cards">
+              <div
+                className="product-mobile-cards"
+                onTouchStart={() => {
+                  if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                    document.activeElement.blur();
+                  }
+                }}
+                onTouchMove={() => {
+                  if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                    document.activeElement.blur();
+                  }
+                }}
+              >
                 <ProductMobileCardList
                   rows={filteredRows}
                   onView={openViewModal}

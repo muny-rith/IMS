@@ -11,6 +11,8 @@ const Input = ({
   leftIcon,
   rightIcon,
   isPasswordToggle = false,
+  enterKeyHint,
+  onKeyDown,
   ...props
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,6 +36,24 @@ const Input = ({
 
   const resolvedLeftIcon = renderLeftIcon();
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      // Dismiss mobile software keyboard on "->" (Enter / Search / Go)
+      e.currentTarget.blur();
+    }
+    if (onKeyDown) {
+      onKeyDown(e);
+    }
+  };
+
+  const isSearch =
+    type === 'search' ||
+    (typeof props.placeholder === 'string' &&
+      props.placeholder.toLowerCase().includes('search'));
+
+  const resolvedEnterKeyHint =
+    enterKeyHint || (isSearch ? 'search' : 'done');
+
   return (
     <div className="form-group">
       <div className={`input-wrapper ${error ? "error" : ""}`}>
@@ -46,6 +66,8 @@ const Input = ({
           className="input"
           value={value}
           onChange={onChange}
+          onKeyDown={handleKeyDown}
+          enterKeyHint={resolvedEnterKeyHint}
           placeholder=" "
           {...props}
         />
@@ -61,7 +83,7 @@ const Input = ({
             {showPassword ? "🙈" : "👁"}
           </span>
         ) : (
-          rightIcon && <span className="icon right">{rightIcon}</span>
+          rightIcon && <span className="icon right clickable">{rightIcon}</span>
         )}
       </div>
 

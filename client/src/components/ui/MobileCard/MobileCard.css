@@ -74,6 +74,86 @@
     white-space: nowrap;
 }
 
+.mobile-card__top-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.mobile-card__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.mobile-card__icon-btn svg {
+    font-size: 18px;
+}
+
+.mobile-card__icon-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(15, 23, 42, 0.08);
+}
+
+.mobile-card__icon-btn:active {
+    transform: scale(0.93);
+}
+
+.mobile-card__icon-btn:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+}
+
+.mobile-card__icon-btn.mobile-card__action--view {
+    color: #2563eb;
+    border-color: #dbeafe;
+    background: #f8faff;
+}
+
+.mobile-card__icon-btn.mobile-card__action--view:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.mobile-card__icon-btn.mobile-card__action--edit {
+    color: #ea580c;
+    border-color: #ffedd5;
+    background: #fffbf7;
+}
+
+.mobile-card__icon-btn.mobile-card__action--edit:hover {
+    background: #fff7ed;
+    border-color: #fdba74;
+    color: #c2410c;
+}
+
+.mobile-card__icon-btn.mobile-card__action--danger {
+    color: #dc2626;
+    border-color: #fee2e2;
+    background: #fffbfb;
+}
+
+.mobile-card__icon-btn.mobile-card__action--danger:hover {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
 .mobile-card__meta {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -213,6 +293,7 @@
 
     .mobile-card__top {
         grid-template-columns: 44px minmax(0, 1fr) auto;
+        gap: 10px;
     }
 
     .mobile-card__avatar {
@@ -221,6 +302,20 @@
         border-radius: 14px;
     }
 
+    .mobile-card__top-actions {
+        gap: 4px;
+    }
+
+    .mobile-card__icon-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        border-radius: 9px;
+    }
+
+    .mobile-card__icon-btn svg {
+        font-size: 16px;
+    }
 
     .mobile-card__price {
         grid-column: 2;
@@ -228,9 +323,21 @@
         margin-top: -4px;
     }
 
-
     .mobile-card__meta {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .mobile-card__meta-item {
+        padding: 5px 6px;
+    }
+
+    .mobile-card__meta-item span {
+        font-size: 9px;
+    }
+
+    .mobile-card__meta-item strong {
+        font-size: 11px;
     }
 
     .mobile-card__actions button {
