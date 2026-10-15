@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import SaveIcon from '@mui/icons-material/Save';
@@ -12,7 +11,9 @@ import { useProducts } from '../hooks/useProducts';
 import ProductBasicInfoForm from '../components/ProductBasicInfoForm';
 import ProductAttributesSelector from '../components/ProductAttributesSelector';
 import ProductVariantsStudio from '../components/ProductVariantsStudio';
+import ProductFormSkeleton from '../components/ProductFormSkeleton';
 import './ProductFormPage.css';
+
 
 const RULES = {
   name: { required: 'Name is required' },
@@ -357,12 +358,9 @@ const ProductFormPage = () => {
   };
 
   if (loadingDetails) {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
-    );
+    return <ProductFormSkeleton isEdit={isEdit} />;
   }
+
 
   return (
     <div className="product-form-page">

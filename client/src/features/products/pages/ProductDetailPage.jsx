@@ -19,9 +19,11 @@ import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../../auth/hooks/useAuth';
+import ProductDetailSkeleton from '../components/ProductDetailSkeleton';
 import './product.css';
 import '../../../components/ui/Form.css';
 import './ProductDetailPage.css';
+
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -208,14 +210,9 @@ const ProductDetailPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="product-detail-page">
-        <div className="product-detail-skeleton-header" />
-        <div className="product-detail-skeleton-ribbon" />
-        <div className="product-detail-skeleton-body" />
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
+
 
   if (error || !product) {
     return (
