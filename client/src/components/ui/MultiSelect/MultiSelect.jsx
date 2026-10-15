@@ -213,13 +213,6 @@ const MultiSelect = ({
     }
 
     onChange(nextValues);
-
-    // Keep search input focused on mobile so keyboard stays open and user can continue typing
-    if (isMobile && mobileStep === 2) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 10);
-    }
   };
 
   const handleClearAll = (e) => {
@@ -409,6 +402,7 @@ const MultiSelect = ({
                       e.stopPropagation();
                       isKeyboardDismissingRef.current = true;
                       e.currentTarget.blur();
+                      setMobileStep(1);
                       setTimeout(() => {
                         isKeyboardDismissingRef.current = false;
                       }, 400);

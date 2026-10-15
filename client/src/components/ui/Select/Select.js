@@ -499,6 +499,7 @@ const Select = forwardRef(
                         e.stopPropagation();
                         isKeyboardDismissingRef.current = true;
                         e.currentTarget.blur();
+                        setMobileStep(1);
                         setTimeout(() => {
                           isKeyboardDismissingRef.current = false;
                         }, 400);
