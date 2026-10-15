@@ -19,8 +19,22 @@ import {
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [session, setSession] = useState(() => {
+    try {
+      const localUserStr = localStorage.getItem("moon-ims-user");
+      const localToken = localStorage.getItem("moon-ims-token");
+      if (localUserStr) {
+        return { access_token: localToken, user: JSON.parse(localUserStr) };
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(() => {
+    const localUserStr = localStorage.getItem("moon-ims-user");
+    return !localUserStr;
+  });
 
   const signOut = useCallback(async () => {
     await signOutUser();
@@ -40,7 +54,11 @@ export const AuthProvider = ({ children }) => {
       try {
         const currentSession = await getCurrentSession();
         if (!active) return;
-        setSession(currentSession);
+        if (currentSession) {
+          setSession(currentSession);
+        } else {
+          setSession(null);
+        }
       } catch (err) {
         if (!active) return;
         setSession(null);
