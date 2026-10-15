@@ -385,6 +385,8 @@ const MultiSelect = ({
                   enterKeyHint="search"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
                       e.currentTarget.blur();
                     }
                     if (e.key === 'Escape') {

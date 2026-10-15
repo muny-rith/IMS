@@ -1,32 +1,82 @@
-/* DataTable Modern Clean Styling (MoonPulse Aesthetic) */
+/* DataTable Modern Clean Styling (MoonPulse Specification & Aesthetics) */
 
-/* 1. Column Headers */
+/* 0. Main Table Card Container */
+.MuiDataGrid-root {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 14px !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  overflow: hidden !important;
+  font-family: inherit !important;
+}
+
+/* 1. Column Headers (MoonPulse: 11px uppercase, 700 weight, #64748b, #f8fafc background, 20px padding) */
 .MuiDataGrid-root .MuiDataGrid-columnHeaders {
-  background-color: #fafbfd !important;
-  border-bottom: 1px solid #f1f5f9 !important;
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  line-height: 46px !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-columnHeader {
+  padding: 0 20px !important;
 }
 
 .MuiDataGrid-root .MuiDataGrid-columnHeaderTitle {
-  font-size: 13px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  color: #475569 !important;
-  letter-spacing: 0.3px;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
 }
 
-/* 2. Rows and Cells — Spacious & Legible */
+.MuiDataGrid-root .MuiDataGrid-iconButtonContainer {
+  margin-left: 4px !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-sortIcon {
+  color: #94a3b8 !important;
+  font-size: 16px !important;
+}
+
+/* 2. Rows and Cells — Spacious & Breathable (MoonPulse: 20px horizontal padding, crisp dividers) */
 .MuiDataGrid-root .MuiDataGrid-row {
   border-bottom: 1px solid #f1f5f9 !important;
   transition: background-color 0.15s ease;
+}
+
+/* MoonPulse Alternating Row Tint (Zebra striping) */
+.MuiDataGrid-root .MuiDataGrid-row:nth-of-type(even) {
+  background-color: #fafafa !important;
+}
+
+.MuiDataGrid-root .MuiDataGrid-row:nth-of-type(odd) {
+  background-color: #ffffff !important;
 }
 
 .MuiDataGrid-root .MuiDataGrid-cell {
   cursor: default !important;
   user-select: none;
   font-size: 14px !important;
-  color: #1e293b;
+  color: #0f172a !important;
   display: flex !important;
   align-items: center !important;
-  padding: 0 16px !important;
+  padding: 0 20px !important;
+}
+
+/* Checkbox column spacing */
+.MuiDataGrid-root .MuiDataGrid-cellCheckbox,
+.MuiDataGrid-root .MuiDataGrid-columnHeaderCheckbox {
+  padding: 0 0 0 16px !important;
+  width: 50px !important;
+  max-width: 50px !important;
+}
+
+/* Avatar / Compact cell padding */
+.MuiDataGrid-root .MuiDataGrid-cell[data-field="avatar"],
+.MuiDataGrid-root .MuiDataGrid-columnHeader[data-field="avatar"] {
+  padding: 0 8px !important;
 }
 
 .MuiDataGrid-root .MuiDataGrid-cell:focus,
@@ -53,15 +103,15 @@
 
 /* 4. Subtle, smooth row hover */
 .MuiDataGrid-root .MuiDataGrid-row:hover {
-  background-color: #f8fafc !important;
-}
-
-.MuiDataGrid-root .MuiDataGrid-row.Mui-selected {
   background-color: #f1f5f9 !important;
 }
 
+.MuiDataGrid-root .MuiDataGrid-row.Mui-selected {
+  background-color: #eff6ff !important;
+}
+
 .MuiDataGrid-root .MuiDataGrid-row.Mui-selected:hover {
-  background-color: #e2e8f0 !important;
+  background-color: #dbeafe !important;
 }
 
 /* 5. Checkbox Styling */
@@ -79,7 +129,7 @@
   border-top: 1px solid #f1f5f9 !important;
   background-color: #ffffff !important;
   min-height: 52px !important;
-  padding: 0 16px !important;
+  padding: 0 20px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;

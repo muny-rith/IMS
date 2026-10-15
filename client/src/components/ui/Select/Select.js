@@ -330,7 +330,7 @@ const Select = forwardRef(
           break;
         case 'Enter':
           e.preventDefault();
-          if (filteredOptions[highlightedIndex]) {
+          if (!isMobile && filteredOptions[highlightedIndex]) {
             handleSelect(filteredOptions[highlightedIndex].value);
           }
           break;
@@ -476,6 +476,8 @@ const Select = forwardRef(
                     enterKeyHint="search"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
                         e.currentTarget.blur();
                       }
                       if (e.key === 'Escape') {
