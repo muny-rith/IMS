@@ -180,7 +180,7 @@
   display: flex;
   flex-direction: row;
   gap: 18px;
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -228,10 +228,14 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  height: fit-content;
   min-width: 0;
   box-sizing: border-box;
+}
+
+.product-form-left-col>.product-form-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Right Column: Interactive Matrix Studio ── */
@@ -240,130 +244,25 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
   box-sizing: border-box;
 }
 
-/* Image Dropzone */
-.product-image-dropzone {
-  position: relative;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  background: #f8fafc;
-  padding: 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  overflow: hidden;
+.product-form-right-col>.product-form-card--studio {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 180px;
+}
+
+.product-form-left-col .image-dropzone {
   width: 100%;
-  box-sizing: border-box;
+  aspect-ratio: auto;
+  height: 250px;
 }
 
-.product-image-dropzone:hover {
-  border-color: var(--primary-color, #eb0029);
-  background: #fffafa;
-}
-
-.product-image-dropzone__empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.product-image-dropzone__icon {
-  color: #94a3b8;
-  font-size: 38px;
-}
-
-.product-image-dropzone:hover .product-image-dropzone__icon {
-  color: var(--primary-color, #eb0029);
-  transform: translateY(-2px);
-  transition: all 0.2s ease;
-}
-
-.product-image-dropzone__text {
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-  margin: 0;
-}
-
-.product-image-dropzone__subtext {
-  font-size: 11px;
-  color: #94a3b8;
-  margin: 0;
-}
-
-/* Preview Active */
-.product-image-dropzone__preview {
-  position: relative;
-  width: 100%;
-  max-width: 240px;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.product-image-dropzone__img {
-  max-width: 100%;
-  max-height: 100%;
+.product-form-left-col .image-dropzone__img {
   object-fit: contain;
-  border-radius: 8px;
-  display: block;
-  margin: 0 auto;
-}
-
-.product-image-dropzone__overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  border-radius: 8px;
-}
-
-.product-image-dropzone:hover .product-image-dropzone__overlay {
-  opacity: 1;
-}
-
-.product-image-action-btn {
-  background: #ffffff;
-  color: #0f172a;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 12px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  transition: all 0.15s ease;
-}
-
-.product-image-action-btn:hover {
-  background: #f1f5f9;
-}
-
-.product-image-action-btn--delete {
-  background: #fee2e2;
-  color: #dc2626;
-}
-
-.product-image-action-btn--delete:hover {
-  background: #fca5a5;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
 /* Form Fields */
@@ -805,8 +704,9 @@
   box-sizing: border-box;
 }
 
+/* ── Variant Photo (Inspector Dropzone) ── */
 .workbench-photo-card {
-  width: 126px;
+  width: 140px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -820,63 +720,24 @@
   color: #334155;
 }
 
-.workbench-photo-dropzone {
-  position: relative;
-  width: 126px;
-  height: 126px;
-  border-radius: 12px;
-  border: 2px dashed #cbd5e1;
-  background: #f8fafc;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-}
-
-.workbench-photo-dropzone:hover {
-  border-color: var(--primary-color, #eb0029);
-  background: #fff5f5;
-}
-
-.workbench-photo-dropzone img {
+.workbench-photo-card .image-dropzone {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  aspect-ratio: 1 / 1;
 }
 
-.workbench-photo-placeholder {
-  display: flex;
+/* រៀបចំប៊ូតុង Change / Remove ក្នុងប្រអប់តូច ឱ្យតម្រៀបជាជួរឈរ (កុំឱ្យធ្លាយចេញក្រៅ) */
+.workbench-photo-card .image-dropzone__overlay {
   flex-direction: column;
-  align-items: center;
   gap: 6px;
-  color: #94a3b8;
-  font-size: 11px;
-  text-align: center;
   padding: 8px;
 }
 
-.workbench-photo-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.65);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.workbench-photo-card .image-dropzone__action-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  width: auto;
+  min-width: 82px;
   justify-content: center;
-  gap: 4px;
-  color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 600;
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-
-.workbench-photo-dropzone:hover .workbench-photo-overlay {
-  opacity: 1;
 }
 
 .product-form-field {
@@ -891,7 +752,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 14px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -1009,28 +870,7 @@
 
   .product-form-left-col {
     width: 100%;
-    flex-direction: row;
     gap: 16px;
-    align-items: stretch;
-  }
-
-  .product-form-left-col>.product-form-card:first-child {
-    width: 220px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .product-form-left-col>.product-form-card:last-child {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .product-image-dropzone {
-    flex: 1;
-    min-height: 180px;
   }
 
   .product-form-right-col {
@@ -1209,7 +1049,7 @@
   /* Photo on the left, SKU + Unit Price stacked on the right */
   .product-workbench-hero-grid {
     display: grid;
-    grid-template-columns: 126px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 12px;
     align-items: start;
   }

@@ -56,9 +56,8 @@ const ImageDropzone = ({
 
   return (
     <div
-      className={`image-dropzone ${size === 'compact' ? 'image-dropzone--compact' : ''} ${
-        isDragOver ? 'image-dropzone--drag-over' : ''
-      } ${className}`.trim()}
+      className={`image-dropzone ${size === 'compact' ? 'image-dropzone--compact' : ''} ${isDragOver ? 'image-dropzone--drag-over' : ''
+        } ${className}`.trim()}
       onClick={handleClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

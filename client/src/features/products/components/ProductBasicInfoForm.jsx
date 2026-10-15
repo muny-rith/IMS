@@ -17,26 +17,25 @@ const ProductBasicInfoForm = ({
 }) => {
   return (
     <div className="product-form-left-col">
-      {/* Card: Media Dropzone */}
-      <div className="product-form-card">
-        <h3 className="product-form-card__title">
-          <span>Product Image</span>
-        </h3>
-
-        <ImageDropzone
-          imagePreview={imagePreview}
-          onFileSelect={onImageSelect}
-          onRemove={onImageRemove}
-          emptyTitle="Click to browse or drop photo"
-          emptySubtitle="PNG, JPG, or WebP"
-        />
-      </div>
-
-      {/* Card: Core Information */}
+      {/* Unified Card: Core Information & Media */}
       <div className="product-form-card">
         <h3 className="product-form-card__title">
           <span>General Information</span>
         </h3>
+
+        {/* Product Image Dropzone */}
+        <div className="product-form-group">
+          <label className="product-form-label">
+            <span>Product Image</span>
+          </label>
+          <ImageDropzone
+            imagePreview={imagePreview}
+            onFileSelect={onImageSelect}
+            onRemove={onImageRemove}
+            emptyTitle="Click to browse or drop photo"
+            emptySubtitle="PNG, JPG, or WebP"
+          />
+        </div>
 
         {/* Product Name */}
         <div className="product-form-group">

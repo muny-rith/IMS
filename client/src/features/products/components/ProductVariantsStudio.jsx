@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Autocomplete, TextField, Tooltip } from '@mui/material';
+import { Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
@@ -8,6 +8,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
+import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
 import ImageDropzone from '../../../components/ui/ImageDropzone/ImageDropzone';
 
 const ProductVariantsStudio = ({
@@ -265,55 +266,31 @@ const ProductVariantsStudio = ({
                             className="product-form-field workbench-attr-item"
                           >
                             <span className="workbench-attr-label">{attr.attribute_name}</span>
-                            <Autocomplete
-                              multiple
-                              freeSolo
-                              size="small"
+                            <MultiSelect
+                              placeholder={`Select ${attr.attribute_name}...`}
                               options={(attributeValuesMap[attr.attribute_id] || []).map(
-                                (val) => val.value
+                                (val) => ({
+                                  value: val.value,
+                                  label: val.value,
+                                })
                               )}
-                              value={
+                              selectedValues={
                                 Array.isArray(selectedVariant.attributes[attr.attribute_id])
                                   ? selectedVariant.attributes[attr.attribute_id]
                                   : selectedVariant.attributes[attr.attribute_id]
                                     ? [selectedVariant.attributes[attr.attribute_id]]
                                     : []
                               }
-                              onChange={(event, newValue) =>
+                              onChange={(newValues) =>
                                 onVariantAttrChange(
                                   selectedVariant.id,
                                   attr.attribute_id,
-                                  newValue
+                                  newValues
                                 )
                               }
-                              renderInput={(params) => (
-                                <TextField
-                                  {...params}
-                                  placeholder={`Add ${attr.attribute_name}...`}
-                                  size="small"
-                                  sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                      fontSize: '13px',
-                                      padding: '3px 8px',
-                                      bgcolor: '#fff',
-                                      borderRadius: '8px',
-                                      '& fieldset': { borderColor: '#cbd5e1' },
-                                      '&:hover fieldset': { borderColor: '#94a3b8' },
-                                      '&.Mui-focused fieldset': {
-                                        borderColor: 'var(--primary-color, #eb0029)',
-                                        borderWidth: '1px',
-                                      },
-                                      '& .MuiChip-root': {
-                                        height: '24px',
-                                        fontSize: '11.5px',
-                                        fontWeight: 600,
-                                        bgcolor: '#f1f5f9',
-                                        color: '#334155',
-                                      },
-                                    },
-                                  }}
-                                />
-                              )}
+                              maxTagsVisible={3}
+                              width="100%"
+                              popoverWidth="100%"
                             />
                           </div>
                         ))}

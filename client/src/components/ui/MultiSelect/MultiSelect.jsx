@@ -180,7 +180,7 @@ const MultiSelect = ({
   // Lookup map for fast label resolution
   const optionMap = useMemo(() => {
     const map = new Map();
-    options.forEach((opt) => map.set(String(opt.value), opt.label));
+    (options || []).forEach((opt) => map.set(String(opt.value), opt.label));
     return map;
   }, [options]);
 
@@ -216,9 +216,9 @@ const MultiSelect = ({
   };
 
   const visibleOptions = useMemo(() => {
-    let list = options;
+    let list = options || [];
     if (activeTab === 'selected') {
-      list = options.filter((opt) =>
+      list = (options || []).filter((opt) =>
         selectedValues.some((v) => String(v) === String(opt.value))
       );
     }
@@ -269,6 +269,18 @@ const MultiSelect = ({
                         <span key={String(val)} className="multiselect__tag">
                           <span className="multiselect__tag-text" title={text}>
                             {text}
+                          </span>
+                          <span
+                            className="multiselect__tag-remove"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggle(val);
+                            }}
+                            title={`Remove ${text}`}
+                            role="button"
+                            aria-label={`Remove ${text}`}
+                          >
+                            <CloseIcon sx={{ fontSize: 13 }} />
                           </span>
                         </span>
                       );
@@ -335,6 +347,18 @@ const MultiSelect = ({
                         <span key={String(val)} className="multiselect__tag">
                           <span className="multiselect__tag-text" title={text}>
                             {text}
+                          </span>
+                          <span
+                            className="multiselect__tag-remove"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggle(val);
+                            }}
+                            title={`Remove ${text}`}
+                            role="button"
+                            aria-label={`Remove ${text}`}
+                          >
+                            <CloseIcon sx={{ fontSize: 13 }} />
                           </span>
                         </span>
                       );
