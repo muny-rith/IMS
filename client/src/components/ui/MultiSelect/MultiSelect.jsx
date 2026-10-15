@@ -123,8 +123,13 @@ const MultiSelect = ({
   // 1st click: Opens menu & focuses search immediately (original pattern)
   // Click arrow or outside: Closes menu
   const handleTriggerClick = (e) => {
-    // If clicking clear '✕' button in search mode, handled by clear button
-    if (e.target.closest('.multiselect__search-cancel')) {
+    // If clicking inside search input or clear button, do not toggle/close
+    if (
+      e.target.closest('.multiselect__search-view') ||
+      e.target.closest('.multiselect__search-input') ||
+      e.target.closest('.multiselect__search-cancel') ||
+      e.target.closest('.multiselect__tag-remove')
+    ) {
       return;
     }
 
@@ -295,13 +300,18 @@ const MultiSelect = ({
                 )}
               </div>
             ) : (
-              <div className="multiselect__search-view">
+              <div
+                className="multiselect__search-view"
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
                 <input
                   ref={searchInputRef}
                   type="text"
                   className="multiselect__search-input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search options...'}
                   autoComplete="off"
                   aria-label={label ? `Search ${label}` : 'Search options'}
@@ -373,13 +383,18 @@ const MultiSelect = ({
                 )}
               </div>
             ) : (
-              <div className="multiselect__search-view multiselect__search-view--mobile">
+              <div
+                className="multiselect__search-view multiselect__search-view--mobile"
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+              >
                 <input
                   ref={searchInputRef}
                   type="text"
                   className="multiselect__search-input multiselect__search-input--mobile"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search...'}
                   autoComplete="off"
                   enterKeyHint="search"
@@ -394,6 +409,12 @@ const MultiSelect = ({
                       setIsOpen(false);
                       setMobileStep(0);
                       setSearchQuery('');
+                    }
+                  }}
+                  onKeyUp={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
                     }
                   }}
                 />

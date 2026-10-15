@@ -244,6 +244,8 @@ const Select = forwardRef(
     const handleTriggerClick = (e) => {
       if (disabled) return;
       if (
+        e.target.closest('.ui-select-search-view') ||
+        e.target.closest('.ui-select-search-input') ||
         e.target.closest('.ui-select-search-clear') ||
         e.target.closest('.ui-select-clear-btn')
       ) {
@@ -404,13 +406,18 @@ const Select = forwardRef(
                   {selectedOption ? selectedOption.label : placeholder}
                 </span>
               ) : (
-                <div className="ui-select-search-view">
+                <div
+                  className="ui-select-search-view"
+                  onClick={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="ui-select-search-input"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                     placeholder={
                       selectedOption
                         ? selectedOption.label
@@ -454,13 +461,18 @@ const Select = forwardRef(
                   {selectedOption ? selectedOption.label : placeholder}
                 </span>
               ) : (
-                <div className="ui-select-search-view ui-select-search-view--mobile">
+                <div
+                  className="ui-select-search-view ui-select-search-view--mobile"
+                  onClick={(e) => e.stopPropagation()}
+                  onTouchStart={(e) => e.stopPropagation()}
+                >
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="ui-select-search-input ui-select-search-input--mobile"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                     placeholder={
                       selectedOption
                         ? selectedOption.label
@@ -485,6 +497,12 @@ const Select = forwardRef(
                         setIsOpen(false);
                         setMobileStep(0);
                         setSearchQuery('');
+                      }
+                    }}
+                    onKeyUp={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
                       }
                     }}
                   />
