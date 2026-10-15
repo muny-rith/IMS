@@ -326,9 +326,7 @@ const MultiSelect = ({
                 {label && <span className="multiselect__trigger-label">{label}:</span>}
 
                 {selectedCount === 0 ? (
-                  <span className="multiselect__placeholder">
-                    {isOpen ? 'Tap to search...' : 'All'}
-                  </span>
+                  <span className="multiselect__placeholder">All</span>
                 ) : (
                   <>
                     {visibleTags.map((val) => {
@@ -352,7 +350,6 @@ const MultiSelect = ({
               </div>
             ) : (
               <div className="multiselect__search-view multiselect__search-view--mobile">
-                <SearchIcon sx={{ fontSize: 16, color: '#64748b' }} />
                 <input
                   ref={searchInputRef}
                   type="text"
@@ -374,34 +371,12 @@ const MultiSelect = ({
                     }
                   }}
                 />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="multiselect__search-cancel"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSearchQuery('');
-                      searchInputRef.current?.focus();
-                    }}
-                    title="Clear search"
-                    aria-label="Clear search"
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </button>
-                )}
               </div>
             )
           )}
         </div>
 
         <div className="multiselect__trigger-actions">
-          {/* On Mobile when in Step 1: show subtle search icon indicator */}
-          {isMobile && isOpen && mobileStep === 1 && (
-            <span className="multiselect__search-hint-icon" title="Tap to search">
-              <SearchIcon sx={{ fontSize: 16, color: '#2563eb' }} />
-            </span>
-          )}
-
           <span
             className={`multiselect__arrow ${isOpen ? 'multiselect__arrow--open' : ''}`}
             title={isOpen ? 'Close menu' : 'Open menu'}
