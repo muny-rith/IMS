@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Sidebar, { getTotalVisibleNavCount } from "../../components/common/SideBar/SideBar";
 import Navbar from "../../components/common/Navbar/Navbar";
@@ -11,12 +11,22 @@ const SIDEBAR_COLLAPSED = 80;
 
 export default function MainLayout() {
   const { user } = useAuth();
+  const location = useLocation();
+  const contentRef = useRef(null);
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile]     = useState(window.innerWidth < 768);
 
   const visibleNavCount = getTotalVisibleNavCount(user?.role);
   const showSidebar = visibleNavCount > 1;
+
+  // Automatically scroll to the top of the page on route change
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.key]);
 
   useEffect(() => {
     const onResize = () => {
@@ -104,7 +114,7 @@ export default function MainLayout() {
         </div>
 
         {/* Page content */}
-        <div className={styles.content}>
+        <div ref={contentRef} className={styles.content}>
           <Outlet />
         </div>
       </motion.div>
