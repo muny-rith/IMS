@@ -206,31 +206,52 @@
   color: #475569;
 }
 
-.brand-action--view:hover {
-  background: #eff6ff !important;
-  border-color: #bfdbfe !important;
-}
-
-.brand-action--view:hover svg {
-  color: #0284c7;
-}
-
-.brand-action--edit:hover {
+/* View (Green Theme) */
+.brand-action--view {
   background: #f0fdf4 !important;
   border-color: #bbf7d0 !important;
 }
-
-.brand-action--edit:hover svg {
-  color: #16a34a;
+.brand-action--view svg {
+  color: #16a34a !important;
+}
+.brand-action--view:hover {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+}
+.brand-action--view:hover svg {
+  color: #15803d !important;
 }
 
-.brand-action--delete:hover {
+/* Edit (Blue Theme) */
+.brand-action--edit {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+.brand-action--edit svg {
+  color: #0c6cea !important;
+}
+.brand-action--edit:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+.brand-action--edit:hover svg {
+  color: #0954b8 !important;
+}
+
+/* Delete (Red Theme) */
+.brand-action--delete {
   background: #fef2f2 !important;
   border-color: #fecaca !important;
 }
-
+.brand-action--delete svg {
+  color: #dc2626 !important;
+}
+.brand-action--delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
 .brand-action--delete:hover svg {
-  color: #dc2626;
+  color: #b91c1c !important;
 }
 
 @media (max-width: 1080px) {

@@ -1,5 +1,6 @@
 import React from 'react';
 import Skeleton from '../Skeleton/Skeleton';
+import ActionButton from '../ActionButtons/ActionButton';
 import './MobileCard.css';
 
 export const MobileCardSkeleton = ({
@@ -98,21 +99,24 @@ const MobileCard = ({
 
                 {actionsPlacement === 'top-right' && actions.length > 0 && (
                     <div className="mobile-card__top-actions">
-                        {actions.map((action) => (
-                            <button
-                                key={action.label}
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    action.onClick?.(e);
-                                }}
-                                className={`mobile-card__icon-btn ${action.className || ''}`}
-                                title={action.label}
-                                aria-label={action.label}
-                            >
-                                {action.icon}
-                            </button>
-                        ))}
+                        {actions.map((action, idx) => {
+                            const actionType =
+                                action.type ||
+                                (action.className?.includes('danger') ? 'delete' :
+                                 action.className?.includes('edit') ? 'edit' :
+                                 action.className?.includes('view') ? 'view' : 'default');
+
+                            return (
+                                <ActionButton
+                                    key={action.key || action.label || idx}
+                                    type={actionType}
+                                    icon={action.icon}
+                                    tooltip={action.label || action.tooltip}
+                                    onClick={action.onClick}
+                                    className={action.className}
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </div>

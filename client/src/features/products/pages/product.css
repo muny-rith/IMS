@@ -397,31 +397,52 @@
   font-size: 17px !important;
 }
 
-.product-action--view:hover {
-  background: #eff6ff !important;
-  border-color: #bfdbfe !important;
-}
-
-.product-action--view:hover svg {
-  color: #0284c7;
-}
-
-.product-action--edit:hover {
+/* View (Green Theme) */
+.product-action--view {
   background: #f0fdf4 !important;
   border-color: #bbf7d0 !important;
 }
-
-.product-action--edit:hover svg {
-  color: #16a34a;
+.product-action--view svg {
+  color: #16a34a !important;
+}
+.product-action--view:hover {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+}
+.product-action--view:hover svg {
+  color: #15803d !important;
 }
 
-.product-action--delete:hover {
+/* Edit (Blue Theme) */
+.product-action--edit {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+.product-action--edit svg {
+  color: #0c6cea !important;
+}
+.product-action--edit:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+.product-action--edit:hover svg {
+  color: #0954b8 !important;
+}
+
+/* Delete (Red Theme) */
+.product-action--delete {
   background: #fef2f2 !important;
   border-color: #fecaca !important;
 }
-
+.product-action--delete svg {
+  color: #dc2626 !important;
+}
+.product-action--delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
 .product-action--delete:hover svg {
-  color: #dc2626;
+  color: #b91c1c !important;
 }
 
 /* Hide Department column when screen width <= 1200px */

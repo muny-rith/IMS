@@ -32,6 +32,7 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import DataTable from '../../../components/ui/DataTable/DataTable';
 import Input from '../../../components/ui/Input/Input';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
+import { ActionGroup } from '../../../components/ui/ActionButtons';
 import { useProducts } from '../hooks/useProducts';
 import { useAuth } from '../../auth/hooks/useAuth';
 import ProductMobileCardList from '../components/ProductMobileCardList';
@@ -428,41 +429,12 @@ const ProductPage = () => {
         align: 'center',
         headerAlign: 'center',
         renderCell: (params) => (
-          <Box className="product-table-actions">
-            <Tooltip title="View">
-              <IconButton
-                size="small"
-                className="product-action product-action--view"
-                onClick={() => openViewModal(params.row)}
-              >
-                <VisibilityIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
-              </IconButton>
-            </Tooltip>
-
-            {canEdit && (
-              <Tooltip title="Edit">
-                <IconButton
-                  size="small"
-                  className="product-action product-action--edit"
-                  onClick={() => openEditModal(params.row)}
-                >
-                  <EditIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
-                </IconButton>
-              </Tooltip>
-            )}
-
-            {canDelete && (
-              <Tooltip title="Delete">
-                <IconButton
-                  size="small"
-                  className="product-action product-action--delete"
-                  onClick={() => requestDelete(params.row.id)}
-                >
-                  <DeleteIcon sx={{ fontSize: isUnder992 ? 14 : 18 }} />
-                </IconButton>
-              </Tooltip>
-            )}
-          </Box>
+          <ActionGroup
+            size={isUnder992 ? 'sm' : 'md'}
+            onView={() => openViewModal(params.row)}
+            onEdit={canEdit ? () => openEditModal(params.row) : undefined}
+            onDelete={canDelete ? () => requestDelete(params.row.id) : undefined}
+          />
         ),
       },
     ],

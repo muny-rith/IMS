@@ -206,31 +206,52 @@
   color: #475569;
 }
 
-.category-action--view:hover {
-  background: #eff6ff !important;
-  border-color: #bfdbfe !important;
-}
-
-.category-action--view:hover svg {
-  color: #0284c7;
-}
-
-.category-action--edit:hover {
+/* View (Green Theme) */
+.category-action--view {
   background: #f0fdf4 !important;
   border-color: #bbf7d0 !important;
 }
-
-.category-action--edit:hover svg {
-  color: #16a34a;
+.category-action--view svg {
+  color: #16a34a !important;
+}
+.category-action--view:hover {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+}
+.category-action--view:hover svg {
+  color: #15803d !important;
 }
 
-.category-action--delete:hover {
+/* Edit (Blue Theme) */
+.category-action--edit {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+.category-action--edit svg {
+  color: #0c6cea !important;
+}
+.category-action--edit:hover {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+.category-action--edit:hover svg {
+  color: #0954b8 !important;
+}
+
+/* Delete (Red Theme) */
+.category-action--delete {
   background: #fef2f2 !important;
   border-color: #fecaca !important;
 }
-
+.category-action--delete svg {
+  color: #dc2626 !important;
+}
+.category-action--delete:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
 .category-action--delete:hover svg {
-  color: #dc2626;
+  color: #b91c1c !important;
 }
 
 @media (max-width: 1080px) {

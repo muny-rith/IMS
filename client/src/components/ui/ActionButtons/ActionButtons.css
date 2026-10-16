@@ -1,0 +1,169 @@
+/* ==========================================================================
+   ActionButtons Component Styles (Unified PC Desktop & Mobile)
+   ========================================================================== */
+
+.ui-action-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Individual Action Icon Button */
+.ui-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+
+.ui-action-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.ui-action-btn:active {
+  transform: scale(0.94);
+}
+
+.ui-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Icon sizing */
+.ui-action-btn svg {
+  font-size: 18px;
+  transition: color 0.15s ease;
+}
+
+/* Size Variants */
+.ui-action-btn--sm {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 8px;
+}
+
+.ui-action-btn--sm svg {
+  font-size: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Distinct Colored Accent Tones (Normal resting state & Hover)
+   -------------------------------------------------------------------------- */
+
+/* View (Green Theme) */
+.ui-action-btn--view {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+
+.ui-action-btn--view svg {
+  color: #16a34a;
+}
+
+.ui-action-btn--view:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(22, 163, 74, 0.18);
+}
+
+.ui-action-btn--view:hover svg {
+  color: #15803d;
+}
+
+/* Edit (Vibrant Blue Theme) */
+.ui-action-btn--edit {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #0c6cea;
+}
+
+.ui-action-btn--edit svg {
+  color: #0c6cea;
+}
+
+.ui-action-btn--edit:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #0954b8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(12, 108, 234, 0.20);
+}
+
+.ui-action-btn--edit:hover svg {
+  color: #0954b8;
+}
+
+/* Delete / Danger (Red Theme) */
+.ui-action-btn--delete,
+.ui-action-btn--danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.ui-action-btn--delete svg,
+.ui-action-btn--danger svg {
+  color: #dc2626;
+}
+
+.ui-action-btn--delete:hover,
+.ui-action-btn--danger:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.18);
+}
+
+.ui-action-btn--delete:hover svg,
+.ui-action-btn--danger:hover svg {
+  color: #b91c1c;
+}
+
+/* Default / Custom Fallback */
+.ui-action-btn--default {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+
+.ui-action-btn--default:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+/* Skeleton Placeholder */
+.ui-action-group--skeleton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-action-btn-skeleton {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+}

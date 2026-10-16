@@ -1,11 +1,6 @@
 import React from 'react';
-
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import MobileCard from '../../../components/ui/MobileCard/MobileCard';
-
-import './ProductMobileCardList.css'
+import './ProductMobileCardList.css';
 
 const getInitial = (name) => name?.[0]?.toUpperCase() ?? '?';
 
@@ -32,10 +27,11 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
 
 
     return (
-        <div>
+        <div className="product-mobile-card-list">
             {rows.map((row) => {
                 const qty = Number(row.qty ?? 0);
-                const hasVariants = Number(row.variantCount ?? 1) > 1;
+                const variantCount = Number(row.variantCount ?? 1);
+                const hasVariants = variantCount >= 1;
                 const skuCode = row.code || row.sku || '';
 
                 return (
@@ -58,7 +54,7 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
                             hasVariants ? (
                                 <div className="product-mobile-card__subtitle-row">
                                     <span className="product-mobile-card__badge product-mobile-card__badge--variants">
-                                        {row.variantCount} {row.variantCount === 1 ? 'Variant' : 'Variants'}
+                                        {variantCount} {variantCount === 1 ? 'Variant' : 'Variants'}
                                     </span>
                                 </div>
                             ) : skuCode ? (
@@ -93,18 +89,16 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
                         actions={[
                             ...(onEdit
                                 ? [{
+                                    type: 'edit',
                                     label: 'Edit',
-                                    icon: <EditIcon fontSize="small" />,
                                     onClick: () => onEdit(row),
-                                    className: 'mobile-card__action--edit',
                                 }]
                                 : []),
                             ...(onDelete
                                 ? [{
+                                    type: 'delete',
                                     label: 'Delete',
-                                    icon: <DeleteIcon fontSize="small" />,
                                     onClick: () => onDelete(row.id),
-                                    className: 'mobile-card__action--danger',
                                 }]
                                 : []),
                         ]}

@@ -1,5 +1,5 @@
 .mobile-card {
-    margin: 15px 0;
+    margin: 10px 0;
     position: relative;
     overflow: hidden;
     border: 1px solid #e5e7eb;
@@ -131,38 +131,39 @@
     outline-offset: 1px;
 }
 
+/* Distinct Accent Colors (Normal resting state & Hover) */
 .mobile-card__icon-btn.mobile-card__action--view {
-    color: #2563eb;
-    border-color: #dbeafe;
-    background: #f8faff;
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #16a34a;
 }
 
 .mobile-card__icon-btn.mobile-card__action--view:hover {
-    background: #eff6ff;
-    border-color: #93c5fd;
-    color: #1d4ed8;
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
 }
 
 .mobile-card__icon-btn.mobile-card__action--edit {
-    color: #ea580c;
-    border-color: #ffedd5;
-    background: #fffbf7;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #0c6cea;
 }
 
 .mobile-card__icon-btn.mobile-card__action--edit:hover {
-    background: #fff7ed;
-    border-color: #fdba74;
-    color: #c2410c;
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #0954b8;
 }
 
 .mobile-card__icon-btn.mobile-card__action--danger {
+    background: #fef2f2;
+    border-color: #fecaca;
     color: #dc2626;
-    border-color: #fee2e2;
-    background: #fffbfb;
 }
 
 .mobile-card__icon-btn.mobile-card__action--danger:hover {
-    background: #fef2f2;
+    background: #fee2e2;
     border-color: #fca5a5;
     color: #b91c1c;
 }
@@ -170,7 +171,6 @@
 .mobile-card__meta {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
     margin-top: 10px;
 }
 
@@ -179,11 +179,13 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    border: 1px solid #eef2f7;
-    border-radius: 10px;
-    background: #f8fafc;
-    padding: 6px 8px;
+    border-right: 1px solid #dfe3e7;
+    padding: 6px 10px;
     min-width: 0;
+}
+
+.mobile-card__meta-item:last-child {
+    border-right: none;
 }
 
 .mobile-card__meta-item span {
@@ -302,11 +304,6 @@
     .mobile-card {
         border-radius: 18px;
         padding: 12px;
-    }
-
-    .mobile-card__top {
-        grid-template-columns: 44px minmax(0, 1fr) auto;
-        gap: 10px;
     }
 
     .mobile-card__avatar {
