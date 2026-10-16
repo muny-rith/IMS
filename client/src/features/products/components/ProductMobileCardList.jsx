@@ -35,14 +35,16 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
         <div>
             {rows.map((row) => {
                 const qty = Number(row.qty ?? 0);
+                const hasVariants = Number(row.variantCount ?? 1) > 1;
+                const skuCode = row.code || row.sku || '';
+
                 return (
                     <MobileCard
                         key={row.id}
+                        onClick={() => onView?.(row)}
                         avatar={
                             <div
-                                onClick={() => onView?.(row)}
-                                style={{ cursor: 'pointer', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                title="View details"
+                                style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             >
                                 {row.image ? (
                                     <img src={row.image} alt={row.name} />
@@ -51,16 +53,22 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
                                 )}
                             </div>
                         }
-                        title={
-                            <span
-                                onClick={() => onView?.(row)}
-                                style={{ cursor: 'pointer' }}
-                                title="View details"
-                            >
-                                {row.name || 'Unnamed product'}
-                            </span>
+                        title={row.name || 'Unnamed product'}
+                        subtitle={
+                            hasVariants ? (
+                                <div className="product-mobile-card__subtitle-row">
+                                    <span className="product-mobile-card__badge product-mobile-card__badge--variants">
+                                        {row.variantCount} {row.variantCount === 1 ? 'Variant' : 'Variants'}
+                                    </span>
+                                </div>
+                            ) : skuCode ? (
+                                <div className="product-mobile-card__subtitle-row">
+                                    <span className="product-mobile-card__badge product-mobile-card__badge--sku">
+                                        #{skuCode}
+                                    </span>
+                                </div>
+                            ) : null
                         }
-                        subtitle={row.code ? `SKU ${row.code}` : 'No code'}
                         actionsPlacement="top-right"
                         meta={[
                             {
@@ -83,14 +91,6 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
                             },
                         ]}
                         actions={[
-                            ...(onView
-                                ? [{
-                                    label: 'View',
-                                    icon: <VisibilityIcon fontSize="small" />,
-                                    onClick: () => onView(row),
-                                    className: 'mobile-card__action--view',
-                                }]
-                                : []),
                             ...(onEdit
                                 ? [{
                                     label: 'Edit',

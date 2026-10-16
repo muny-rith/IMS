@@ -1,14 +1,10 @@
-import React, { useState } from 'react'
+import React from 'react'
 import './Navbar.css'
 import logo from '../../../assets/images/logo.png'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import MenuOpenIcon from '@mui/icons-material/MenuOpen'
-import InstallMobileIcon from '@mui/icons-material/InstallMobile'
 import { useAuth } from '../../../features/auth/hooks/useAuth'
-import SystemDiagnosticsModal from '../SystemDiagnostics/SystemDiagnosticsModal'
-import { usePwaInstall } from '../../../hooks/usePwaInstall'
-import PwaInstallModal from '../PwaInstall/PwaInstallModal'
 
 const getInitials = (email = '') => {
   const name = email.split('@')[0] || 'U'
@@ -18,9 +14,6 @@ const getInitials = (email = '') => {
 // All state comes from MainLayout
 const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
   const { user, signOut } = useAuth()
-  const [diagOpen, setDiagOpen] = useState(false)
-  const [installOpen, setInstallOpen] = useState(false)
-  const { canInstall, isInstalled, isIOS, triggerInstall } = usePwaInstall()
 
   const handleSignOut = async () => {
     await signOut()
@@ -45,32 +38,6 @@ const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
       )}
 
       <div className="navbar__right">
-        {/* PWA Install Button (hidden when already installed in standalone mode) */}
-        {!isInstalled && (
-          <button
-            type="button"
-            className="navbar__pwa-btn"
-            onClick={() => setInstallOpen(true)}
-            title="Install App for Fullscreen Experience"
-            aria-label="Install App"
-          >
-            <InstallMobileIcon fontSize="small" />
-            <span className="navbar__pwa-text">Install App</span>
-          </button>
-        )}
-
-        {/* Live System Diagnostics Indicator */}
-        <button
-          type="button"
-          className="navbar__diag-btn"
-          onClick={() => setDiagOpen(true)}
-          title="View system telemetry & diagnostics"
-          aria-label="System Diagnostics"
-        >
-          <span className="navbar__diag-dot" />
-          <span className="navbar__diag-text">System Live</span>
-        </button>
-
         <div className="navbar__user">
           <span className="navbar__avatar">{getInitials(user?.email)}</span>
           <div className="navbar__user-info">
@@ -91,20 +58,6 @@ const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
           <LogoutIcon fontSize="small" />
         </button>
       </div>
-
-      <SystemDiagnosticsModal
-        open={diagOpen}
-        onClose={() => setDiagOpen(false)}
-        isAdmin={user?.role === 'admin'}
-      />
-
-      <PwaInstallModal
-        open={installOpen}
-        onClose={() => setInstallOpen(false)}
-        canInstall={canInstall}
-        isIOS={isIOS}
-        triggerInstall={triggerInstall}
-      />
     </header>
   )
 }

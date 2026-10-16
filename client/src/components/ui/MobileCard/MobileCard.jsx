@@ -62,6 +62,7 @@ const MobileCard = ({
   actions = [],
   actionsPlacement = 'bottom',
   loading = false,
+  onClick,
 }) => {
   if (loading) {
     return (
@@ -72,7 +73,10 @@ const MobileCard = ({
     );
   }
     return (
-        <article className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''}`}>
+        <article
+            className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''} ${onClick ? 'mobile-card--clickable' : ''}`}
+            onClick={onClick}
+        >
             <div className="mobile-card__top">
 
                 {avatar && (
@@ -83,7 +87,7 @@ const MobileCard = ({
 
                 <div className="mobile-card__main">
                     <strong>{title}</strong>
-                    {subtitle && <span>{subtitle}</span>}
+                    {subtitle && (typeof subtitle === 'string' ? <span>{subtitle}</span> : subtitle)}
                 </div>
 
                 {rightContent && (
@@ -98,7 +102,10 @@ const MobileCard = ({
                             <button
                                 key={action.label}
                                 type="button"
-                                onClick={action.onClick}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    action.onClick?.(e);
+                                }}
                                 className={`mobile-card__icon-btn ${action.className || ''}`}
                                 title={action.label}
                                 aria-label={action.label}

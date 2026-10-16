@@ -174,7 +174,8 @@ export const findAll = async () => {
       COALESCE(MIN(pv.unit_price), 0)::NUMERIC AS unit_price,
       COALESCE(MIN(pv.variant_id), 0)::INTEGER AS default_variant_id,
       COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS sku,
-      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS product_code
+      COALESCE(MIN(pv.sku), 'SKU-' || p.product_id::text) AS product_code,
+      COUNT(DISTINCT pv.variant_id)::INTEGER AS variant_count
     FROM tb_product p
     LEFT JOIN tb_category c ON p.category_id = c.category_id
     LEFT JOIN tb_brand b ON p.brand_id = b.brand_id

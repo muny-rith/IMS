@@ -1,9 +1,47 @@
 .mobile-card__avatar {
   overflow: hidden;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 14px !important;
+  background: #f1f5f9;
 }
 
 .mobile-card__avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.product-mobile-card__subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.product-mobile-card__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.product-mobile-card__badge--variants {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #dbeafe;
+}
+
+.product-mobile-card__badge--sku {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
 }

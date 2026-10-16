@@ -14,6 +14,7 @@ import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined';
 import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
 import { IconButton } from '@mui/material';
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
@@ -67,6 +68,7 @@ const ProductDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('matrix');
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
   const [activeImage, setActiveImage] = useState('');
   const [copiedSku, setCopiedSku] = useState('');
   const [variantSearch, setVariantSearch] = useState('');
@@ -86,13 +88,17 @@ const ProductDetailPage = () => {
       .then((data) => {
         if (!mounted) return;
         setProduct(data);
-        const variantImages = (data.variants || [])
-          .map((v) => v.imageUrl || v.imagePreview)
-          .filter(Boolean);
-        const initialImg = variantImages.length > 0
-          ? variantImages[0]
-          : (data.imageUrl || data.image || '');
-        setActiveImage(initialImg);
+        const variantList = data.variants || [];
+        const initialVarWithImg = variantList.find((v) => v.imageUrl || v.imagePreview);
+        const defaultVar = initialVarWithImg || variantList[0] || null;
+
+        if (defaultVar) {
+          setSelectedVariantId(defaultVar.id || defaultVar.variant_id);
+          setActiveImage(defaultVar.imageUrl || defaultVar.imagePreview || '');
+        } else {
+          setSelectedVariantId(null);
+          setActiveImage(data.imageUrl || data.image || '');
+        }
         setLoading(false);
       })
       .catch((err) => {
@@ -160,24 +166,55 @@ const ProductDetailPage = () => {
     };
   }, [product, variants]);
 
-  const galleryImages = useMemo(() => {
+  const previewItems = useMemo(() => {
     if (!product) return [];
-    const set = new Set();
-    const variantImages = variants
-      .map((v) => v.imageUrl || v.imagePreview)
-      .filter(Boolean);
+    if (variants.length > 0) {
+      return variants.map((v, idx) => {
+        let optionLabel = '';
+        if (Array.isArray(v.attribute_values) && v.attribute_values.length > 0) {
+          optionLabel = v.attribute_values.map((av) => av.value).join(', ');
+        } else if (v.attributes && typeof v.attributes === 'object') {
+          optionLabel = Object.values(v.attributes).flat().join(', ');
+        }
 
-    // If variants have their own images, the gallery thumbnails show ONLY the variant images
-    if (variantImages.length > 0) {
-      variantImages.forEach((img) => set.add(img));
-    } else {
-      // Fallback: If no variant images (or product without variants), show the product's own image
-      const mainImg = product.imageUrl || product.image;
-      if (mainImg) set.add(mainImg);
+        const sku = v.sku || `SKU-${product.id}-${idx + 1}`;
+        const img = v.imageUrl || v.imagePreview || null;
+
+        return {
+          id: v.id || v.variant_id || idx,
+          variant: v,
+          sku,
+          optionLabel,
+          imageUrl: img,
+        };
+      });
     }
 
-    return Array.from(set);
+    const mainImg = product.imageUrl || product.image;
+    if (mainImg) {
+      return [{
+        id: 'main-product',
+        variant: null,
+        sku: product.sku || product.product_code || '',
+        optionLabel: '',
+        imageUrl: mainImg,
+      }];
+    }
+
+    return [];
   }, [product, variants]);
+
+  const activeVariant = useMemo(() => {
+    if (!variants.length || !selectedVariantId) return null;
+    return variants.find((v) => (v.id || v.variant_id) === selectedVariantId) || null;
+  }, [variants, selectedVariantId]);
+
+  const handleSelectVariant = (v) => {
+    if (!v) return;
+    const vId = v.id || v.variant_id;
+    setSelectedVariantId(vId);
+    setActiveImage(v.imageUrl || v.imagePreview || '');
+  };
 
   // Filtered variants for the search bar inside Tab 1 matrix table
   const filteredVariants = useMemo(() => {
@@ -320,24 +357,46 @@ const ProductDetailPage = () => {
                     <img src={activeImage} alt={productName} className="product-detail-preview-img" />
                   ) : (
                     <div className="product-detail-no-media">
-                      <span>{productName?.[0]?.toUpperCase() ?? '?'}</span>
                       <p>No photo available</p>
                     </div>
                   )}
                 </div>
 
-                {galleryImages.length > 0 && (
+                {previewItems.length > 0 && (
                   <div className="product-detail-thumbs">
-                    {galleryImages.map((img, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className={`product-detail-thumb ${activeImage === img ? 'product-detail-thumb--active' : ''}`}
-                        onClick={() => setActiveImage(img)}
-                      >
-                        <img src={img} alt={`Thumb ${idx + 1}`} />
-                      </button>
-                    ))}
+                    {previewItems.map((item, idx) => {
+                      const isActive = selectedVariantId
+                        ? selectedVariantId === item.id
+                        : activeImage === item.imageUrl;
+                      const titleText = item.optionLabel
+                        ? `${item.sku} (${item.optionLabel})`
+                        : (item.sku || `Variant ${idx + 1}`);
+
+                      return (
+                        <button
+                          key={item.id || idx}
+                          type="button"
+                          className={`product-detail-thumb ${isActive ? 'product-detail-thumb--active' : ''}`}
+                          onClick={() => {
+                            if (item.variant) {
+                              handleSelectVariant(item.variant);
+                            } else {
+                              setActiveImage(item.imageUrl || '');
+                            }
+                          }}
+                          title={titleText}
+                          aria-label={titleText}
+                        >
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.sku || `Thumb ${idx + 1}`} />
+                          ) : (
+                            <span className="product-detail-thumb-no-photo" title="No photo available">
+                              <ImageNotSupportedOutlinedIcon sx={{ fontSize: 18 }} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -456,14 +515,14 @@ const ProductDetailPage = () => {
                               <tr key={v.id || v.variant_id || idx}>
                                 <td>
                                   <div
-                                    className="product-detail-tbl-avatar"
-                                    style={{ cursor: (v.imageUrl || v.imagePreview) ? 'pointer' : 'default' }}
-                                    onClick={() => {
-                                      if (v.imageUrl || v.imagePreview) {
-                                        setActiveImage(v.imageUrl || v.imagePreview);
-                                      }
-                                    }}
-                                    title={v.imageUrl || v.imagePreview ? 'Click to preview variant image' : undefined}
+                                    className={`product-detail-tbl-avatar ${
+                                      selectedVariantId === (v.id || v.variant_id)
+                                        ? 'product-detail-tbl-avatar--selected'
+                                        : ''
+                                    }`}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleSelectVariant(v)}
+                                    title={`Click to preview ${vSku}`}
                                   >
                                     {v.imageUrl || v.imagePreview ? (
                                       <img src={v.imageUrl || v.imagePreview} alt={vSku} />

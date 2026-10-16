@@ -303,14 +303,18 @@
 .product-detail-no-media {
   text-align: center;
   color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
-.product-detail-no-media span {
-  font-size: 36px;
-  font-weight: 800;
-  color: #cbd5e1;
-  display: block;
-  margin-bottom: 2px;
+.product-detail-no-media p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
 }
 
 .product-detail-thumbs {
@@ -343,6 +347,9 @@
   overflow: hidden;
   flex-shrink: 0;
   transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-detail-thumb:hover {
@@ -360,6 +367,31 @@
   object-fit: cover;
   border-radius: 4px;
 }
+
+.product-detail-thumb-no-photo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #94a3b8;
+  border-radius: 4px;
+  user-select: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.product-detail-thumb:hover .product-detail-thumb-no-photo {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.product-detail-thumb--active .product-detail-thumb-no-photo {
+  background: #fef2f2;
+  color: #eb0029;
+}
+
+
 
 /* Left Metadata List (Catalog Registry) */
 .product-detail-registry-section {
@@ -599,6 +631,17 @@
   flex-shrink: 0;
   margin: 0 auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.product-detail-tbl-avatar:hover {
+  border-color: #94a3b8;
+  transform: scale(1.04);
+}
+
+.product-detail-tbl-avatar--selected {
+  border-color: #eb0029 !important;
+  box-shadow: 0 0 0 2px rgba(235, 0, 41, 0.25) !important;
 }
 
 .product-detail-tbl-avatar img {
