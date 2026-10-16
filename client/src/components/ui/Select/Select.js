@@ -282,15 +282,10 @@ const Select = forwardRef(
       }
     }, [isOpen, isMobile]);
 
-    // Set highlighted index when opened
+    // Reset highlighted index when opened/closed (never force index 0 to default gray!)
     useEffect(() => {
-      if (isOpen) {
-        const idx = filteredOptions.findIndex(
-          (opt) => String(opt.value) === String(value)
-        );
-        setHighlightedIndex(idx >= 0 ? idx : 0);
-      }
-    }, [isOpen, filteredOptions, value]);
+      setHighlightedIndex(-1);
+    }, [isOpen]);
 
     // Scroll highlighted item into view
     useEffect(() => {
@@ -666,8 +661,8 @@ const Select = forwardRef(
             role="listbox"
           >
             <div ref={listRef} className="ui-select-list" style={listStyle}>
-              {/* Optional "None" Option */}
-              {(placeholder === 'None' || isClearable) &&
+              {/* Optional "None" Option (only when placeholder is explicitly 'None') */}
+              {placeholder === 'None' &&
                 !required &&
                 !searchQuery && (
                   <div
@@ -707,6 +702,7 @@ const Select = forwardRef(
                       }`}
                       onClick={() => handleSelect(opt.value)}
                       onMouseEnter={() => setHighlightedIndex(index)}
+                      onMouseLeave={() => setHighlightedIndex(-1)}
                     >
                       <span className="ui-select-option-label">{opt.label}</span>
                       {isSelected && (
