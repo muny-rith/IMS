@@ -638,7 +638,6 @@
 }
 
 .product-detail-attr-val {
-  font-size: 15px;
   font-weight: 600;
   color: #1e293b;
 }
@@ -673,13 +672,12 @@
 }
 
 .product-detail-other-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 6px;
-  font-size: 13px;
+  /* display: inline-flex; */
+  /* align-items: center; */
+  /* padding: 3px 9px; */
+  /* background: #f8fafc; */
+  /* border: 1px dashed #cbd5e1; */
+  /* border-radius: 6px; */
   font-weight: 600;
   color: #475569;
 }
@@ -695,7 +693,6 @@
 
 .product-detail-price-text {
   font-weight: 700;
-  font-size: 16px;
   color: #2563eb;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
@@ -998,6 +995,14 @@
 
 /* ── Hide SKU Code column on screens <= 576px ── */
 @media (max-width: 576px) {
+  .product-detail-main-media {
+    height: 240px;
+  }
+
+  .product-detail-table thead th,
+  .product-detail-table tbody td {
+    padding: 12px 10px;
+  }
 
   .product-detail-th--sku,
   .product-detail-td--sku,
@@ -1012,6 +1017,7 @@
     min-width: 100px;
     padding: 0 30px;
   }
+
 }
 
 /* ── PRINT MEDIA QUERY ── */
