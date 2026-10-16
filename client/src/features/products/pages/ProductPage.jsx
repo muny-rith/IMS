@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './product.css';
 
@@ -91,6 +91,23 @@ const StatCard = ({ icon, label, value, tone = 'default' }) => (
   </div>
 );
 
+const PRODUCT_FILTERS_STORAGE_KEY = 'product_filters_state';
+
+const loadSavedProductFilters = () => {
+  try {
+    const raw = sessionStorage.getItem(PRODUCT_FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return {
+      search: typeof parsed.search === 'string' ? parsed.search : '',
+      selectedCategories: Array.isArray(parsed.selectedCategories) ? parsed.selectedCategories : [],
+      selectedBrands: Array.isArray(parsed.selectedBrands) ? parsed.selectedBrands : [],
+    };
+  } catch (err) {
+    return null;
+  }
+};
+
 const ProductPage = () => {
   const {
     rows = [],
@@ -110,13 +127,42 @@ const ProductPage = () => {
 
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
+  const initialFilters = useMemo(() => loadSavedProductFilters(), []);
+
+  const [search, setSearch] = useState(() => initialFilters?.search || '');
+  const [selectedCategories, setSelectedCategories] = useState(() => initialFilters?.selectedCategories || []);
+  const [selectedBrands, setSelectedBrands] = useState(() => initialFilters?.selectedBrands || []);
   const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
+
+  // Sync active filters to sessionStorage so navigating to detail/edit and back preserves filter state
+  useEffect(() => {
+    try {
+      if (!search && selectedCategories.length === 0 && selectedBrands.length === 0) {
+        sessionStorage.removeItem(PRODUCT_FILTERS_STORAGE_KEY);
+      } else {
+        sessionStorage.setItem(
+          PRODUCT_FILTERS_STORAGE_KEY,
+          JSON.stringify({
+            search,
+            selectedCategories,
+            selectedBrands,
+          })
+        );
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [search, selectedCategories, selectedBrands]);
+
+  const handleClearAllFilters = useCallback(() => {
+    setSearch('');
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    sessionStorage.removeItem(PRODUCT_FILTERS_STORAGE_KEY);
+  }, []);
 
 
   const showToast = useCallback((message, severity = 'success') => {
@@ -549,6 +595,19 @@ const ProductPage = () => {
               maxTagsVisible={1}
               loading={loading && brandOptions.length === 0}
             />
+
+            {(Boolean(search) || selectedCategories.length > 0 || selectedBrands.length > 0) && (
+              <button
+                type="button"
+                className="product-filter-clear"
+                onClick={handleClearAllFilters}
+                title="Reset all filters"
+                aria-label="Reset all filters"
+              >
+                <CloseIcon sx={{ fontSize: 13 }} />
+                <span>Reset</span>
+              </button>
+            )}
           </div>
 
         </div>
