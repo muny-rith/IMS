@@ -88,9 +88,19 @@
   color: #2563eb;
 }
 
+.product-stat-card--brand .product-stat-card__icon {
+  background: #faf5ff;
+  color: #7c3aed;
+}
+
 .product-stat-card--warning .product-stat-card__icon {
   background: #fffbeb;
   color: #d97706;
+}
+
+.product-stat-card--danger .product-stat-card__icon {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .product-stat-card--success .product-stat-card__icon {
@@ -121,6 +131,52 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Dual value styling for Low / Out Stock */
+.product-stat-dual-val {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.product-stat-num {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.product-stat-num--warning {
+  color: #d97706;
+}
+
+.product-stat-num--danger {
+  color: #dc2626;
+}
+
+.product-stat-sub {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.product-stat-num--warning .product-stat-sub {
+  color: #b45309;
+}
+
+.product-stat-num--danger .product-stat-sub {
+  color: #b91c1c;
+}
+
+.product-stat-slash {
+  font-size: 13px;
+  font-weight: 400;
+  color: #cbd5e1;
+  margin: 0 1px;
 }
 
 /* 3. Main Data Panel */
@@ -542,6 +598,14 @@
 
   .product-stat-card__value {
     font-size: 15px;
+  }
+
+  .product-stat-sub {
+    font-size: 9.5px;
+  }
+
+  .product-stat-slash {
+    font-size: 11px;
   }
 
   .product-panel {

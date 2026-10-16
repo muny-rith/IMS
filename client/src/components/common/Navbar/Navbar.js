@@ -1,10 +1,12 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import './Navbar.css'
 import logo from '../../../assets/images/logo.png'
 import LogoutIcon from '@mui/icons-material/Logout'
 import MenuIcon from '@mui/icons-material/Menu'
 import MenuOpenIcon from '@mui/icons-material/MenuOpen'
 import { useAuth } from '../../../features/auth/hooks/useAuth'
+import { getHomeRouteByRole } from '../../../constants/routes'
 
 const getInitials = (email = '') => {
   const name = email.split('@')[0] || 'U'
@@ -14,6 +16,7 @@ const getInitials = (email = '') => {
 // All state comes from MainLayout
 const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
   const { user, signOut } = useAuth()
+  const homePath = getHomeRouteByRole(user?.role)
 
   const handleSignOut = async () => {
     await signOut()
@@ -31,10 +34,10 @@ const Navbar = ({ collapsed, isMobile, hasSidebar = true, onMenuClick }) => {
           }
         </button>
       ) : (
-        <div className="navbar__brand">
+        <Link to={homePath} className="navbar__brand" title="Go to Home">
           <img src={logo} alt="Moon IMS" className="navbar__brand-logo" />
           <span className="navbar__brand-text">Moon IMS</span>
-        </div>
+        </Link>
       )}
 
       <div className="navbar__right">

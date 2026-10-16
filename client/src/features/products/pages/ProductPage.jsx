@@ -18,7 +18,7 @@ import {
 
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
-import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -75,11 +75,6 @@ const INITIAL_TOAST = {
   message: '',
   severity: 'success',
 };
-
-const currencyFormatter = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-});
 
 const StatCard = ({ icon, label, value, tone = 'default' }) => (
   <div className={`product-stat-card product-stat-card--${tone}`}>
@@ -251,12 +246,6 @@ const ProductPage = () => {
       (row) => Number(row.qty ?? 0) <= 0
     ).length;
 
-    const stockValue = rows.reduce((sum, row) => {
-      const qty = Number(row.qty ?? 0);
-      const price = Number(row.price ?? 0);
-      return sum + qty * price;
-    }, 0);
-
     return [
       {
         label: 'Products',
@@ -273,21 +262,39 @@ const ProductPage = () => {
         tone: 'info',
       },
       {
-        label: 'Low Stock',
-        value: lowStockCount,
-        helper: `${outOfStockCount} out of stock`,
-        icon: <WarningAmberOutlinedIcon fontSize="small" />,
-        tone: 'warning',
+        label: 'Brands',
+        value: brands.length,
+        helper: 'Product brands',
+        icon: <LocalOfferOutlinedIcon fontSize="small" />,
+        tone: 'brand',
       },
       {
-        label: 'Stock Value',
-        value: currencyFormatter.format(stockValue),
-        helper: 'Visible inventory value',
-        icon: <PaymentsOutlinedIcon fontSize="small" />,
-        tone: 'success',
+        label: 'Low / Out Stock',
+        value: (
+          <span className="product-stat-dual-val">
+            <span
+              className={`product-stat-num ${lowStockCount > 0 ? 'product-stat-num--warning' : ''}`}
+              title={`${lowStockCount} low stock (1-10 items)`}
+            >
+              {lowStockCount}
+              <span className="product-stat-sub">Low</span>
+            </span>
+            <span className="product-stat-slash">/</span>
+            <span
+              className={`product-stat-num ${outOfStockCount > 0 ? 'product-stat-num--danger' : ''}`}
+              title={`${outOfStockCount} out of stock (0 items)`}
+            >
+              {outOfStockCount}
+              <span className="product-stat-sub">Out</span>
+            </span>
+          </span>
+        ),
+        helper: `${lowStockCount} low, ${outOfStockCount} out of stock`,
+        icon: <WarningAmberOutlinedIcon fontSize="small" />,
+        tone: outOfStockCount > 0 ? 'danger' : 'warning',
       },
     ];
-  }, [rows, categories, filteredRows.length]);
+  }, [rows, categories, brands, filteredRows.length]);
 
 
 

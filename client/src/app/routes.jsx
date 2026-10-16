@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout/MainLayout";
 
-import { ROUTE_PATHS, ROUTE_SEGMENTS } from "../constants/routes";
+import { ROUTE_SEGMENTS, getHomeRouteByRole } from "../constants/routes";
 
 import ProtectedRoute from "../features/auth/components/ProtectedRoute";
 import { useAuth } from "../features/auth/hooks/useAuth";
@@ -23,8 +23,7 @@ import SalePage from "../features/sales/pages/SalePage";
 
 const HomeRedirect = () => {
   const { user } = useAuth();
-  const isStaff = user?.role === 'staff' || user?.role === 'worker';
-  return <Navigate to={isStaff ? ROUTE_PATHS.products : ROUTE_PATHS.dashboard} replace />;
+  return <Navigate to={getHomeRouteByRole(user?.role)} replace />;
 };
 
 function AppRoutes() {

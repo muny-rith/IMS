@@ -13,6 +13,13 @@
   align-items: center;
   gap: 10px;
   user-select: none;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.navbar__brand:hover {
+  opacity: 0.85;
 }
 
 .navbar__brand-logo {

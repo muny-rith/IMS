@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment, useMemo } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
+import { getHomeRouteByRole } from '../../../constants/routes'
 import logo from '../../../assets/images/logo.png'
 import './SideBar.css'
 
@@ -147,6 +148,7 @@ const SidebarGroup = ({ section, isMobile, onClose }) => {
 const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {
   const { user } = useAuth();
   const userRole = user?.role || 'staff';
+  const homePath = getHomeRouteByRole(userRole);
 
   const visibleSections = useMemo(() => {
     return getVisibleNavSections(userRole);
@@ -155,10 +157,15 @@ const SideBar = ({ collapsed = false, isMobile = false, onClose }) => {
   return (
     <nav className={['sidebar', collapsed ? 'sidebar--collapsed' : ''].filter(Boolean).join(' ')}>
 
-      <div className="sidebar__logo">
+      <Link
+        to={homePath}
+        className="sidebar__logo"
+        onClick={() => isMobile && onClose?.()}
+        title="Go to Home"
+      >
         <img src={logo} alt="Moon IMS" />
         <span className="sidebar__logo-text">Moon IMS</span>
-      </div>
+      </Link>
 
       <div className="sidebar__nav">
         {!collapsed && <div className="sidebar__menu-label">Menu</div>}

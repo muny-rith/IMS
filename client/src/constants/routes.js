@@ -35,3 +35,16 @@ export const ROUTE_PATHS = Object.freeze({
   product_edit: `/${ROUTE_SEGMENTS.product_edit}`,
   product_view: `/${ROUTE_SEGMENTS.product_view}`,
 });
+
+/**
+ * Returns the default home destination based on the user's role.
+ * - Admin / Manager -> Dashboard (/dashboard)
+ * - Worker / Staff / Other -> Product Catalog (/products)
+ */
+export const getHomeRouteByRole = (role = 'staff') => {
+  const normalizedRole = String(role || '').toLowerCase();
+  if (['admin', 'manager'].includes(normalizedRole)) {
+    return ROUTE_PATHS.dashboard;
+  }
+  return ROUTE_PATHS.products;
+};

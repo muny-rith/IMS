@@ -33,6 +33,13 @@
   flex-shrink: 0;
   height: 70px;
   overflow: hidden;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar__logo:hover {
+  opacity: 0.85;
 }
 
 .sidebar__logo img {

@@ -204,11 +204,6 @@ const ProductDetailPage = () => {
     return [];
   }, [product, variants]);
 
-  const activeVariant = useMemo(() => {
-    if (!variants.length || !selectedVariantId) return null;
-    return variants.find((v) => (v.id || v.variant_id) === selectedVariantId) || null;
-  }, [variants, selectedVariantId]);
-
   const handleSelectVariant = (v) => {
     if (!v) return;
     const vId = v.id || v.variant_id;
@@ -515,11 +510,10 @@ const ProductDetailPage = () => {
                               <tr key={v.id || v.variant_id || idx}>
                                 <td>
                                   <div
-                                    className={`product-detail-tbl-avatar ${
-                                      selectedVariantId === (v.id || v.variant_id)
+                                    className={`product-detail-tbl-avatar ${selectedVariantId === (v.id || v.variant_id)
                                         ? 'product-detail-tbl-avatar--selected'
                                         : ''
-                                    }`}
+                                      }`}
                                     style={{ cursor: 'pointer' }}
                                     onClick={() => handleSelectVariant(v)}
                                     title={`Click to preview ${vSku}`}
