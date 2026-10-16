@@ -115,5 +115,4 @@ const LoanoutChart = ({ loading = false, height = 280 }) => {
 
 LoanoutChart.Skeleton = LoanoutChartSkeleton;
 
-export { LoanoutChartSkeleton };
 export default LoanoutChart;

@@ -1,5 +1,5 @@
 // Moon IMS Service Worker for PWA Standalone Fullscreen
-const CACHE_NAME = 'moon-ims-pwa-v1';
+const CACHE_NAME = 'moon-ims-pwa-v2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
