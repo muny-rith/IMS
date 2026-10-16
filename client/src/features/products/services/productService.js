@@ -69,6 +69,7 @@ export const fetchProducts = async (forceRefresh = false) => {
   }
   const response = await api.get('/products');
   const data = (response.data.data ?? []).map(normalizeProductRow);
+  data.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' }));
   cacheService.set(CACHE_KEYS.PRODUCTS_LIST, data, CACHE_TTL.PRODUCTS);
   return data;
 };

@@ -278,9 +278,8 @@ const Select = forwardRef(
       if (disabled) return;
 
       if (!isMobile) {
-        // Desktop: clicking inside search input or clear button should not toggle/close
+        // Desktop: clicking clear button should not toggle/close
         if (
-          e.target.closest('.ui-select-search-input') ||
           e.target.closest('.ui-select-search-clear') ||
           e.target.closest('.ui-select-clear-btn')
         ) {
@@ -454,18 +453,13 @@ const Select = forwardRef(
                   {selectedOption ? selectedOption.label : placeholder}
                 </span>
               ) : (
-                <div
-                  className="ui-select-search-view"
-                  onClick={(e) => e.stopPropagation()}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
+                <div className="ui-select-search-view">
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="ui-select-search-input"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
                     placeholder={
                       selectedOption
                         ? selectedOption.label

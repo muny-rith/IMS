@@ -182,7 +182,7 @@ export const findAll = async () => {
     LEFT JOIN tb_product_variant pv ON p.product_id = pv.product_id AND pv.is_active = true
     LEFT JOIN tb_stock_balance sb ON pv.variant_id = sb.variant_id
     GROUP BY p.product_id, c.category_name, b.brand_name
-    ORDER BY p.product_id DESC;
+    ORDER BY LOWER(p.product_name) ASC, p.product_name ASC;
   `;
   const { rows } = await query(text);
   return rows;

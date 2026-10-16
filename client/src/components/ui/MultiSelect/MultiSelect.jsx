@@ -164,16 +164,15 @@ const MultiSelect = ({
   // Click arrow or outside: Closes menu
   const handleTriggerClick = (e) => {
     if (!isMobile) {
-      // Desktop: If clicking inside search input or clear button, do not toggle/close
+      // Desktop: clicking clear search text or tag-remove button should not toggle/close
       if (
-        e.target.closest('.multiselect__search-input') ||
         e.target.closest('.multiselect__search-cancel') ||
         e.target.closest('.multiselect__tag-remove')
       ) {
         return;
       }
 
-      // Desktop: toggle
+      // Desktop: toggle open/close when clicking the trigger (including in the middle)
       if (isOpen) {
         setIsOpen(false);
         setSearchQuery('');
@@ -305,9 +304,8 @@ const MultiSelect = ({
     >
       {/* Trigger Box */}
       <div
-        className={`multiselect__trigger ${isOpen ? 'multiselect__trigger--open' : ''} ${
-          selectedCount > 0 ? 'multiselect__trigger--active' : ''
-        }`}
+        className={`multiselect__trigger ${isOpen ? 'multiselect__trigger--open' : ''} ${selectedCount > 0 ? 'multiselect__trigger--active' : ''
+          }`}
         onClick={handleTriggerClick}
       >
         <div className="multiselect__trigger-content">
@@ -353,18 +351,13 @@ const MultiSelect = ({
                 )}
               </div>
             ) : (
-              <div
-                className="multiselect__search-view"
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-              >
+              <div className="multiselect__search-view">
                 <input
                   ref={searchInputRef}
                   type="text"
                   className="multiselect__search-input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}
                   placeholder={label ? `Search ${label.toLowerCase()}...` : 'Search options...'}
                   autoComplete="off"
                   aria-label={label ? `Search ${label}` : 'Search options'}
@@ -509,9 +502,9 @@ const MultiSelect = ({
           style={
             popoverWidth
               ? {
-                  width: typeof popoverWidth === 'number' ? `${popoverWidth}px` : popoverWidth,
-                  maxWidth: '100%',
-                }
+                width: typeof popoverWidth === 'number' ? `${popoverWidth}px` : popoverWidth,
+                maxWidth: '100%',
+              }
               : undefined
           }
         >
@@ -520,18 +513,16 @@ const MultiSelect = ({
             <div className="multiselect__tabs-left">
               <button
                 type="button"
-                className={`multiselect__tab ${
-                  activeTab === 'all' ? 'multiselect__tab--active' : ''
-                }`}
+                className={`multiselect__tab ${activeTab === 'all' ? 'multiselect__tab--active' : ''
+                  }`}
                 onClick={() => setActiveTab('all')}
               >
                 All
               </button>
               <button
                 type="button"
-                className={`multiselect__tab ${
-                  activeTab === 'selected' ? 'multiselect__tab--active' : ''
-                }`}
+                className={`multiselect__tab ${activeTab === 'selected' ? 'multiselect__tab--active' : ''
+                  }`}
                 onClick={() => setActiveTab('selected')}
               >
                 Selected
@@ -569,8 +560,8 @@ const MultiSelect = ({
                   {searchQuery
                     ? `No ${label ? label.toLowerCase() : 'options'} matching "${searchQuery}"`
                     : activeTab === 'selected'
-                    ? 'Nothing selected'
-                    : 'No options available'}
+                      ? 'Nothing selected'
+                      : 'No options available'}
                 </span>
               </div>
             ) : (
@@ -581,9 +572,8 @@ const MultiSelect = ({
                 return (
                   <div
                     key={String(opt.value)}
-                    className={`multiselect__item ${
-                      isChecked ? 'multiselect__item--checked' : ''
-                    }`}
+                    className={`multiselect__item ${isChecked ? 'multiselect__item--checked' : ''
+                      }`}
                     onMouseDown={(e) => {
                       // Prevent focus loss from search input when picking options
                       e.preventDefault();
@@ -595,9 +585,8 @@ const MultiSelect = ({
                     title={opt.label}
                   >
                     <div
-                      className={`multiselect__checkbox ${
-                        isChecked ? 'multiselect__checkbox--checked' : ''
-                      }`}
+                      className={`multiselect__checkbox ${isChecked ? 'multiselect__checkbox--checked' : ''
+                        }`}
                     >
                       {isChecked && <CheckIcon sx={{ fontSize: 14, color: '#ffffff' }} />}
                     </div>

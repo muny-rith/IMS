@@ -17,11 +17,8 @@ import {
 } from '@mui/material';
 
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
