@@ -69,11 +69,13 @@ const Select = forwardRef(
       required = false,
       isClearable,
       loading = false,
+      autoFlip = false,
       ...props
     },
     ref
   ) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [placement, setPlacement] = useState('bottom'); // 'bottom' | 'top'
     const [searchQuery, setSearchQuery] = useState('');
 
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -200,6 +202,37 @@ const Select = forwardRef(
         document.removeEventListener('keydown', handleKeyDown);
       };
     }, [isOpen, onBlur]);
+
+    // Placement detection: always drops down ('bottom') by default. Only auto-flips if autoFlip={true}
+    useEffect(() => {
+      if (!autoFlip) {
+        setPlacement('bottom');
+        return;
+      }
+      if (!isOpen || !triggerRef.current) return;
+
+      const calculatePlacement = () => {
+        if (!triggerRef.current) return;
+        const rect = triggerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        const minRequiredBelow = 200; // Estimated height of popover menu
+
+        if (spaceBelow < minRequiredBelow && spaceAbove > spaceBelow) {
+          setPlacement('top');
+        } else {
+          setPlacement('bottom');
+        }
+      };
+
+      calculatePlacement();
+      window.addEventListener('resize', calculatePlacement);
+      window.addEventListener('scroll', calculatePlacement, true);
+      return () => {
+        window.removeEventListener('resize', calculatePlacement);
+        window.removeEventListener('scroll', calculatePlacement, true);
+      };
+    }, [isOpen, autoFlip]);
 
     // Desktop: Auto-focus search input immediately on 1st click
     // Mobile: Handled explicitly by mobileStep (focuses only on 2nd click)
@@ -412,7 +445,9 @@ const Select = forwardRef(
 
       <div
         ref={containerRef}
-        className={`ui-select-container ${className}`.trim()}
+        className={`ui-select-container ${
+          isOpen ? 'ui-select-container--open' : ''
+        } ${className}`.trim()}
       >
         {label && <label className="ui-select-label">{label}</label>}
 
@@ -594,7 +629,11 @@ const Select = forwardRef(
 
         {/* Popover Menu: Starts DIRECTLY with Options List, NO duplicate search box */}
         {isOpen && (
-          <div id={listboxId} className="ui-select-popover" role="listbox">
+          <div
+            id={listboxId}
+            className={`ui-select-popover ui-select-popover--${placement}`}
+            role="listbox"
+          >
             <div ref={listRef} className="ui-select-list">
               {/* Optional "None" Option */}
               {(placeholder === 'None' || isClearable) &&

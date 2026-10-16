@@ -8,7 +8,7 @@ import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
-import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
+import Select from '../../../components/ui/Select/Select';
 import ImageDropzone from '../../../components/ui/ImageDropzone/ImageDropzone';
 
 const ProductVariantsStudio = ({
@@ -260,40 +260,38 @@ const ProductVariantsStudio = ({
                   {activeAttributes.length > 0 && (
                     <div className="product-form-field workbench-attr-section">
                       <div className="workbench-attr-list">
-                        {activeAttributes.map((attr) => (
-                          <div
-                            key={attr.attribute_id}
-                            className="product-form-field workbench-attr-item"
-                          >
-                            <span className="workbench-attr-label">{attr.attribute_name}</span>
-                            <MultiSelect
-                              placeholder={`Select ${attr.attribute_name}...`}
-                              options={(attributeValuesMap[attr.attribute_id] || []).map(
-                                (val) => ({
-                                  value: val.value,
-                                  label: val.value,
-                                })
-                              )}
-                              selectedValues={
-                                Array.isArray(selectedVariant.attributes[attr.attribute_id])
-                                  ? selectedVariant.attributes[attr.attribute_id]
-                                  : selectedVariant.attributes[attr.attribute_id]
-                                    ? [selectedVariant.attributes[attr.attribute_id]]
-                                    : []
-                              }
-                              onChange={(newValues) =>
-                                onVariantAttrChange(
-                                  selectedVariant.id,
-                                  attr.attribute_id,
-                                  newValues
-                                )
-                              }
-                              maxTagsVisible={3}
-                              width="100%"
-                              popoverWidth="100%"
-                            />
-                          </div>
-                        ))}
+                        {activeAttributes.map((attr) => {
+                          const currentVal = Array.isArray(selectedVariant.attributes?.[attr.attribute_id])
+                            ? selectedVariant.attributes[attr.attribute_id][0] || ''
+                            : selectedVariant.attributes?.[attr.attribute_id] || '';
+
+                          return (
+                            <div
+                              key={attr.attribute_id}
+                              className="product-form-field workbench-attr-item"
+                            >
+                              <span className="workbench-attr-label">{attr.attribute_name}</span>
+                              <Select
+                                placeholder={`Select ${attr.attribute_name}...`}
+                                options={(attributeValuesMap[attr.attribute_id] || []).map(
+                                  (val) => ({
+                                    value: String(val.value ?? val),
+                                    label: String(val.value ?? val),
+                                  })
+                                )}
+                                value={currentVal}
+                                onChange={(e) =>
+                                  onVariantAttrChange(
+                                    selectedVariant.id,
+                                    attr.attribute_id,
+                                    e.target.value ? [e.target.value] : []
+                                  )
+                                }
+                                isClearable
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
