@@ -70,6 +70,7 @@ const Select = forwardRef(
       isClearable,
       loading = false,
       autoFlip = false,
+      maxVisibleItems,
       ...props
     },
     ref
@@ -167,6 +168,36 @@ const Select = forwardRef(
         opt.label.toLowerCase().includes(q)
       );
     }, [normalizedOptions, searchQuery]);
+
+    // Dynamic list height with Smart Scroll Affordance (The 4.5 / 5.5 Item Rule)
+    const listStyle = useMemo(() => {
+      const hasNoneOption =
+        (placeholder === 'None' || isClearable) && !required && !searchQuery;
+      const totalCount = filteredOptions.length + (hasNoneOption ? 1 : 0);
+
+      // Default to 5.5 items if maxVisibleItems is omitted
+      let targetCount =
+        maxVisibleItems !== undefined ? Number(maxVisibleItems) : 5.5;
+
+      if (!targetCount || targetCount <= 0) return undefined;
+
+      // Smart Peek Rule: If integer specified and there are more items below,
+      // peek the next item (+0.5) so user visually notices scrollability
+      if (Number.isInteger(targetCount) && totalCount > targetCount) {
+        targetCount += 0.5;
+      }
+
+      // ~36px per option + 10px vertical padding (5px top + 5px bottom)
+      const calculatedMaxHeight = Math.round(targetCount * 36 + 10);
+      return { maxHeight: `${calculatedMaxHeight}px` };
+    }, [
+      maxVisibleItems,
+      filteredOptions.length,
+      placeholder,
+      isClearable,
+      required,
+      searchQuery,
+    ]);
 
     // Close when clicking outside or pressing Escape
     useEffect(() => {
@@ -634,7 +665,7 @@ const Select = forwardRef(
             className={`ui-select-popover ui-select-popover--${placement}`}
             role="listbox"
           >
-            <div ref={listRef} className="ui-select-list">
+            <div ref={listRef} className="ui-select-list" style={listStyle}>
               {/* Optional "None" Option */}
               {(placeholder === 'None' || isClearable) &&
                 !required &&

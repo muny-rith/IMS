@@ -60,6 +60,7 @@ const MultiSelect = ({
   selectedValues = [],
   onChange,
   maxTagsVisible = 1,
+  maxVisibleItems,
   width,
   popoverWidth,
   className = '',
@@ -278,6 +279,27 @@ const MultiSelect = ({
   const visibleTags = useMemo(() => {
     return selectedValues.slice(0, maxTagsVisible);
   }, [selectedValues, maxTagsVisible]);
+
+  // Dynamic options list max height with Smart Scroll Affordance (The 4.5 / 5.5 Item Rule)
+  const listStyle = useMemo(() => {
+    const totalCount = visibleOptions.length;
+
+    // Default to 5.5 items if maxVisibleItems is omitted
+    let targetCount =
+      maxVisibleItems !== undefined ? Number(maxVisibleItems) : 5.5;
+
+    if (!targetCount || targetCount <= 0) return undefined;
+
+    // Smart Peek Rule: If integer specified and there are more items below,
+    // peek the next item (+0.5) so user visually notices scrollability
+    if (Number.isInteger(targetCount) && totalCount > targetCount) {
+      targetCount += 0.5;
+    }
+
+    // ~38px per option item + 12px list vertical padding
+    const calculatedMaxHeight = Math.round(targetCount * 38 + 12);
+    return { maxHeight: `${calculatedMaxHeight}px` };
+  }, [maxVisibleItems, visibleOptions.length]);
 
   const overflowCount = selectedCount - maxTagsVisible;
 
@@ -546,7 +568,7 @@ const MultiSelect = ({
           </div>
 
           {/* Options List */}
-          <div className="multiselect__list">
+          <div className="multiselect__list" style={listStyle}>
             {visibleOptions.length === 0 ? (
               <div className="multiselect__empty">
                 <div className="multiselect__empty-icon">
