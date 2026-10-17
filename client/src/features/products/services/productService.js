@@ -235,3 +235,38 @@ export const bulkUpdateProductStatus = async (ids, isActive) => {
   return response.data;
 };
 
+export const syncProductsToGoogleSheets = async () => {
+  const response = await api.post('/products/sync-sheets');
+  return response.data;
+};
+
+export const formatVariantAttributes = (variant) => {
+  if (!variant) return '-';
+  if (Array.isArray(variant.attribute_values) && variant.attribute_values.length > 0) {
+    const formatted = variant.attribute_values
+      .map((attr) => {
+        const name = attr.attribute_name || 'Attr';
+        const val = attr.value || '';
+        return `${name}: ${val}`;
+      })
+      .filter((s) => s.trim().length > 0)
+      .join(' / ');
+    return formatted || '-';
+  }
+  if (variant.attributes && typeof variant.attributes === 'object') {
+    const entries = Object.entries(variant.attributes);
+    if (entries.length === 0) return '-';
+    return entries
+      .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+      .join(' / ');
+  }
+  return '-';
+};
+
+export const fetchVariantsForExport = async (categoryFilter = null) => {
+  const params = categoryFilter ? { category: categoryFilter } : {};
+  const response = await api.get('/products/variants', { params });
+  return response.data.data ?? [];
+};
+
+

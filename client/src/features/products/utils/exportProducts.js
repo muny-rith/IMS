@@ -1,5 +1,7 @@
 /**
- * Utility to export product catalog to Excel (.xls) or CSV format.
+ * Utility to export product catalog & variants to Excel (.xls) or CSV format.
+ * Dynamically respects active/selected columns matching the Google Sheet layout:
+ * [ # No. | Product Name | Attributes | Other (Detail) | Price ($) | optional SKU / Category / Stock ]
  * Formats data with UTF-8 BOM to ensure Khmer and international characters display correctly.
  */
 
@@ -13,22 +15,90 @@ const escapeXml = (unsafe = '') => {
     .replace(/'/g, '&apos;');
 };
 
-export const exportProductsToExcel = (products = [], filenamePrefix = 'moon-ims-products') => {
-  if (!products || products.length === 0) {
+export const formatVariantAttributesString = (item) => {
+  if (!item) return '-';
+  if (item.formattedAttributes) return item.formattedAttributes;
+  if (Array.isArray(item.attribute_values) && item.attribute_values.length > 0) {
+    const formatted = item.attribute_values
+      .map((attr) => {
+        const name = attr.attribute_name || 'Attr';
+        const val = attr.value || '';
+        return `${name}: ${val}`;
+      })
+      .filter((s) => s.trim().length > 0)
+      .join(' / ');
+    return formatted || '-';
+  }
+  if (item.attributes && typeof item.attributes === 'object') {
+    const entries = Object.entries(item.attributes);
+    if (entries.length > 0) {
+      return entries
+        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
+        .join(' / ');
+    }
+  }
+  return '-';
+};
+
+const extractField = (item, colId, idx) => {
+  switch (colId) {
+    case 'no':
+      return idx + 1;
+    case 'name':
+      return item.product_name || item.name || 'Unnamed';
+    case 'attributes':
+      return formatVariantAttributesString(item);
+    case 'other':
+      return (item.other && String(item.other).trim()) || '-';
+    case 'price':
+      return Number(item.unit_price ?? item.price ?? 0);
+    case 'sku':
+      return item.sku || item.code || '-';
+    case 'category':
+      return item.category_name || item.category || '-';
+    case 'brand':
+      return item.brand_name || item.brand || '-';
+    case 'stock':
+      return Number(item.on_hand_qty ?? item.qty ?? 0);
+    default:
+      return item[colId] ?? '-';
+  }
+};
+
+const CORE_COL_IDS = ['no', 'name', 'attributes', 'other', 'price'];
+
+const buildColumnDefinitions = (selectedCols = []) => {
+  const allDefs = [
+    { id: 'no', label: '# No.', align: 'center', width: '60px' },
+    { id: 'name', label: 'Product Name', align: 'left', width: '220px' },
+    { id: 'attributes', label: 'Attributes', align: 'left', width: '200px' },
+    { id: 'other', label: 'Other (Detail)', align: 'left', width: '130px' },
+    { id: 'price', label: 'Price ($)', align: 'right', width: '100px' },
+    { id: 'sku', label: 'SKU', align: 'left', width: '110px' },
+    { id: 'category', label: 'Category', align: 'left', width: '140px' },
+    { id: 'brand', label: 'Brand', align: 'left', width: '130px' },
+    { id: 'stock', label: 'Stock Qty', align: 'right', width: '90px' },
+  ];
+
+  const activeCols = Array.isArray(selectedCols) ? selectedCols : [];
+  return allDefs.filter((d) => CORE_COL_IDS.includes(d.id) || activeCols.includes(d.id));
+};
+
+export const exportProductsToExcel = (
+  items = [],
+  selectedCols = [],
+  filenamePrefix = 'Report_Products'
+) => {
+  if (!items || items.length === 0) {
     alert('No products available to export.');
     return;
   }
 
+  const cols = buildColumnDefinitions(selectedCols);
   const generatedAt = new Date().toLocaleString('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
-
-  const totalQty = products.reduce((sum, p) => sum + (Number(p.qty) || 0), 0);
-  const totalValue = products.reduce(
-    (sum, p) => sum + (Number(p.qty) || 0) * (Number(p.price) || 0),
-    0
-  );
 
   let tableHtml = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -39,7 +109,7 @@ export const exportProductsToExcel = (products = [], filenamePrefix = 'moon-ims-
           <x:ExcelWorkbook>
             <x:ExcelWorksheets>
               <x:ExcelWorksheet>
-                <x:Name>Product Catalog</x:Name>
+                <x:Name>Product Variants</x:Name>
                 <x:WorksheetOptions>
                   <x:DisplayGridlines/>
                 </x:WorksheetOptions>
@@ -49,88 +119,84 @@ export const exportProductsToExcel = (products = [], filenamePrefix = 'moon-ims-
         </xml>
         <![endif]-->
         <style>
-          body { font-family: 'Battambang', 'Khmer OS Battambang', 'Segoe UI', Arial, sans-serif; font-size: 11pt; }
-          .title { font-size: 16pt; font-weight: bold; color: #0f172a; height: 35px; }
-          .meta { font-size: 10pt; color: #64748b; height: 22px; }
-          .th { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: left; padding: 10px; border: 1px solid #cbd5e1; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; }
+          .title { font-size: 15pt; font-weight: bold; color: #0f172a; height: 32px; }
+          .meta { font-size: 9.5pt; color: #64748b; height: 20px; }
+          .th { background-color: #1e293b; color: #ffffff; font-weight: bold; text-align: left; padding: 8px 10px; border: 1px solid #cbd5e1; }
           .th-num { text-align: center; }
           .th-right { text-align: right; }
-          .td { padding: 8px 10px; border: 1px solid #e2e8f0; vertical-align: middle; }
-          .td-num { text-align: center; }
-          .td-right { text-align: right; mso-number-format: "\\$#,##0.00"; }
-          .td-qty { text-align: center; font-weight: bold; }
+          .td { padding: 6px 10px; border: 1px solid #e2e8f0; vertical-align: middle; }
+          .td-num { text-align: center; color: #64748b; }
+          .td-name { font-weight: 600; color: #0f172a; }
+          .td-attr { color: #334155; }
+          .td-right { text-align: right; mso-number-format: "\\$#,##0.00"; font-weight: bold; color: #0f766e; }
+          .td-qty { text-align: right; font-weight: 600; }
           .even { background-color: #f8fafc; }
-          .status-in { color: #16a34a; font-weight: bold; }
-          .status-low { color: #d97706; font-weight: bold; }
-          .status-out { color: #dc2626; font-weight: bold; }
           .total-row { background-color: #f1f5f9; font-weight: bold; border-top: 2px solid #0f172a; }
         </style>
       </head>
       <body>
         <table>
           <tr>
-            <td colspan="9" class="title">Moon IMS &mdash; Product Catalog</td>
+            <td colspan="${cols.length}" class="title">INVENTORY MANAGEMENT SYSTEM &mdash; Product Variants Report</td>
           </tr>
           <tr>
-            <td colspan="9" class="meta">Exported on: ${escapeXml(generatedAt)} &bull; Total Products: ${products.length} items</td>
+            <td colspan="${cols.length}" class="meta">Exported on: ${escapeXml(generatedAt)} &bull; Total Variants: ${items.length} items</td>
           </tr>
-          <tr><td colspan="9"></td></tr>
+          <tr><td colspan="${cols.length}"></td></tr>
           <thead>
             <tr>
-              <th class="th th-num" style="width: 50px;">#</th>
-              <th class="th" style="width: 250px;">Product Name</th>
-              <th class="th" style="width: 140px;">Category</th>
-              <th class="th" style="width: 140px;">Brand</th>
-              <th class="th" style="width: 130px;">Department</th>
-              <th class="th th-right" style="width: 100px;">Price ($)</th>
-              <th class="th th-num" style="width: 90px;">Qty</th>
-              <th class="th th-num" style="width: 120px;">Status</th>
-              <th class="th th-right" style="width: 130px;">Total Value ($)</th>
+              ${cols
+                .map((col) => {
+                  const alignClass = col.align === 'center' ? 'th-num' : col.align === 'right' ? 'th-right' : '';
+                  return `<th class="th ${alignClass}" style="width: ${col.width};">${escapeXml(col.label)}</th>`;
+                })
+                .join('')}
             </tr>
           </thead>
           <tbody>
   `;
 
-  products.forEach((product, idx) => {
+  items.forEach((item, idx) => {
     const isEven = idx % 2 === 1;
-    const qty = Number(product.qty) || 0;
-    const price = Number(product.price) || 0;
-    const rowValue = qty * price;
+    tableHtml += `<tr class="${isEven ? 'even' : ''}">`;
 
-    let statusText = 'In Stock';
-    let statusClass = 'status-in';
-    if (qty <= 0) {
-      statusText = 'Out of Stock';
-      statusClass = 'status-out';
-    } else if (qty <= 10) {
-      statusText = 'Low Stock';
-      statusClass = 'status-low';
-    }
+    cols.forEach((col) => {
+      const val = extractField(item, col.id, idx);
+      if (col.id === 'no') {
+        tableHtml += `<td class="td td-num">${val}</td>`;
+      } else if (col.id === 'name') {
+        tableHtml += `<td class="td td-name">${escapeXml(val)}</td>`;
+      } else if (col.id === 'price') {
+        tableHtml += `<td class="td td-right">$${Number(val).toFixed(2)}</td>`;
+      } else if (col.id === 'stock') {
+        tableHtml += `<td class="td td-qty">${val}</td>`;
+      } else if (col.id === 'attributes') {
+        tableHtml += `<td class="td td-attr">${escapeXml(val)}</td>`;
+      } else {
+        tableHtml += `<td class="td">${escapeXml(val)}</td>`;
+      }
+    });
 
-    tableHtml += `
-      <tr class="${isEven ? 'even' : ''}">
-        <td class="td td-num">${idx + 1}</td>
-        <td class="td" style="font-weight: 600;">${escapeXml(product.name || 'Unnamed')}</td>
-        <td class="td">${escapeXml(product.category || '—')}</td>
-        <td class="td">${escapeXml(product.brand || '—')}</td>
-        <td class="td">${escapeXml(product.department || 'N/A')}</td>
-        <td class="td td-right">$${price.toFixed(2)}</td>
-        <td class="td td-qty">${qty}</td>
-        <td class="td td-num ${statusClass}">${statusText}</td>
-        <td class="td td-right">$${rowValue.toFixed(2)}</td>
-      </tr>
-    `;
+    tableHtml += `</tr>`;
   });
 
   tableHtml += `
           </tbody>
           <tfoot>
             <tr class="total-row">
-              <td colspan="5" class="td" style="text-align: right; font-weight: bold;">TOTAL:</td>
-              <td class="td td-right">—</td>
-              <td class="td td-qty">${totalQty}</td>
-              <td class="td td-num">—</td>
-              <td class="td td-right">$${totalValue.toFixed(2)}</td>
+              <td class="td td-num" style="font-weight: bold;">—</td>
+              <td class="td td-name">Total: ${items.length} variants</td>
+              ${cols
+                .slice(2)
+                .map((col) => {
+                  if (col.id === 'stock') {
+                    const totalQty = items.reduce((s, i) => s + Number(extractField(i, 'stock', 0)), 0);
+                    return `<td class="td td-qty">${totalQty}</td>`;
+                  }
+                  return `<td class="td" style="text-align: center;">—</td>`;
+                })
+                .join('')}
             </tr>
           </tfoot>
         </table>
@@ -144,7 +210,7 @@ export const exportProductsToExcel = (products = [], filenamePrefix = 'moon-ims-
 
   const url = URL.createObjectURL(blob);
   const dateStr = new Date().toISOString().slice(0, 10);
-  const filename = `${filenamePrefix}-${dateStr}.xls`;
+  const filename = `${filenamePrefix}_${dateStr}.xls`;
 
   const link = document.createElement('a');
   link.href = url;
@@ -155,38 +221,37 @@ export const exportProductsToExcel = (products = [], filenamePrefix = 'moon-ims-
   URL.revokeObjectURL(url);
 };
 
-export const exportProductsToCsv = (products = [], filenamePrefix = 'moon-ims-products') => {
-  if (!products || products.length === 0) {
+export const exportProductsToCsv = (
+  items = [],
+  selectedCols = [],
+  filenamePrefix = 'Report_Products'
+) => {
+  if (!items || items.length === 0) {
     alert('No products available to export.');
     return;
   }
 
-  const headers = ['#', 'Product Name', 'Category', 'Brand', 'Department', 'Price ($)', 'Qty', 'Status', 'Total Value ($)'];
+  const cols = buildColumnDefinitions(selectedCols);
+  const headers = cols.map((c) => c.label);
 
-  const rows = products.map((p, idx) => {
-    const qty = Number(p.qty) || 0;
-    const price = Number(p.price) || 0;
-    const rowValue = qty * price;
-    const status = qty <= 0 ? 'Out of Stock' : qty <= 10 ? 'Low Stock' : 'In Stock';
-
-    return [
-      idx + 1,
-      `"${String(p.name || '').replace(/"/g, '""')}"`,
-      `"${String(p.category || '').replace(/"/g, '""')}"`,
-      `"${String(p.brand || '').replace(/"/g, '""')}"`,
-      `"${String(p.department || '').replace(/"/g, '""')}"`,
-      price.toFixed(2),
-      qty,
-      status,
-      rowValue.toFixed(2),
-    ].join(',');
+  const rows = items.map((item, idx) => {
+    return cols
+      .map((col) => {
+        const raw = extractField(item, col.id, idx);
+        if (col.id === 'price') {
+          return `$${Number(raw).toFixed(2)}`;
+        }
+        const stringified = String(raw ?? '');
+        return `"${stringified.replace(/"/g, '""')}"`;
+      })
+      .join(',');
   });
 
   const csvContent = [headers.join(','), ...rows].join('\r\n');
   const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const dateStr = new Date().toISOString().slice(0, 10);
-  const filename = `${filenamePrefix}-${dateStr}.csv`;
+  const filename = `${filenamePrefix}_${dateStr}.csv`;
 
   const link = document.createElement('a');
   link.href = url;

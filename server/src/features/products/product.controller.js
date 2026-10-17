@@ -2,6 +2,7 @@ import * as productModel from './product.model.js';
 import ApiError from '../../shared/errors/ApiError.js';
 import { uploadFileToSupabase, deleteFileFromSupabase } from '../../config/supabase.js';
 import serverCache, { SERVER_CACHE_TTL } from '../../shared/cache/memoryCache.js';
+import { syncAllProductsToSheet, formatProductRow } from '../../integrations/googleSheets/sheetsClient.js';
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -306,3 +307,41 @@ export const getExternalStocks = async (req, res, next) => {
     next(err);
   }
 };
+
+export const syncProductsToGoogleSheets = async (req, res, next) => {
+  try {
+    const category = req.query?.category !== undefined ? req.query.category : null;
+    const variants = await productModel.findAllVariantsForExport(category);
+
+    // Map each variant to [No, Product Name, Attributes, Other, Price]
+    const rows = variants.map((item, index) =>
+      formatProductRow(index + 1, item.product_name, item)
+    );
+
+    const sheetResult = await syncAllProductsToSheet(rows);
+
+    res.status(200).json({
+      status: 'success',
+      filter: category,
+      totalSynced: rows.length,
+      sheetResponse: sheetResult,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getVariantsForExport = async (req, res, next) => {
+  try {
+    const category = req.query?.category || null;
+    const variants = await productModel.findAllVariantsForExport(category);
+
+    res.status(200).json({
+      status: 'success',
+      data: variants,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+

@@ -12,3 +12,5 @@ export { default as ImageDropzone, ImageDropzoneSkeleton } from './ImageDropzone
 export { default as LoanoutChart, LoanoutChartSkeleton } from './LoanoutChart';
 export { default as FormEdit } from './FormEdit';
 export { default as ActionButtons, ActionButton, ActionGroup, ActionGroupSkeleton } from './ActionButtons';
+export { default as PrintModal } from './PrintModal';
+

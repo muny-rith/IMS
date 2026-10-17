@@ -740,3 +740,53 @@ export const findExternalStocks = async () => {
   return rows;
 };
 
+export const findAllVariantsForExport = async (categoryFilter = null) => {
+  let filterClause = '';
+  const params = [];
+
+  if (categoryFilter && String(categoryFilter).trim()) {
+    params.push(`%${categoryFilter.trim()}%`);
+    filterClause = `AND (c.category_name ILIKE $${params.length} OR p.product_name ILIKE $${params.length})`;
+  }
+
+  const text = `
+    SELECT 
+      p.product_id,
+      p.product_name,
+      p.category_id,
+      c.category_name,
+      p.brand_id,
+      b.brand_name,
+      pv.variant_id,
+      pv.sku,
+      pv.unit_price,
+      pv.other,
+      COALESCE(SUM(sb.on_hand_qty), 0)::INTEGER AS on_hand_qty,
+      COALESCE(
+        json_agg(
+          json_build_object(
+            'attribute_name', a.attribute_name,
+            'value', av.value
+          )
+          ORDER BY a.attribute_name, av.value
+        ) FILTER (WHERE av.value_id IS NOT NULL),
+        '[]'::json
+      ) AS attribute_values
+    FROM tb_product p
+    LEFT JOIN tb_category c ON p.category_id = c.category_id
+    LEFT JOIN tb_brand b ON p.brand_id = b.brand_id
+    JOIN tb_product_variant pv ON p.product_id = pv.product_id
+    LEFT JOIN tb_stock_balance sb ON pv.variant_id = sb.variant_id
+    LEFT JOIN tb_variant_attribute_value vav ON pv.variant_id = vav.variant_id
+    LEFT JOIN tb_attribute_value av ON vav.value_id = av.value_id
+    LEFT JOIN tb_attribute a ON av.attribute_id = a.attribute_id
+    WHERE p.is_active = true AND pv.is_active = true ${filterClause}
+    GROUP BY p.product_id, p.product_name, p.category_id, c.category_name, p.brand_id, b.brand_name, pv.variant_id, pv.sku, pv.unit_price, pv.other
+    ORDER BY LOWER(p.product_name) ASC, pv.variant_id ASC;
+  `;
+  const { rows } = await query(text, params);
+  return rows;
+};
+
+
+

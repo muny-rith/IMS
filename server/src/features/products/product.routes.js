@@ -10,8 +10,10 @@ router.get('/external/stocks', productController.getExternalStocks);
 
 router.use(protect); // All product endpoints require login
 
+router.post('/sync-sheets', restrictTo('admin', 'manager', 'staff'), productController.syncProductsToGoogleSheets);
 router.post('/bulk-delete', restrictTo('admin', 'manager'), productController.bulkDeleteProducts);
 router.post('/bulk-status', restrictTo('admin', 'manager', 'staff'), productController.bulkUpdateStatus);
+router.get('/variants', productController.getVariantsForExport);
 
 router.route('/')
   .get(productController.getProducts)

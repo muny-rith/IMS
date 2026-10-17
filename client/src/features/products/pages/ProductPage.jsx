@@ -25,8 +25,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 
 import Button from '../../../components/ui/Button/Button';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined';
+import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import DataTable from '../../../components/ui/DataTable/DataTable';
+import PrintModal from '../../../components/ui/PrintModal/PrintModal';
 import Input from '../../../components/ui/Input/Input';
 import Skeleton from '../../../components/ui/Skeleton/Skeleton';
 import { ActionGroup } from '../../../components/ui/ActionButtons';
@@ -37,7 +39,12 @@ import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
 import ProductBulkActionsBar from '../components/ProductBulkActionsBar';
 import { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
 import ProductHoverPreview from '../components/ProductHoverPreview';
-import { exportProductsToExcel } from '../utils/exportProducts';
+import { exportProductsToExcel, exportProductsToCsv } from '../utils/exportProducts';
+import {
+  syncProductsToGoogleSheets,
+  fetchVariantsForExport,
+  formatVariantAttributes,
+} from '../services/productService';
 
 
 
@@ -227,14 +234,149 @@ const ProductPage = () => {
     });
   }, [rows, search, selectedCategories, selectedBrands]);
 
-  const handleExport = useCallback(() => {
-    if (!filteredRows || filteredRows.length === 0) {
-      showToast('No products to export.', 'error');
-      return;
+  const [syncingSheets, setSyncingSheets] = useState(false);
+
+  const handleSyncGoogleSheets = async () => {
+    try {
+      setSyncingSheets(true);
+      const res = await syncProductsToGoogleSheets();
+      showToast(`Synced ${res.totalSynced || 'all'} products to Google Sheets!`);
+    } catch (err) {
+      showToast(err.response?.data?.message || err.message || 'Failed to sync to Google Sheets.', 'error');
+    } finally {
+      setSyncingSheets(false);
     }
-    exportProductsToExcel(filteredRows);
-    showToast(`Exported ${filteredRows.length} products to Excel.`);
-  }, [filteredRows, showToast]);
+  };
+
+  const [showPrintModal, setShowPrintModal] = useState(false);
+  const [variantRows, setVariantRows] = useState([]);
+
+  // Pre-load variant rows on mount so print preview is instantly ready
+  useEffect(() => {
+    let active = true;
+    const loadVariants = async () => {
+      try {
+        const data = await fetchVariantsForExport();
+        if (active) {
+          setVariantRows(data);
+        }
+      } catch (err) {
+        console.error('Failed to load variants for export:', err);
+      }
+    };
+    loadVariants();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep only variants belonging to currently filtered products
+  const filteredProductIds = useMemo(
+    () => new Set(filteredRows.map((r) => Number(r.id))),
+    [filteredRows]
+  );
+
+  const printableVariantRows = useMemo(() => {
+    if (variantRows && variantRows.length > 0) {
+      return variantRows.filter((v) => filteredProductIds.has(Number(v.product_id)));
+    }
+    // Fallback if variants haven't loaded yet
+    return filteredRows.map((r) => ({
+      product_id: r.id,
+      product_name: r.name,
+      category_name: r.category,
+      brand_name: r.brand,
+      variant_id: r.id,
+      sku: r.sku,
+      unit_price: r.price,
+      other: '-',
+      on_hand_qty: r.qty,
+      attribute_values: [],
+    }));
+  }, [variantRows, filteredProductIds, filteredRows]);
+
+  // 5 Core Google Sheet columns: [ # No. | Product Name | Attributes | Other (Detail) | Price ($) ]
+  // are permanent direct columns in the table.
+  // Optional columns that can be toggled on/off in the customizer:
+  const PRINT_CUSTOM_COLUMNS = useMemo(
+    () => [
+      { id: 'sku', label: 'SKU' },
+      { id: 'category', label: 'Category' },
+      { id: 'stock', label: 'Qty' },
+    ],
+    []
+  );
+  const [activePrintCols, setActivePrintCols] = useState([]);
+
+  const handleTogglePrintCol = (colId) => {
+    setActivePrintCols((prev) =>
+      prev.includes(colId) ? prev.filter((c) => c !== colId) : [...prev, colId]
+    );
+  };
+
+  const printColWidths = useMemo(() => {
+    // Permanent direct columns with optimal balanced weights:
+    const weights = [
+      { key: 'no', weight: 6 },
+      { key: 'name', weight: 28 },
+      { key: 'attributes', weight: 26 },
+      { key: 'other', weight: 24 },
+      { key: 'price', weight: 14 },
+    ];
+    // Optional toggleable columns:
+    if (activePrintCols.includes('sku')) weights.push({ key: 'sku', weight: 13 });
+    if (activePrintCols.includes('category')) weights.push({ key: 'category', weight: 15 });
+    if (activePrintCols.includes('stock')) weights.push({ key: 'stock', weight: 11 });
+
+    const totalWeight = weights.reduce((sum, w) => sum + w.weight, 0);
+    return weights.map((w) => `${((w.weight / totalWeight) * 100).toFixed(1)}%`);
+  }, [activePrintCols]);
+
+  const printSummary = useMemo(() => {
+    const list = printableVariantRows || [];
+    let inStock = 0;
+    let lowStock = 0;
+    let outOfStock = 0;
+    let totalQty = 0;
+    list.forEach((p) => {
+      const q = Number(p.on_hand_qty ?? p.qty ?? 0);
+      totalQty += q;
+      if (q <= 0) outOfStock++;
+      else if (q <= 10) lowStock++;
+      else inStock++;
+    });
+    return {
+      totalVariants: list.length,
+      totalProducts: filteredRows.length,
+      inStock,
+      lowStock,
+      outOfStock,
+      totalQty,
+    };
+  }, [printableVariantRows, filteredRows]);
+
+  // Request 3: Smart Pagination for A4 Printable Pages
+  // Page 1: 17 items (perfectly fills the page with IMS Header + Executive Summary table, leaving no excess empty space)
+  // Page 2+: 25 items (full-height detailed items list with balanced margins)
+  const printPages = useMemo(() => {
+    const list = printableVariantRows || [];
+    if (list.length === 0) return [[]];
+    const page1Size = 17;
+    const subsequentPageSize = 25;
+    const pagesList = [];
+    pagesList.push(list.slice(0, page1Size));
+    let i = page1Size;
+    while (i < list.length) {
+      pagesList.push(list.slice(i, i + subsequentPageSize));
+      i += subsequentPageSize;
+    }
+    return pagesList.length > 0 ? pagesList : [[]];
+  }, [printableVariantRows]);
+
+  const getItemGlobalNo = (pageNumber, itemIndex) => {
+    if (pageNumber === 1) return itemIndex + 1;
+    return 17 + (pageNumber - 2) * 25 + itemIndex + 1;
+  };
 
   const stats = useMemo(() => {
     const lowStockCount = rows.filter((row) => {
@@ -509,12 +651,22 @@ const ProductPage = () => {
         <div className="product-header__actions">
           <Button
             variant="outline"
-            icon={<FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />}
+            icon={<CloudSyncOutlinedIcon sx={{ fontSize: 18, color: '#10b981' }} />}
             responsiveCollapse
-            onClick={handleExport}
-            title="Export product list to Excel"
+            onClick={handleSyncGoogleSheets}
+            loading={syncingSheets}
+            title="Sync all products to Google Sheets"
           >
-            Export
+            Google Sheet
+          </Button>
+          <Button
+            variant="outline"
+            icon={<PrintOutlinedIcon sx={{ fontSize: 18 }} />}
+            responsiveCollapse
+            onClick={() => setShowPrintModal(true)}
+            title="Print or export PDF, Excel, and CSV report"
+          >
+            Print
           </Button>
           {canCreate && (
             <Button
@@ -729,6 +881,266 @@ const ProductPage = () => {
           {toast.message}
         </Alert>
       </Snackbar>
+
+      {/* Reusable A4 Print & PDF Preview Modal (Modeled after MoonPulse ExportModal) */}
+      <PrintModal
+        isOpen={showPrintModal}
+        onClose={() => setShowPrintModal(false)}
+        title="Report Product Inventory"
+        fileName={`Report_Products_${new Date().toISOString().split('T')[0]}`}
+        optionalColumns={PRINT_CUSTOM_COLUMNS}
+        selectedColumns={activePrintCols}
+        onToggleColumn={handleTogglePrintCol}
+        pages={printPages}
+        onExportCsv={(cols) => {
+          const targetCols = cols || activePrintCols;
+          exportProductsToCsv(printableVariantRows, targetCols);
+          showToast(`Exported ${printableVariantRows.length} variant items to CSV.`);
+        }}
+        onExportExcel={(cols) => {
+          const targetCols = cols || activePrintCols;
+          exportProductsToExcel(printableVariantRows, targetCols);
+          showToast(`Exported ${printableVariantRows.length} variant items to Excel.`);
+        }}
+        renderPage={(pageRows, pageNumber, totalPages) => (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100%' }}>
+            {/* Header: only on Page 1 */}
+            {pageNumber === 1 && (
+              <div style={{ marginBottom: '14px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div
+                      style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '8px',
+                        backgroundColor: '#eff6ff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#2563eb',
+                        fontWeight: 800,
+                        fontSize: '15px',
+                        border: '1px solid #bfdbfe',
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      IMS
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+                        INVENTORY MANAGEMENT SYSTEM
+                      </div>
+                      <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>Store & Catalog Operations</div>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', fontSize: '11.5px', color: '#64748b', lineHeight: 1.5 }}>
+                    <div>កាលបរិច្ឆេទ ៖ {new Date().toLocaleDateString('km-KH')}</div>
+                    <div>
+                      ទំនិញសរុប ៖ <strong style={{ color: '#0f172a' }}>{filteredRows.length}</strong> មុខ ({printableVariantRows.length} វ៉ារ្យ៉ង់)
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+                  <h3
+                    style={{
+                      margin: '0 0 4px',
+                      fontSize: '20px',
+                      fontWeight: 800,
+                      color: '#0f172a',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    REPORT PRODUCT INVENTORY
+                  </h3>
+                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
+                    រយៈពេល ៖ {new Date().toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+
+                {/* EXECUTIVE SUMMARY */}
+                <div style={{ marginBottom: '14px' }}>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      color: '#0f172a',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    EXECUTIVE SUMMARY
+                  </div>
+                  <table className="print-report-table" style={{ marginTop: 0 }}>
+                    <colgroup>
+                      <col style={{ width: '26%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '14%' }} />
+                      <col style={{ width: '14%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '16%' }} />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th style={{ textAlign: 'center' }}>Total Variants</th>
+                        <th style={{ textAlign: 'center' }}>In Stock</th>
+                        <th style={{ textAlign: 'center' }}>Low Stock</th>
+                        <th style={{ textAlign: 'center' }}>Out of Stock</th>
+                        <th style={{ textAlign: 'right' }}>Total Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ fontWeight: 600, color: '#0f172a' }}>Catalog Overview</td>
+                        <td style={{ textAlign: 'center', fontWeight: 700 }}>{printSummary.totalVariants}</td>
+                        <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 700 }}>
+                          {printSummary.inStock}
+                        </td>
+                        <td style={{ textAlign: 'center', color: '#d97706', fontWeight: 700 }}>
+                          {printSummary.lowStock}
+                        </td>
+                        <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700 }}>
+                          {printSummary.outOfStock}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
+                          {printSummary.totalQty}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* DETAILED PRODUCTS TABLE */}
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  color: '#0f172a',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  marginBottom: '6px',
+                }}
+              >
+                DETAILED PRODUCTS {totalPages > 1 ? `(Page ${pageNumber} of ${totalPages})` : ''}
+              </div>
+              <table className="print-report-table" style={{ marginTop: 0 }}>
+                <colgroup>
+                  {printColWidths.map((w, idx) => (
+                    <col key={idx} style={{ width: w }} />
+                  ))}
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'center' }}>No.</th>
+                    <th>Name</th>
+                    <th>Attributes</th>
+                    <th style={{ textAlign: 'center' }}>Other</th>
+                    <th style={{ textAlign: 'right' }}>Price</th>
+                    {activePrintCols.includes('sku') && <th>SKU</th>}
+                    {activePrintCols.includes('category') && <th>Category</th>}
+                    {activePrintCols.includes('stock') && (
+                      <th style={{ textAlign: 'right' }}>Stock</th>
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageRows.map((item, idx) => {
+                    const globalNo = getItemGlobalNo(pageNumber, idx);
+                    const formattedAttrs = formatVariantAttributes(item);
+                    const detail = (item.other && String(item.other).trim()) || '-';
+                    const price = Number(item.unit_price ?? item.price ?? 0);
+                    const stock = Number(item.on_hand_qty ?? item.qty ?? 0);
+
+                    return (
+                      <tr key={item.variant_id || item.id || idx}>
+                        <td style={{ color: '#64748b', textAlign: 'center' }}>{globalNo}</td>
+                        <td style={{ fontWeight: 600, color: '#0f172a' }}>
+                          {item.product_name || item.name}
+                        </td>
+                        <td style={{ color: '#334155' }}>{formattedAttrs}</td>
+                        <td style={{ textAlign: 'center', color: '#94a3b8' }}>{detail}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0d9488', fontSize: '12.5px' }}>
+                          ${price.toFixed(2)}
+                        </td>
+                        {activePrintCols.includes('sku') && (
+                          <td style={{ color: '#475569', fontWeight: 500 }}>
+                            {item.sku || '—'}
+                          </td>
+                        )}
+                        {activePrintCols.includes('category') && (
+                          <td style={{ color: '#64748b' }}>{item.category_name || item.category || '—'}</td>
+                        )}
+                        {activePrintCols.includes('stock') && (
+                          <td
+                            style={{
+                              textAlign: 'right',
+                              fontWeight: 700,
+                              color: stock <= 0 ? '#ef4444' : '#0f172a',
+                            }}
+                          >
+                            {stock}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                {pageNumber === totalPages && (
+                  <tfoot>
+                    <tr>
+                      <td colSpan={2} style={{ fontWeight: 700, color: '#0f172a' }}>
+                        Total ({printableVariantRows.length} variants)
+                      </td>
+                      <td>—</td>
+                      <td style={{ textAlign: 'center' }}>—</td>
+                      <td>—</td>
+                      {activePrintCols.includes('sku') && <td>—</td>}
+                      {activePrintCols.includes('category') && <td>—</td>}
+                      {activePrintCols.includes('stock') && (
+                        <td style={{ textAlign: 'right', fontWeight: 800, color: '#0f172a' }}>
+                          {printSummary.totalQty}
+                        </td>
+                      )}
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+
+            {/* Sub-page footer */}
+            <div
+              style={{
+                marginTop: 'auto',
+                paddingTop: '16px',
+                paddingBottom: '4px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '11px',
+                color: '#94a3b8',
+              }}
+            >
+              <span>Inventory Management System • Confidential</span>
+              <span>
+                Page {pageNumber} of {totalPages}
+              </span>
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 };
