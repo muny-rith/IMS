@@ -94,10 +94,10 @@ const ProductBasicInfoForm = ({
         <div className="product-form-group">
           <label className="product-form-label">
             <span>Department</span>
-            <span className="req">*</span>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>(Optional)</span>
           </label>
           <Input
-            {...register('department', rules.department)}
+            {...register('department')}
             placeholder="e.g. Snack, Baby, Beverage"
             error={errors.department?.message}
           />

@@ -179,7 +179,7 @@ export const updateProduct = async (req, res, next) => {
       product_name: name ? name.trim() : existing.product_name,
       category_id: categoryId ? Number(categoryId) : existing.category_id,
       brand_id: brandId !== undefined ? (brandId ? Number(brandId) : null) : existing.brand_id,
-      department: department !== undefined ? department?.trim() : existing.department,
+      department: department !== undefined ? (department?.trim() || null) : existing.department,
       unit_price: price !== undefined ? Number(price) : existing.unit_price,
       image_url: finalImageUrl !== undefined ? finalImageUrl : existing.image_url,
       is_active: isActive !== undefined ? (isActive === 'true' || isActive === true) : existing.is_active,

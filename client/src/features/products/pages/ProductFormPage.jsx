@@ -18,7 +18,6 @@ import './ProductFormPage.css';
 const RULES = {
   name: { required: 'Name is required' },
   categoryId: { required: 'Category is required' },
-  department: { required: 'Department is required' },
 };
 
 const EMPTY_FORM = {
@@ -236,7 +235,7 @@ const ProductFormPage = () => {
       name: values.name.trim(),
       categoryId: values.categoryId ? Number(values.categoryId) : null,
       brandId: values.brandId ? Number(values.brandId) : null,
-      department: values.department.trim(),
+      department: values.department ? values.department.trim() : '',
       imageFile,
       imageUrl: formValues.imageUrl || '',
       variants: variants,

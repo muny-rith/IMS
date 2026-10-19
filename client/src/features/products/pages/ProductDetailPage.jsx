@@ -267,7 +267,7 @@ const ProductDetailPage = () => {
   const productName = product.name || product.product_name || 'Unnamed Product';
   const categoryName = product.category || product.category_name || 'General';
   const brandName = product.brand || product.brand_name || '—';
-  const departmentName = product.department || 'Operations';
+  const departmentName = product.department || '—';
 
   return (
     <div className="product-detail-page">
