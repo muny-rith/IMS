@@ -205,7 +205,7 @@ const ProductFormPage = () => {
 
   const handleClose = () => {
     if (isEdit && id) {
-      navigate(`/products/view/${id}`);
+      navigate(`/products/view/${id}`, { replace: true });
     } else {
       navigate('/products');
     }
@@ -248,7 +248,7 @@ const ProductFormPage = () => {
 
     if (result.success) {
       if (isEdit && id) {
-        navigate(`/products/view/${id}`);
+        navigate(`/products/view/${id}`, { replace: true });
       } else {
         navigate('/products');
       }

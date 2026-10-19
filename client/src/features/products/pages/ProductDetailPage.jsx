@@ -277,7 +277,7 @@ const ProductDetailPage = () => {
           <button
             type="button"
             className="product-detail-back-btn"
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/products'))}
+            onClick={() => navigate('/products')}
             title="Back to Products"
             aria-label="Back to Products"
           >
@@ -286,7 +286,7 @@ const ProductDetailPage = () => {
 
           <div className="product-detail-header__info">
             <div className="product-detail-breadcrumbs">
-              <span className="clickable" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/products'))}>Products</span>
+              <span className="clickable" onClick={() => navigate('/products')}>Products</span>
               <span>/</span>
               <span className="product-detail-breadcrumbs__current">{productName}</span>
             </div>
