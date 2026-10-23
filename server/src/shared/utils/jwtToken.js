@@ -7,8 +7,8 @@ dotenv.config();
 const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'super_secret_ims_access_token_key_12345';
 const REFRESH_TOKEN_SECRET = process.env.JWT_REFRESH_SECRET || 'super_secret_ims_refresh_token_key_67890';
 
-export const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
-export const REFRESH_TOKEN_EXPIRY_DAYS = 7; // 7 days
+export const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes (short-lived for security)
+export const REFRESH_TOKEN_EXPIRY_DAYS = 7; // 7 days (keeps you logged in for 7 days)
 
 /**
  * Sign a short-lived access token (15 mins)

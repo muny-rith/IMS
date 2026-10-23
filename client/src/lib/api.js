@@ -1,8 +1,10 @@
 import axios from 'axios';
 
 const AUTH_TOKEN_KEY = 'moon-ims-token';
+const REFRESH_TOKEN_KEY = 'moon-ims-refresh-token';
 
 let inMemoryAccessToken = localStorage.getItem(AUTH_TOKEN_KEY) || null;
+let inMemoryRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || null;
 
 export const setAccessToken = (token) => {
   inMemoryAccessToken = token;
@@ -13,7 +15,30 @@ export const setAccessToken = (token) => {
   }
 };
 
-export const getAccessToken = () => inMemoryAccessToken;
+export const setRefreshToken = (token) => {
+  inMemoryRefreshToken = token;
+  if (token) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+};
+
+export const setTokens = (accessToken, refreshToken) => {
+  setAccessToken(accessToken);
+  if (refreshToken !== undefined) {
+    setRefreshToken(refreshToken);
+  }
+};
+
+export const clearTokens = () => {
+  setAccessToken(null);
+  setRefreshToken(null);
+  localStorage.removeItem('moon-ims-user');
+};
+
+export const getAccessToken = () => inMemoryAccessToken || localStorage.getItem(AUTH_TOKEN_KEY);
+export const getRefreshToken = () => inMemoryRefreshToken || localStorage.getItem(REFRESH_TOKEN_KEY);
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:50257/api',
@@ -23,7 +48,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor: attach short-lived access token
+// Request interceptor: attach access token
 api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
@@ -35,21 +60,55 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor: Silent Refresh on 401
-let isRefreshing = false;
-let failedQueue = [];
+// Shared singleton refresh promise prevents parallel duplicate refresh calls
+let refreshPromise = null;
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
+export const executeSilentRefresh = async () => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const storedRefreshToken = getRefreshToken();
+      // Pass stored refreshToken in body as fallback if HttpOnly cookie is blocked
+      const response = await axios.post(
+        `${api.defaults.baseURL}/auth/refresh`,
+        { refreshToken: storedRefreshToken || undefined },
+        { withCredentials: true }
+      );
+
+      const { accessToken, token, refreshToken: newRefreshToken, user } =
+        response.data?.data || {};
+      const activeAccessToken = accessToken || token;
+
+      if (!activeAccessToken) {
+        throw new Error('No access token returned from refresh.');
+      }
+
+      setTokens(activeAccessToken, newRefreshToken || storedRefreshToken);
+      if (user) {
+        localStorage.setItem('moon-ims-user', JSON.stringify(user));
+      }
+
+      return {
+        accessToken: activeAccessToken,
+        refreshToken: newRefreshToken || storedRefreshToken,
+        user,
+      };
+    } catch (err) {
+      clearTokens();
+      window.dispatchEvent(new CustomEvent('ims:session-expired'));
+      throw err;
+    } finally {
+      refreshPromise = null;
     }
-  });
-  failedQueue = [];
+  })();
+
+  return refreshPromise;
 };
 
+// Response interceptor: Silent Refresh on 401
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -59,49 +118,17 @@ api.interceptors.response.use(
     const isAuthEndpoint =
       originalRequest?.url?.includes('/auth/login') ||
       originalRequest?.url?.includes('/auth/refresh') ||
-      originalRequest?.url?.includes('/auth/logout') ||
-      originalRequest?.url?.includes('/auth/session');
+      originalRequest?.url?.includes('/auth/logout');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-      if (isRefreshing) {
-        // Queue parallel requests while refresh is in flight
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
       originalRequest._retry = true;
-      isRefreshing = true;
 
       try {
-        // Silent refresh call with HttpOnly cookie automatically passed
-        const refreshResponse = await api.post('/auth/refresh');
-        const newAccessToken =
-          refreshResponse.data?.data?.accessToken ||
-          refreshResponse.data?.data?.token;
-
-        if (!newAccessToken) {
-          throw new Error('No access token returned from refresh.');
-        }
-
-        setAccessToken(newAccessToken);
-        processQueue(null, newAccessToken);
-
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        const { accessToken } = await executeSilentRefresh();
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshErr) {
-        processQueue(refreshErr, null);
-        setAccessToken(null);
-        localStorage.removeItem('moon-ims-user');
-        window.dispatchEvent(new CustomEvent('ims:session-expired'));
         return Promise.reject(refreshErr);
-      } finally {
-        isRefreshing = false;
       }
     }
 

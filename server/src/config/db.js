@@ -70,6 +70,14 @@ export const initDB = async () => {
     console.log('PostgreSQL connection established successfully.');
 
     // Read the SQL init file (Skipped automatically on startup to prevent accidental data drops)
+    try {
+      await pool.query(`
+        ALTER TABLE tb_user_session ADD COLUMN IF NOT EXISTS prev_token_hash VARCHAR(64);
+        ALTER TABLE tb_user_session ADD COLUMN IF NOT EXISTS prev_rotated_at TIMESTAMP;
+      `);
+    } catch (migErr) {
+      console.warn('tb_user_session column check:', migErr.message);
+    }
     console.log('Database connected successfully.');
   } catch (err) {
     console.error('Database connection / initialization failed!');

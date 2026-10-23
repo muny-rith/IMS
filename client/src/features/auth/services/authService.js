@@ -1,4 +1,10 @@
-import api, { setAccessToken, getAccessToken } from "../../../lib/api";
+import api, {
+  setTokens,
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  executeSilentRefresh,
+} from "../../../lib/api";
 
 const AUTH_USER_KEY = "moon-ims-user";
 const USERNAME_EMAIL_DOMAIN = "moonims.com";
@@ -37,6 +43,22 @@ const notifyListeners = (event, session) => {
 };
 
 /**
+ * Check if a JWT is structurally valid and unexpired
+ */
+export const isTokenValid = (token) => {
+  if (!token) return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1]));
+    // Check if token has at least 30 seconds left before expiration
+    return payload.exp * 1000 > Date.now() + 30000;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * 1. Sign In
  */
 export const signInWithEmail = async ({ email, password }) => {
@@ -46,10 +68,10 @@ export const signInWithEmail = async ({ email, password }) => {
     password,
   });
 
-  const { accessToken, token, user } = response.data.data;
+  const { accessToken, token, refreshToken, user } = response.data.data;
   const activeToken = accessToken || token;
 
-  setAccessToken(activeToken);
+  setTokens(activeToken, refreshToken);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 
   const session = { access_token: activeToken, user };
@@ -63,12 +85,12 @@ export const signInWithEmail = async ({ email, password }) => {
  */
 export const signOutUser = async () => {
   try {
-    await api.post('/auth/logout');
+    const refreshToken = getRefreshToken();
+    await api.post('/auth/logout', { refreshToken });
   } catch (err) {
     // Ignore network failure on logout
   } finally {
-    setAccessToken(null);
-    localStorage.removeItem(AUTH_USER_KEY);
+    clearTokens();
     notifyListeners("SIGNED_OUT", null);
   }
 };
@@ -78,21 +100,12 @@ export const signOutUser = async () => {
  */
 export const refreshSession = async () => {
   try {
-    const response = await api.post('/auth/refresh');
-    const { accessToken, token, user } = response.data.data;
-    const activeToken = accessToken || token;
-
-    setAccessToken(activeToken);
-    if (user) {
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-    }
-
-    const session = { access_token: activeToken, user };
+    const result = await executeSilentRefresh();
+    const session = { access_token: result.accessToken, user: result.user };
     notifyListeners("TOKEN_REFRESHED", session);
     return session;
   } catch (err) {
-    setAccessToken(null);
-    localStorage.removeItem(AUTH_USER_KEY);
+    clearTokens();
     notifyListeners("SIGNED_OUT", null);
     throw err;
   }
@@ -103,43 +116,40 @@ export const refreshSession = async () => {
  */
 export const getCurrentSession = async () => {
   const localUserStr = localStorage.getItem(AUTH_USER_KEY);
-  const hasToken = Boolean(getAccessToken());
+  const activeToken = getAccessToken();
 
-  if (!hasToken && !localUserStr) {
+  if (!activeToken && !localUserStr) {
     return null;
   }
 
+  // 1. If access token is still valid (7 days validity), verify profile with backend
+  if (isTokenValid(activeToken)) {
+    try {
+      const response = await api.get('/auth/session');
+      const user = response.data?.data?.user || response.data?.session?.user;
+      if (user) {
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+        return { access_token: activeToken, user };
+      }
+    } catch (err) {
+      // If network is offline but token is structurally valid, preserve the session
+      if (localUserStr && (!err.response || err.response.status >= 500)) {
+        try {
+          return { access_token: activeToken, user: JSON.parse(localUserStr) };
+        } catch {
+          // continue
+        }
+      }
+    }
+  }
+
+  // 2. If access token is expired or /auth/session returned 401, perform silent refresh
   try {
-    // Verify session with backend endpoint
-    const response = await api.get('/auth/session');
-    const user = response.data?.data?.user || response.data?.session?.user;
-    const activeToken = getAccessToken();
-
-    if (user) {
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-      return { access_token: activeToken, user };
-    }
-  } catch (err) {
-    // If access token failed, try refreshing silently
-    try {
-      return await refreshSession();
-    } catch (refreshErr) {
-      setAccessToken(null);
-      localStorage.removeItem(AUTH_USER_KEY);
-      return null;
-    }
+    return await refreshSession();
+  } catch (refreshErr) {
+    clearTokens();
+    return null;
   }
-
-  if (localUserStr) {
-    try {
-      const user = JSON.parse(localUserStr);
-      return { access_token: getAccessToken(), user };
-    } catch {
-      return null;
-    }
-  }
-
-  return null;
 };
 
 /**
@@ -166,10 +176,10 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
     currentPassword,
     newPassword,
   });
-  const { accessToken, token } = response.data?.data || {};
+  const { accessToken, token, refreshToken } = response.data?.data || {};
   const activeToken = accessToken || token;
   if (activeToken) {
-    setAccessToken(activeToken);
+    setTokens(activeToken, refreshToken);
   }
   return response.data;
 };
@@ -177,8 +187,7 @@ export const changePassword = async ({ currentPassword, newPassword }) => {
 // Listen for global session expiration events emitted by api.js
 if (typeof window !== 'undefined') {
   window.addEventListener('ims:session-expired', () => {
-    setAccessToken(null);
-    localStorage.removeItem(AUTH_USER_KEY);
+    clearTokens();
     notifyListeners("SIGNED_OUT", null);
   });
 }

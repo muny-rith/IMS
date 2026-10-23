@@ -18,28 +18,59 @@ export const createSession = async ({ userId, tokenHash, ipAddress, userAgent, d
  * Find active session by token hash
  */
 export const findSessionByHash = async (tokenHash) => {
-  const text = `
-    SELECT s.*, u.name, u.email, u.role
-    FROM tb_user_session s
-    JOIN tb_user u ON s.user_id = u.user_id
-    WHERE s.token_hash = $1 AND s.is_revoked = FALSE;
-  `;
-  const { rows } = await query(text, [tokenHash]);
-  return rows[0] || null;
+  try {
+    const text = `
+      SELECT s.*, u.name, u.email, u.role
+      FROM tb_user_session s
+      JOIN tb_user u ON s.user_id = u.user_id
+      WHERE (
+        s.token_hash = $1 
+        OR (s.prev_token_hash = $1 AND s.prev_rotated_at > NOW() - INTERVAL '60 seconds')
+      ) AND s.is_revoked = FALSE;
+    `;
+    const { rows } = await query(text, [tokenHash]);
+    return rows[0] || null;
+  } catch (err) {
+    // Fallback if prev_token_hash column is not present
+    const fallbackText = `
+      SELECT s.*, u.name, u.email, u.role
+      FROM tb_user_session s
+      JOIN tb_user u ON s.user_id = u.user_id
+      WHERE s.token_hash = $1 AND s.is_revoked = FALSE;
+    `;
+    const { rows } = await query(fallbackText, [tokenHash]);
+    return rows[0] || null;
+  }
 };
 
 /**
  * Rotate session with new token hash and updated expiration
  */
-export const rotateSessionToken = async (sessionId, newTokenHash, newExpiresAt) => {
-  const text = `
-    UPDATE tb_user_session
-    SET token_hash = $1, expires_at = $2, last_used_at = NOW()
-    WHERE session_id = $3 AND is_revoked = FALSE
-    RETURNING session_id, user_id, expires_at, last_used_at;
-  `;
-  const { rows } = await query(text, [newTokenHash, newExpiresAt, sessionId]);
-  return rows[0] || null;
+export const rotateSessionToken = async (sessionId, newTokenHash, newExpiresAt, oldTokenHash = null) => {
+  try {
+    const text = `
+      UPDATE tb_user_session
+      SET prev_token_hash = COALESCE($1, token_hash),
+          prev_rotated_at = NOW(),
+          token_hash = $2,
+          expires_at = $3,
+          last_used_at = NOW()
+      WHERE session_id = $4 AND is_revoked = FALSE
+      RETURNING session_id, user_id, expires_at, last_used_at;
+    `;
+    const { rows } = await query(text, [oldTokenHash, newTokenHash, newExpiresAt, sessionId]);
+    return rows[0] || null;
+  } catch (err) {
+    // Fallback if prev_token_hash column is not present
+    const fallbackText = `
+      UPDATE tb_user_session
+      SET token_hash = $1, expires_at = $2, last_used_at = NOW()
+      WHERE session_id = $3 AND is_revoked = FALSE
+      RETURNING session_id, user_id, expires_at, last_used_at;
+    `;
+    const { rows } = await query(fallbackText, [newTokenHash, newExpiresAt, sessionId]);
+    return rows[0] || null;
+  }
 };
 
 /**

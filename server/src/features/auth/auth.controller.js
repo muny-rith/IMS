@@ -111,6 +111,7 @@ export const login = async (req, res, next) => {
       data: {
         accessToken,
         token: accessToken, // backward compatibility
+        refreshToken,
         user: {
           id: userId,
           user_id: userId,
@@ -150,17 +151,7 @@ export const refreshToken = async (req, res, next) => {
     const tokenHash = hashToken(rawRefreshToken);
     const session = await sessionModel.findSessionByHash(tokenHash);
 
-    // Theft detection: if token is decoded but not found in active sessions, revoke all sessions
     if (!session) {
-      if (decoded?.id) {
-        await sessionModel.revokeAllUserSessions(decoded.id);
-        await sessionModel.logAuthEvent({
-          userId: decoded.id,
-          action: 'TOKEN_REUSE_DETECTED_ALL_REVOKED',
-          ipAddress,
-          userAgent,
-        });
-      }
       res.clearCookie('ims_refresh_token', getCookieOptions());
       return next(new ApiError(401, 'Session invalid or already consumed. Please sign in again.'));
     }
@@ -171,23 +162,25 @@ export const refreshToken = async (req, res, next) => {
       return next(new ApiError(401, 'Session has expired. Please sign in again.'));
     }
 
-    // Issue rotated tokens
+    // Issue rotated tokens with grace period support for concurrent requests
     const newAccessToken = signAccessToken({ id: session.user_id, role: session.role });
-    const newRefreshToken = signRefreshToken({ id: session.user_id, role: session.role });
-    const newTokenHash = hashToken(newRefreshToken);
-    const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+    let newRefreshToken = rawRefreshToken;
 
-    // Rotate in database
-    await sessionModel.rotateSessionToken(session.session_id, newTokenHash, newExpiresAt);
+    if (session.token_hash === tokenHash) {
+      newRefreshToken = signRefreshToken({ id: session.user_id, role: session.role });
+      const newTokenHash = hashToken(newRefreshToken);
+      const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
 
-    // Set new cookie
-    res.cookie('ims_refresh_token', newRefreshToken, getCookieOptions());
+      await sessionModel.rotateSessionToken(session.session_id, newTokenHash, newExpiresAt, tokenHash);
+      res.cookie('ims_refresh_token', newRefreshToken, getCookieOptions());
+    }
 
     res.status(200).json({
       status: 'success',
       data: {
         accessToken: newAccessToken,
         token: newAccessToken, // backward compatibility
+        refreshToken: newRefreshToken,
         user: {
           id: session.user_id,
           user_id: session.user_id,
@@ -376,6 +369,7 @@ export const changePassword = async (req, res, next) => {
       data: {
         accessToken,
         token: accessToken,
+        refreshToken,
       },
     });
   } catch (err) {
