@@ -9,7 +9,7 @@ export const ProductDetailSkeleton = () => {
       role="status"
       aria-label="Loading product details"
     >
-      {/* ── 1. Compact Header Bar ── */}
+      {/* ── 1. Compact Header Bar (Matching ProductDetailPage) ── */}
       <div className="product-header">
         <div className="product-header__left">
           <Skeleton
@@ -21,27 +21,48 @@ export const ProductDetailSkeleton = () => {
 
           <div className="product-detail-header__info">
             <div className="product-detail-breadcrumbs" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Skeleton variant="text" width={55} height={14} />
+              <Skeleton variant="text" width={55} height={14} style={{ margin: 0 }} />
               <span style={{ color: '#cbd5e1' }}>/</span>
-              <Skeleton variant="text" width={140} height={14} />
+              <Skeleton variant="text" width={110} height={14} style={{ margin: 0 }} />
             </div>
             <div style={{ marginTop: 2 }}>
-              <Skeleton variant="text" width={240} height={28} />
+              <Skeleton
+                variant="text"
+                height={26}
+                className="product-header-skeleton-title"
+                style={{ margin: 0 }}
+              />
             </div>
           </div>
         </div>
 
         <div className="product-header__actions">
-          <Skeleton variant="rounded" width={100} height={36} style={{ borderRadius: '8px' }} />
-          <Skeleton variant="rounded" width={110} height={36} style={{ borderRadius: '8px' }} />
+          <Skeleton
+            variant="rounded"
+            className="product-header-skeleton-btn"
+          />
+          <Skeleton
+            variant="rounded"
+            className="product-header-skeleton-btn"
+          />
         </div>
       </div>
 
-      {/* ── 2. Tabs Navigation ── */}
-      <div className="product-detail-tabs" style={{ display: 'flex', gap: '8px', padding: '4px' }}>
-        <Skeleton variant="rounded" width={180} height={36} style={{ borderRadius: '8px' }} />
-        <Skeleton variant="rounded" width={200} height={36} style={{ borderRadius: '8px' }} />
-        <Skeleton variant="rounded" width={190} height={36} style={{ borderRadius: '8px' }} />
+      {/* ── 2. Underline Tabs Navigation (Zero Discrepancy with loaded state) ── */}
+      <div className="product-detail-tabs">
+        <div className="product-detail-tab-btn product-detail-tab-btn--active product-detail-tab-skeleton">
+          <Skeleton variant="circular" width={16} height={16} />
+          <Skeleton variant="text" width={120} height={14} style={{ margin: 0 }} />
+          <Skeleton variant="rounded" width={22} height={16} style={{ borderRadius: '9999px', margin: 0 }} />
+        </div>
+        <div className="product-detail-tab-btn product-detail-tab-skeleton">
+          <Skeleton variant="circular" width={16} height={16} />
+          <Skeleton variant="text" width={100} height={14} style={{ margin: 0 }} />
+        </div>
+        <div className="product-detail-tab-btn product-detail-tab-skeleton">
+          <Skeleton variant="circular" width={16} height={16} />
+          <Skeleton variant="text" width={90} height={14} style={{ margin: 0 }} />
+        </div>
       </div>
 
       {/* ── 3. Split Content (Sidebar + Workspace) ── */}
@@ -50,62 +71,89 @@ export const ProductDetailSkeleton = () => {
           {/* Left Sidebar */}
           <aside className="product-detail-sidebar">
             <div className="product-detail-card product-detail-hub-card">
-              {/* Main Media Preview */}
-              <div className="product-detail-main-media" style={{ padding: 0, minHeight: 220 }}>
+              {/* Main Media Preview: 100% height matches 300px on PC, 240px on mobile */}
+              <div className="product-detail-main-media" style={{ padding: 0 }}>
                 <Skeleton
                   variant="rounded"
                   width="100%"
-                  height={240}
+                  height="100%"
                   style={{ borderRadius: '12px' }}
                 />
               </div>
 
               {/* Thumbnails strip */}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              <div className="product-detail-thumbs" style={{ marginTop: '10px' }}>
                 {[1, 2, 3].map((i) => (
-                  <Skeleton
+                  <div
                     key={i}
-                    variant="rounded"
-                    width={40}
-                    height={40}
-                    style={{ borderRadius: '8px' }}
-                  />
+                    className="product-detail-thumb"
+                    style={{ border: '2px solid #f1f5f9' }}
+                  >
+                    <Skeleton
+                      variant="rounded"
+                      width="100%"
+                      height="100%"
+                      style={{ borderRadius: '4px' }}
+                    />
+                  </div>
                 ))}
               </div>
 
               {/* Product Information Skeleton (Unified List) */}
-              <div className="product-detail-registry-section" style={{ marginTop: '14px' }}>
+              <div className="product-detail-registry-section">
                 <div className="product-detail-meta-list">
-                  {/* Hero Row Skeleton */}
-                  <div className="product-detail-hero-row" style={{ alignItems: 'center', paddingBottom: '6px' }}>
-                    <Skeleton variant="text" width={150} height={26} />
-                    <Skeleton variant="rounded" width={80} height={28} style={{ borderRadius: '6px' }} />
+                  {/* Hero Row Skeleton (Name & Price) */}
+                  <div className="product-detail-hero-row">
+                    <div className="product-detail-hero-info">
+                      <Skeleton variant="text" width="65%" height={24} style={{ margin: 0 }} />
+                    </div>
+                    <div className="product-detail-hero-price-wrap">
+                      <Skeleton variant="text" width={75} height={26} style={{ margin: 0 }} />
+                    </div>
                   </div>
 
                   {/* Attributes Strip Skeleton */}
-                  <div style={{ display: 'flex', gap: '6px', padding: '6px 0 10px' }}>
-                    <Skeleton variant="rounded" width={68} height={24} style={{ borderRadius: '6px' }} />
-                    <Skeleton variant="rounded" width={86} height={24} style={{ borderRadius: '6px' }} />
-                    <Skeleton variant="rounded" width={52} height={24} style={{ borderRadius: '6px' }} />
+                  <div className="product-detail-variant-attrs-strip">
+                    <Skeleton variant="rounded" width={80} height={24} style={{ borderRadius: '6px' }} />
+                    <Skeleton variant="rounded" width={95} height={24} style={{ borderRadius: '6px' }} />
+                    <Skeleton variant="rounded" width={60} height={24} style={{ borderRadius: '6px' }} />
                   </div>
 
-                  {[
-                    { labelWidth: 60, valWidth: 95 },
-                    { labelWidth: 50, valWidth: 80 },
-                    { labelWidth: 80, valWidth: 55 },
-                    { labelWidth: 90, valWidth: 75 },
-                    { labelWidth: 75, valWidth: 50 },
-                  ].map((item, idx) => (
-                    <div className="product-detail-meta-item" key={idx}>
-                      <Skeleton variant="text" width={item.labelWidth} height={16} />
-                      <Skeleton
-                        variant="rounded"
-                        width={item.valWidth}
-                        height={24}
-                        style={{ borderRadius: '6px' }}
-                      />
-                    </div>
-                  ))}
+                  {/* Master Catalog Details */}
+                  <div className="product-detail-meta-item product-detail-meta-item--divider">
+                    <span className="product-detail-meta-label">
+                      <Skeleton variant="text" width={65} height={14} style={{ margin: 0 }} />
+                    </span>
+                    <Skeleton variant="rounded" width={85} height={22} style={{ borderRadius: '9999px', margin: 0 }} />
+                  </div>
+
+                  <div className="product-detail-meta-item">
+                    <span className="product-detail-meta-label">
+                      <Skeleton variant="text" width={50} height={14} style={{ margin: 0 }} />
+                    </span>
+                    <Skeleton variant="rounded" width={75} height={22} style={{ borderRadius: '9999px', margin: 0 }} />
+                  </div>
+
+                  <div className="product-detail-meta-item">
+                    <span className="product-detail-meta-label">
+                      <Skeleton variant="text" width={80} height={14} style={{ margin: 0 }} />
+                    </span>
+                    <Skeleton variant="text" width={60} height={16} style={{ margin: 0 }} />
+                  </div>
+
+                  <div className="product-detail-meta-item">
+                    <span className="product-detail-meta-label">
+                      <Skeleton variant="text" width={95} height={14} style={{ margin: 0 }} />
+                    </span>
+                    <Skeleton variant="text" width={70} height={16} style={{ margin: 0 }} />
+                  </div>
+
+                  <div className="product-detail-meta-item">
+                    <span className="product-detail-meta-label">
+                      <Skeleton variant="text" width={85} height={14} style={{ margin: 0 }} />
+                    </span>
+                    <Skeleton variant="text" width={55} height={16} style={{ margin: 0 }} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -116,14 +164,14 @@ export const ProductDetailSkeleton = () => {
             <div className="product-detail-card product-detail-table-card">
               <div className="product-detail-table-header">
                 <div>
-                  <Skeleton variant="text" width={160} height={20} />
-                  <Skeleton variant="text" width={280} height={14} style={{ marginTop: '4px' }} />
+                  <Skeleton variant="text" width={160} height={20} style={{ margin: 0 }} />
+                  <Skeleton variant="text" width={260} height={13} style={{ marginTop: '6px', marginBottom: 0 }} />
                 </div>
                 <div className="product-detail-table-search">
                   <Skeleton
                     variant="rounded"
-                    width={220}
                     height={38}
+                    className="product-detail-table-search-skeleton"
                     style={{ borderRadius: '8px' }}
                   />
                 </div>
@@ -153,10 +201,10 @@ export const ProductDetailSkeleton = () => {
                             <Skeleton variant="text" width={60} height={14} />
                           </div>
                         </td>
-                        <td>
+                        <td className="product-detail-td--sku">
                           <Skeleton variant="text" width={80} height={16} />
                         </td>
-                        <td>
+                        <td className="product-detail-td--attr">
                           <Skeleton
                             variant="rounded"
                             width={75}
@@ -164,13 +212,13 @@ export const ProductDetailSkeleton = () => {
                             style={{ borderRadius: '6px' }}
                           />
                         </td>
-                        <td>
+                        <td className="product-detail-td--other">
                           <Skeleton variant="text" width={45} height={14} />
                         </td>
-                        <td>
+                        <td className="product-detail-price-col">
                           <Skeleton variant="text" width={60} height={16} />
                         </td>
-                        <td>
+                        <td className="product-detail-td--stock">
                           <Skeleton
                             variant="rounded"
                             width={45}
@@ -178,7 +226,7 @@ export const ProductDetailSkeleton = () => {
                             style={{ borderRadius: '999px' }}
                           />
                         </td>
-                        <td>
+                        <td className="product-detail-td--stock">
                           <Skeleton
                             variant="rounded"
                             width={40}
@@ -186,7 +234,7 @@ export const ProductDetailSkeleton = () => {
                             style={{ borderRadius: '999px' }}
                           />
                         </td>
-                        <td>
+                        <td className="product-detail-td--stock">
                           <Skeleton
                             variant="rounded"
                             width={45}

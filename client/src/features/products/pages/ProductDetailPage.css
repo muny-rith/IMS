@@ -1340,3 +1340,62 @@
     position: static !important;
   }
 }
+
+
+/* ── 8. Product Detail Skeleton Screen Polish & Mobile Alignment ── */
+.product-header-skeleton-title {
+  width: 240px;
+}
+
+.product-header-skeleton-btn {
+  width: 104px;
+  height: 36px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.product-detail-tab-skeleton {
+  cursor: default;
+  pointer-events: none;
+}
+
+.product-detail-table-search-skeleton {
+  width: 220px;
+}
+
+@media (max-width: 640px) {
+  .product-detail-table-search-skeleton {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .product-detail-page--skeleton .product-header {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .product-detail-page--skeleton .product-header__left {
+    min-width: 0;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .product-detail-page--skeleton .product-detail-header__info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .product-detail-page--skeleton .product-header-skeleton-title {
+    width: 100% !important;
+    max-width: 140px;
+  }
+
+  .product-header-skeleton-btn {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+  }
+}
