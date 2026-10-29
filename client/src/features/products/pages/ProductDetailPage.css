@@ -308,119 +308,46 @@
   height: 100%;
   object-fit: contain;
   pointer-events: none;
-  transition: transform 0.25s ease;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: opacity, transform;
 }
 
-.product-detail-main-media:hover .product-detail-preview-img {
-  transform: scale(1.03);
-}
-
-/* Option 1: Directional Slide Transitions (Shopee / Instagram Gallery style) */
+/* Option 1: GPU-Accelerated Directional Slide (Shopee / Instagram Gallery) */
 @keyframes productDetailSlideInNext {
-  from {
-    opacity: 0.28;
-    transform: translateX(45px);
+  0% {
+    opacity: 0.25;
+    transform: translate3d(42px, 0, 0);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes productDetailSlideInPrev {
-  from {
-    opacity: 0.28;
-    transform: translateX(-45px);
+  0% {
+    opacity: 0.25;
+    transform: translate3d(-42px, 0, 0);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .product-detail-preview-img--slide-next {
-  animation: productDetailSlideInNext 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: productDetailSlideInNext 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .product-detail-preview-img--slide-prev {
-  animation: productDetailSlideInPrev 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Option 2: Soft Fade Dissolve Transition (Luxury / Minimalist style) */
-@keyframes productDetailFadeIn {
-  from {
-    opacity: 0.2;
-    transform: scale(0.975);
-    filter: blur(1.5px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
-}
-
-.product-detail-preview-img--fade {
-  animation: productDetailFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Option 3: Real-Time Finger / Mouse Drag Physics entry */
-@keyframes productDetailDragIn {
-  from {
-    opacity: 0.45;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.product-detail-preview-img--drag {
-  animation: productDetailDragIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* Animation Mode Switcher Pill (Top-Left of media preview) */
-.product-detail-anim-toggle {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  border-radius: 9999px;
-  padding: 2px;
-  gap: 2px;
-  z-index: 4;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
-}
-
-.product-detail-anim-btn {
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 3px 9px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  transition: all 0.15s ease;
-  line-height: 1.2;
-  user-select: none;
-}
-
-.product-detail-anim-btn:hover {
-  color: #0f172a;
-}
-
-.product-detail-anim-btn--active {
-  background: var(--primary-color, #eb0029);
-  color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(235, 0, 41, 0.3);
+  animation: productDetailSlideInPrev 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* Floating Prev/Next Nav Chevrons (PC Hover & Mobile Tap) */

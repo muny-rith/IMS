@@ -75,9 +75,6 @@ const ProductDetailPage = () => {
   const [copiedSku, setCopiedSku] = useState('');
   const [variantSearch, setVariantSearch] = useState('');
   const [slideDirection, setSlideDirection] = useState('next');
-  const [animMode, setAnimMode] = useState('drag'); // 'slide' (Option 1) vs 'fade' (Option 2) vs 'drag' (Option 3)
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!availableTabs.some((t) => t.id === activeTab)) {
@@ -319,7 +316,7 @@ const ProductDetailPage = () => {
   const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
   const mouseDragRef = useRef({ isDown: false, startX: 0, moved: false });
 
-  // Mobile Touch Swipe Handlers (Horizontal gesture detection with real-time tracking)
+  // Mobile Touch Swipe Handlers (Horizontal gesture detection with vertical scroll protection)
   const handleTouchStart = (e) => {
     if (e.touches && e.touches[0]) {
       touchStartRef.current = {
@@ -327,22 +324,6 @@ const ProductDetailPage = () => {
         y: e.touches[0].clientY,
         time: Date.now(),
       };
-      setDragOffset(0);
-      setIsDragging(false);
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (previewItems.length <= 1) return;
-    if (e.touches && e.touches[0]) {
-      const deltaX = e.touches[0].clientX - touchStartRef.current.x;
-      const deltaY = e.touches[0].clientY - touchStartRef.current.y;
-      if (Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY)) {
-        if (animMode === 'drag') {
-          setDragOffset(deltaX);
-          setIsDragging(true);
-        }
-      }
     }
   };
 
@@ -352,67 +333,7 @@ const ProductDetailPage = () => {
       const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
       const deltaTime = Date.now() - touchStartRef.current.time;
 
-      if (animMode === 'drag') {
-        setIsDragging(false);
-        if (dragOffset < -42) {
-          handleNextVariant();
-        } else if (dragOffset > 42) {
-          handlePrevVariant();
-        }
-        setDragOffset(0);
-      } else {
-        if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 650) {
-          if (deltaX > 0) {
-            handleNextVariant();
-          } else {
-            handlePrevVariant();
-          }
-        }
-      }
-    }
-  };
-
-  // PC Mouse Drag Handlers (Real-time physics tracking + click-and-drag)
-  const handleMouseDown = (e) => {
-    if (e.button !== 0 || previewItems.length <= 1) return;
-    mouseDragRef.current = {
-      isDown: true,
-      startX: e.clientX,
-      moved: false,
-    };
-    setDragOffset(0);
-    if (animMode === 'drag') {
-      setIsDragging(true);
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!mouseDragRef.current.isDown) return;
-    const deltaX = e.clientX - mouseDragRef.current.startX;
-    if (Math.abs(deltaX) > 4) {
-      mouseDragRef.current.moved = true;
-      if (animMode === 'drag') {
-        setDragOffset(deltaX);
-      }
-    }
-  };
-
-  const handleMouseUp = (e) => {
-    if (!mouseDragRef.current.isDown) return;
-    const deltaX = mouseDragRef.current.startX - e.clientX;
-    const wasMoved = mouseDragRef.current.moved;
-    mouseDragRef.current.isDown = false;
-    setIsDragging(false);
-
-    if (animMode === 'drag') {
-      if (dragOffset < -42) {
-        handleNextVariant();
-      } else if (dragOffset > 42) {
-        handlePrevVariant();
-      }
-      setDragOffset(0);
-    } else {
-      if (wasMoved && Math.abs(deltaX) > 40) {
+      if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 650) {
         if (deltaX > 0) {
           handleNextVariant();
         } else {
@@ -422,10 +343,40 @@ const ProductDetailPage = () => {
     }
   };
 
+  // PC Mouse Drag Handlers (Click & drag left/right)
+  const handleMouseDown = (e) => {
+    if (e.button !== 0 || previewItems.length <= 1) return;
+    mouseDragRef.current = {
+      isDown: true,
+      startX: e.clientX,
+      moved: false,
+    };
+  };
+
+  const handleMouseMove = (e) => {
+    if (!mouseDragRef.current.isDown) return;
+    if (Math.abs(e.clientX - mouseDragRef.current.startX) > 8) {
+      mouseDragRef.current.moved = true;
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (!mouseDragRef.current.isDown) return;
+    const deltaX = mouseDragRef.current.startX - e.clientX;
+    const wasMoved = mouseDragRef.current.moved;
+    mouseDragRef.current.isDown = false;
+
+    if (wasMoved && Math.abs(deltaX) > 40) {
+      if (deltaX > 0) {
+        handleNextVariant();
+      } else {
+        handlePrevVariant();
+      }
+    }
+  };
+
   const handleMouseLeave = () => {
     mouseDragRef.current.isDown = false;
-    setIsDragging(false);
-    setDragOffset(0);
   };
 
   // PC Keyboard Arrow Navigation
@@ -440,13 +391,32 @@ const ProductDetailPage = () => {
     }
   };
 
-  // Thumbnail strip scroll sync ref
+  // Preload variant preview images into browser memory for zero-lag instant swapping
+  useEffect(() => {
+    if (!previewItems.length) return;
+    previewItems.forEach((item) => {
+      if (item.imageUrl) {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = item.imageUrl;
+      }
+    });
+  }, [previewItems]);
+
+  // Thumbnail strip scroll sync ref (only scrolls if thumbnail is out of view)
   const thumbListRef = useRef(null);
   useEffect(() => {
     if (!thumbListRef.current) return;
-    const activeEl = thumbListRef.current.querySelector('.product-detail-thumb--active');
+    const container = thumbListRef.current;
+    const activeEl = container.querySelector('.product-detail-thumb--active');
     if (activeEl) {
-      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      const cLeft = container.scrollLeft;
+      const cRight = cLeft + container.clientWidth;
+      const elLeft = activeEl.offsetLeft;
+      const elRight = elLeft + activeEl.clientWidth;
+      if (elLeft < cLeft || elRight > cRight) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      }
     }
   }, [selectedVariantId, activeImage]);
 
@@ -589,7 +559,6 @@ const ProductDetailPage = () => {
                 <div
                   className="product-detail-main-media"
                   onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
                   onMouseDown={handleMouseDown}
                   onMouseMove={handleMouseMove}
@@ -632,63 +601,16 @@ const ProductDetailPage = () => {
                       <div className="product-detail-media-counter">
                         {activePreviewIndex + 1} / {previewItems.length}
                       </div>
-
-                      {/* Animation Mode Switcher Pill */}
-                      <div
-                        className="product-detail-anim-toggle"
-                        onClick={(e) => e.stopPropagation()}
-                        title="Switch between Option 1 (Slide), Option 2 (Fade), and Option 3 (Drag)"
-                      >
-                        <button
-                          type="button"
-                          className={`product-detail-anim-btn ${animMode === 'slide' ? 'product-detail-anim-btn--active' : ''}`}
-                          onClick={() => setAnimMode('slide')}
-                          title="Option 1: Directional Slide Animation"
-                        >
-                          Slide
-                        </button>
-                        <button
-                          type="button"
-                          className={`product-detail-anim-btn ${animMode === 'fade' ? 'product-detail-anim-btn--active' : ''}`}
-                          onClick={() => setAnimMode('fade')}
-                          title="Option 2: Soft Fade Dissolve Animation"
-                        >
-                          Fade
-                        </button>
-                        <button
-                          type="button"
-                          className={`product-detail-anim-btn ${animMode === 'drag' ? 'product-detail-anim-btn--active' : ''}`}
-                          onClick={() => setAnimMode('drag')}
-                          title="Option 3: Real-Time Finger / Mouse Drag Physics"
-                        >
-                          Drag
-                        </button>
-                      </div>
                     </>
                   )}
 
                   {activeImage ? (
                     <img
-                      key={`${selectedVariantId || 'default'}-${activePreviewIndex}-${animMode}`}
+                      key={`${selectedVariantId || 'default'}-${activePreviewIndex}`}
                       src={activeImage}
                       alt={productName}
-                      className={`product-detail-preview-img ${animMode === 'slide'
-                        ? `product-detail-preview-img--slide-${slideDirection}`
-                        : animMode === 'fade'
-                          ? 'product-detail-preview-img--fade'
-                          : 'product-detail-preview-img--drag'
-                        }`}
-                      style={
-                        animMode === 'drag'
-                          ? {
-                              transform: `translateX(${dragOffset}px) scale(${isDragging ? 0.98 : 1})`,
-                              transition: isDragging
-                                ? 'none'
-                                : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
-                              opacity: Math.max(0.35, 1 - Math.abs(dragOffset) / 380),
-                            }
-                          : undefined
-                      }
+                      decoding="async"
+                      className={`product-detail-preview-img product-detail-preview-img--slide-${slideDirection}`}
                       draggable={false}
                     />
                   ) : (
