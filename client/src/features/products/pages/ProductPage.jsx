@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import logo from '../../../assets/images/logo.png';
 import './product.css';
 
@@ -24,6 +24,8 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 import Button from '../../../components/ui/Button/Button';
 import CloudSyncOutlinedIcon from '@mui/icons-material/CloudSyncOutlined';
@@ -94,23 +96,6 @@ const StatCard = ({ icon, label, value, tone = 'default' }) => (
   </div>
 );
 
-const PRODUCT_FILTERS_STORAGE_KEY = 'product_filters_state';
-
-const loadSavedProductFilters = () => {
-  try {
-    const raw = sessionStorage.getItem(PRODUCT_FILTERS_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return {
-      search: typeof parsed.search === 'string' ? parsed.search : '',
-      selectedCategories: Array.isArray(parsed.selectedCategories) ? parsed.selectedCategories : [],
-      selectedBrands: Array.isArray(parsed.selectedBrands) ? parsed.selectedBrands : [],
-    };
-  } catch (err) {
-    return null;
-  }
-};
-
 const ProductPage = () => {
   const {
     rows = [],
@@ -129,44 +114,129 @@ const ProductPage = () => {
   const canDelete = ['admin', 'manager'].includes(userRole);
 
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialFilters = useMemo(() => loadSavedProductFilters(), []);
+  // 1. Read URL query parameters (1-based for human readability e.g. ?page=3)
+  const pageFromUrl = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+  const pageSizeFromUrl = Math.max(5, parseInt(searchParams.get('pageSize') || '25', 10));
+  const searchFromUrl = searchParams.get('q') || '';
+  const categoriesFromUrl = useMemo(() => {
+    const raw = searchParams.get('cat');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
+  const brandsFromUrl = useMemo(() => {
+    const raw = searchParams.get('brand');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  }, [searchParams]);
 
-  const [search, setSearch] = useState(() => initialFilters?.search || '');
-  const [selectedCategories, setSelectedCategories] = useState(() => initialFilters?.selectedCategories || []);
-  const [selectedBrands, setSelectedBrands] = useState(() => initialFilters?.selectedBrands || []);
+  // Local state for fast responsive typing and immediate UI reflection
+  const [search, setSearch] = useState(searchFromUrl);
+  const [selectedCategories, setSelectedCategories] = useState(categoriesFromUrl);
+  const [selectedBrands, setSelectedBrands] = useState(brandsFromUrl);
+
   const [selectedRowIds, setSelectedRowIds] = useState([]);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [toast, setToast] = useState(INITIAL_TOAST);
   const [deleting, setDeleting] = useState(null);
 
-  // Sync active filters to sessionStorage so navigating to detail/edit and back preserves filter state
+  const pageRef = useRef(null);
+
+  // Sync state when browser back/forward or direct URL changes occur
   useEffect(() => {
-    try {
-      if (!search && selectedCategories.length === 0 && selectedBrands.length === 0) {
-        sessionStorage.removeItem(PRODUCT_FILTERS_STORAGE_KEY);
-      } else {
-        sessionStorage.setItem(
-          PRODUCT_FILTERS_STORAGE_KEY,
-          JSON.stringify({
-            search,
-            selectedCategories,
-            selectedBrands,
-          })
-        );
-      }
-    } catch (err) {
-      // ignore
-    }
-  }, [search, selectedCategories, selectedBrands]);
+    setSearch(searchFromUrl);
+    setSelectedCategories(categoriesFromUrl);
+    setSelectedBrands(brandsFromUrl);
+  }, [searchFromUrl, categoriesFromUrl, brandsFromUrl]);
+
+  // Central URL updater
+  const updateUrlParams = useCallback(
+    (updates, { replace = false } = {}) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+
+          if (updates.page !== undefined) {
+            if (updates.page <= 1) next.delete('page');
+            else next.set('page', String(updates.page));
+          }
+
+          if (updates.pageSize !== undefined) {
+            if (updates.pageSize === 25) next.delete('pageSize');
+            else next.set('pageSize', String(updates.pageSize));
+          }
+
+          if (updates.q !== undefined) {
+            if (!updates.q) next.delete('q');
+            else next.set('q', updates.q);
+          }
+
+          if (updates.cat !== undefined) {
+            if (!updates.cat || updates.cat.length === 0) next.delete('cat');
+            else next.set('cat', updates.cat.join(','));
+          }
+
+          if (updates.brand !== undefined) {
+            if (!updates.brand || updates.brand.length === 0) next.delete('brand');
+            else next.set('brand', updates.brand.join(','));
+          }
+
+          return next;
+        },
+        { replace }
+      );
+    },
+    [setSearchParams]
+  );
+
+  const handleSearchChange = useCallback(
+    (val) => {
+      setSearch(val);
+      updateUrlParams({ q: val, page: 1 }, { replace: true });
+    },
+    [updateUrlParams]
+  );
+
+  const handleCategoriesChange = useCallback(
+    (newCats) => {
+      setSelectedCategories(newCats);
+      updateUrlParams({ cat: newCats, page: 1 }, { replace: false });
+    },
+    [updateUrlParams]
+  );
+
+  const handleBrandsChange = useCallback(
+    (newBrands) => {
+      setSelectedBrands(newBrands);
+      updateUrlParams({ brand: newBrands, page: 1 }, { replace: false });
+    },
+    [updateUrlParams]
+  );
 
   const handleClearAllFilters = useCallback(() => {
     setSearch('');
     setSelectedCategories([]);
     setSelectedBrands([]);
-    sessionStorage.removeItem(PRODUCT_FILTERS_STORAGE_KEY);
-  }, []);
+    setSearchParams(new URLSearchParams(), { replace: false });
+  }, [setSearchParams]);
 
+  // Desktop DataGrid Pagination Model (0-indexed)
+  const paginationModel = useMemo(
+    () => ({
+      page: pageFromUrl - 1,
+      pageSize: pageSizeFromUrl,
+    }),
+    [pageFromUrl, pageSizeFromUrl]
+  );
+
+  const handlePaginationModelChange = useCallback(
+    (newModel) => {
+      updateUrlParams({
+        page: newModel.page + 1,
+        pageSize: newModel.pageSize,
+      });
+    },
+    [updateUrlParams]
+  );
 
   const showToast = useCallback((message, severity = 'success') => {
     setToast({
@@ -180,13 +250,25 @@ const ProductPage = () => {
     navigate('/products/new');
   }, [navigate]);
 
-  const openViewModal = useCallback((row) => {
-    navigate(`/products/view/${row.id}`);
-  }, [navigate]);
+  const openViewModal = useCallback(
+    (row) => {
+      if (row && row.id) {
+        sessionStorage.setItem('last_viewed_product_id', String(row.id));
+      }
+      navigate(`/products/view/${row.id}`);
+    },
+    [navigate]
+  );
 
-  const openEditModal = useCallback((row) => {
-    navigate(`/products/edit/${row.id}`);
-  }, [navigate]);
+  const openEditModal = useCallback(
+    (row) => {
+      if (row && row.id) {
+        sessionStorage.setItem('last_viewed_product_id', String(row.id));
+      }
+      navigate(`/products/edit/${row.id}`);
+    },
+    [navigate]
+  );
 
   const requestDelete = useCallback((id) => {
     setDeleting(id);
@@ -234,6 +316,75 @@ const ProductPage = () => {
       return true;
     });
   }, [rows, search, selectedCategories, selectedBrands]);
+
+  // Defensive boundary check to ensure page never exceeds maximum available pages
+  useEffect(() => {
+    if (!filteredRows.length) return;
+    const maxPage = Math.max(1, Math.ceil(filteredRows.length / pageSizeFromUrl));
+    if (pageFromUrl > maxPage) {
+      updateUrlParams({ page: maxPage }, { replace: true });
+    }
+  }, [filteredRows.length, pageSizeFromUrl, pageFromUrl, updateUrlParams]);
+
+  // Mobile Pagination calculation (25 items per page chunk)
+  const mobileCurrentPage = pageFromUrl;
+  const mobileTotalCount = filteredRows.length;
+  const mobileTotalPages = Math.max(1, Math.ceil(mobileTotalCount / pageSizeFromUrl));
+  const clampedMobilePage = Math.min(Math.max(1, mobileCurrentPage), mobileTotalPages);
+
+  const mobileStartIndex = (clampedMobilePage - 1) * pageSizeFromUrl;
+  const mobileEndIndex = Math.min(mobileStartIndex + pageSizeFromUrl, mobileTotalCount);
+  const mobilePaginatedRows = useMemo(() => {
+    return filteredRows.slice(mobileStartIndex, mobileEndIndex);
+  }, [filteredRows, mobileStartIndex, mobileEndIndex]);
+
+  const getScrollContainer = useCallback(() => {
+    return (
+      pageRef.current?.parentElement ||
+      pageRef.current?.closest('[class*="content"]') ||
+      document.querySelector('[class*="content"]') ||
+      window
+    );
+  }, []);
+
+  const handleMobileNextPage = useCallback(() => {
+    if (clampedMobilePage < mobileTotalPages) {
+      updateUrlParams({ page: clampedMobilePage + 1 });
+      const container = getScrollContainer();
+      if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [clampedMobilePage, mobileTotalPages, updateUrlParams, getScrollContainer]);
+
+  const handleMobilePrevPage = useCallback(() => {
+    if (clampedMobilePage > 1) {
+      updateUrlParams({ page: clampedMobilePage - 1 });
+      const container = getScrollContainer();
+      if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [clampedMobilePage, updateUrlParams, getScrollContainer]);
+
+  // Entity Anchor: center and highlight the last viewed product on return
+  useEffect(() => {
+    const lastId = sessionStorage.getItem('last_viewed_product_id');
+    if (!lastId || loading || rows.length === 0) return;
+
+    const timer = setTimeout(() => {
+      const targetElement =
+        document.getElementById(`product-card-${lastId}`) ||
+        document.querySelector(`[data-id="${lastId}"]`);
+
+      if (targetElement) {
+        targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        targetElement.classList.add('product-row-highlight');
+        setTimeout(() => {
+          targetElement.classList.remove('product-row-highlight');
+        }, 1600);
+        sessionStorage.removeItem('last_viewed_product_id');
+      }
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [loading, rows.length, clampedMobilePage]);
 
   const [syncingSheets, setSyncingSheets] = useState(false);
 
@@ -636,7 +787,7 @@ const ProductPage = () => {
   );
 
   return (
-    <div className="product-page">
+    <div className="product-page" ref={pageRef}>
       {/* 1. Compact Header */}
       <div className="product-header">
         <div className="product-header__left">
@@ -720,7 +871,7 @@ const ProductPage = () => {
                       size="small"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSearch('');
+                        handleSearchChange('');
                       }}
                       sx={{ padding: '2px', color: '#94a3b8' }}
                       aria-label="Clear search"
@@ -730,7 +881,7 @@ const ProductPage = () => {
                   ) : null
                 }
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Search by name, category, brand..."
               />
             </form>
@@ -742,7 +893,7 @@ const ProductPage = () => {
               placeholder="Select Category"
               options={categoryOptions}
               selectedValues={selectedCategories}
-              onChange={setSelectedCategories}
+              onChange={handleCategoriesChange}
               maxTagsVisible={1}
               loading={loading && categoryOptions.length === 0}
             />
@@ -752,7 +903,7 @@ const ProductPage = () => {
               placeholder="Select Brand"
               options={brandOptions}
               selectedValues={selectedBrands}
-              onChange={setSelectedBrands}
+              onChange={handleBrandsChange}
               maxTagsVisible={1}
               loading={loading && brandOptions.length === 0}
             />
@@ -783,6 +934,8 @@ const ProductPage = () => {
               columnVisibilityModel={columnVisibilityModel}
               rowSelectionModel={selectedRowIds}
               onRowSelectionModelChange={setSelectedRowIds}
+              paginationModel={paginationModel}
+              onPaginationModelChange={handlePaginationModelChange}
             />
           </div>
           <div
@@ -800,15 +953,45 @@ const ProductPage = () => {
           >
             <ProductMobileCardList
               loading={loading && rows.length === 0}
-              rows={filteredRows}
+              rows={mobilePaginatedRows}
               onView={openViewModal}
               onEdit={canEdit ? openEditModal : undefined}
               onDelete={canDelete ? requestDelete : undefined}
             />
-            {(!loading || rows.length > 0) && (
-              <div className="product-panel__footer">
-                <div className="product-panel__count">
-                  Showing <strong>{filteredRows.length}</strong> of {rows.length} products
+
+            {/* Mobile Bottom Pagination Bar */}
+            {(!loading || rows.length > 0) && mobileTotalCount > 0 && (
+              <div className="product-mobile-pagination">
+                <div className="product-mobile-pagination__controls">
+                  <button
+                    type="button"
+                    className="product-mobile-pagination__btn"
+                    onClick={handleMobilePrevPage}
+                    disabled={clampedMobilePage <= 1}
+                    aria-label="Previous 25 products"
+                  >
+                    <ChevronLeftIcon sx={{ fontSize: 20 }} />
+                    <span>Previous</span>
+                  </button>
+
+                  <div className="product-mobile-pagination__indicator">
+                    Page {clampedMobilePage} / {mobileTotalPages}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="product-mobile-pagination__btn"
+                    onClick={handleMobileNextPage}
+                    disabled={clampedMobilePage >= mobileTotalPages}
+                    aria-label="Next 25 products"
+                  >
+                    <span>Next</span>
+                    <ChevronRightIcon sx={{ fontSize: 20 }} />
+                  </button>
+                </div>
+
+                <div className="product-mobile-pagination__summary">
+                  Showing <strong>{mobileStartIndex + 1}–{mobileEndIndex}</strong> of <strong>{mobileTotalCount}</strong> products
                 </div>
               </div>
             )}

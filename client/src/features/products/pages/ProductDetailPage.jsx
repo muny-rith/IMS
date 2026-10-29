@@ -450,6 +450,14 @@ const ProductDetailPage = () => {
     window.print();
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/products');
+    }
+  };
+
   if (loading) {
     return <ProductDetailSkeleton />;
   }
@@ -486,7 +494,7 @@ const ProductDetailPage = () => {
           <button
             type="button"
             className="product-detail-back-btn"
-            onClick={() => navigate('/products')}
+            onClick={handleBack}
             title="Back to Products"
             aria-label="Back to Products"
           >
@@ -495,7 +503,7 @@ const ProductDetailPage = () => {
 
           <div className="product-detail-header__info">
             <div className="product-detail-breadcrumbs">
-              <span className="clickable" onClick={() => navigate('/products')}>Products</span>
+              <span className="clickable" onClick={handleBack}>Products</span>
               <span>/</span>
               <span className="product-detail-breadcrumbs__current">{productName}</span>
             </div>

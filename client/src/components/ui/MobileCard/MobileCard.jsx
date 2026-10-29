@@ -64,6 +64,9 @@ const MobileCard = ({
   actionsPlacement = 'bottom',
   loading = false,
   onClick,
+  id,
+  className = '',
+  ...rest
 }) => {
   if (loading) {
     return (
@@ -75,7 +78,9 @@ const MobileCard = ({
   }
     return (
         <article
-            className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''} ${onClick ? 'mobile-card--clickable' : ''}`}
+            id={id}
+            className={`mobile-card ${actionsPlacement === 'top-right' ? 'mobile-card--actions-top' : ''} ${onClick ? 'mobile-card--clickable' : ''} ${className}`.trim()}
+            {...rest}
             onClick={onClick}
         >
             <div className="mobile-card__top">

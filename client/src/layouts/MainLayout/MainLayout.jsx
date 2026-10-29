@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigationType } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Sidebar, { getTotalVisibleNavCount } from "../../components/common/SideBar/SideBar";
@@ -12,6 +12,7 @@ const SIDEBAR_COLLAPSED = 80;
 export default function MainLayout() {
   const { user } = useAuth();
   const location = useLocation();
+  const navType = useNavigationType();
   const contentRef = useRef(null);
   const [collapsed, setCollapsed]   = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -20,13 +21,16 @@ export default function MainLayout() {
   const visibleNavCount = getTotalVisibleNavCount(user?.role);
   const showSidebar = visibleNavCount > 1;
 
-  // Automatically scroll to the top of the page on route change
+  // Scroll to top on forward navigation ('PUSH'), preserve position on back ('POP')
   useEffect(() => {
+    if (navType === 'POP') return;
+
+
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
     }
     window.scrollTo(0, 0);
-  }, [location.pathname, location.key]);
+  }, [location.pathname, location.key, navType]);
 
   useEffect(() => {
     const onResize = () => {

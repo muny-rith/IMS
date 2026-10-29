@@ -37,6 +37,8 @@ const ProductMobileCardList = ({ rows = [], loading = false, onView, onEdit, onD
                 return (
                     <MobileCard
                         key={row.id}
+                        id={`product-card-${row.id}`}
+                        data-id={row.id}
                         onClick={() => onView?.(row)}
                         avatar={
                             <div

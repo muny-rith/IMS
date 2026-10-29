@@ -182,6 +182,8 @@ const DataTable = ({
   initialState,
   rowSelectionModel,
   onRowSelectionModelChange,
+  paginationModel,
+  onPaginationModelChange,
   slots,
   ...rest
 }) => {
@@ -241,10 +243,14 @@ const DataTable = ({
         columns={columns}
         rowHeight={rowHeight}
         columnHeaderHeight={columnHeaderHeight}
+        {...(paginationModel ? { paginationModel } : {})}
+        {...(onPaginationModelChange ? { onPaginationModelChange } : {})}
         initialState={{
-          pagination: {
-            paginationModel: { pageSize, page: 0 },
-          },
+          ...(!paginationModel ? {
+            pagination: {
+              paginationModel: { pageSize, page: 0 },
+            },
+          } : {}),
           ...initialState,
         }}
         pageSizeOptions={pageSizeOptions}
