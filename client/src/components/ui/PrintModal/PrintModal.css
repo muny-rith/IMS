@@ -156,11 +156,12 @@
   box-sizing: border-box;
 }
 
-/* Printable Page Sheet - Standard A4 with Inter typography */
+/* Printable Page Sheet - Standard A4 (840px × 1188px = 1:1.414 true A4 ratio) */
 .print-preview-page {
   width: 840px;
   max-width: 840px;
-  min-height: 1040px;
+  height: 1188px;
+  min-height: 1188px;
   background-color: #ffffff;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
   padding: 32px 36px;
@@ -170,12 +171,20 @@
   font-family: 'Inter', 'Battambang', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+.print-preview-page>* {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* MoonPulse Dark Navy Tables - Larger readable typography */
 .print-report-table {
   width: 100%;
-  font-size: 12px;
+  font-size: 13px;
   border-collapse: collapse;
   table-layout: fixed;
   margin-top: 8px;
@@ -188,7 +197,7 @@
   font-weight: 700;
   background-color: #0f172a;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 12.5px;
   letter-spacing: 0.01em;
   border-right: 1px solid rgba(255, 255, 255, 0.12);
   vertical-align: middle;
@@ -199,13 +208,13 @@
 }
 
 .print-report-table td {
-  padding: 7.5px 10px;
+  padding: 6.5px 10px;
   color: #334155;
   border-bottom: 1px solid #e2e8f0;
   border-right: 1px solid #f1f5f9;
   text-align: left;
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.4;
   vertical-align: middle;
   word-break: break-word;
   font-variant-numeric: tabular-nums;
@@ -349,6 +358,12 @@
   pointer-events: none;
   z-index: -9999;
   width: 840px;
+}
+
+.print-offscreen-container .print-preview-page {
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
 }
 
 /* =========================================================================

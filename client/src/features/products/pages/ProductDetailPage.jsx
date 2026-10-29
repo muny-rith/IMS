@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
@@ -15,6 +15,8 @@ import CheckOutlinedIcon from '@mui/icons-material/CheckOutlined';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { IconButton } from '@mui/material';
 import Button from '../../../components/ui/Button/Button';
 import Input from '../../../components/ui/Input/Input';
@@ -72,6 +74,10 @@ const ProductDetailPage = () => {
   const [activeImage, setActiveImage] = useState('');
   const [copiedSku, setCopiedSku] = useState('');
   const [variantSearch, setVariantSearch] = useState('');
+  const [slideDirection, setSlideDirection] = useState('next');
+  const [animMode, setAnimMode] = useState('drag'); // 'slide' (Option 1) vs 'fade' (Option 2) vs 'drag' (Option 3)
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!availableTabs.some((t) => t.id === activeTab)) {
@@ -114,6 +120,60 @@ const ProductDetailPage = () => {
   }, [id, fetchProductDetail]);
 
   const variants = useMemo(() => product?.variants || [], [product]);
+
+  const selectedVariant = useMemo(() => {
+    if (!variants.length) return null;
+    return variants.find((v) => (v.id || v.variant_id) === selectedVariantId) || variants[0] || null;
+  }, [variants, selectedVariantId]);
+
+  const selectedVariantIndex = useMemo(() => {
+    if (!variants.length || !selectedVariant) return 0;
+    const idx = variants.findIndex(
+      (v) => (v.id || v.variant_id) === (selectedVariant.id || selectedVariant.variant_id)
+    );
+    return idx >= 0 ? idx + 1 : 1;
+  }, [variants, selectedVariant]);
+
+  const selectedVariantData = useMemo(() => {
+    if (!selectedVariant) return null;
+    const stock = Number(selectedVariant.openingQty ?? selectedVariant.on_hand_qty ?? 0);
+    const reserved = Number(selectedVariant.reservedQty ?? selectedVariant.reserved_qty ?? 0);
+    const available = Math.max(0, stock - reserved);
+    const sku = selectedVariant.sku || (product ? `SKU-${product.id}-${selectedVariantIndex}` : '—');
+    const price = Number(selectedVariant.unit_price ?? 0);
+
+    let optionLabel = '';
+    if (Array.isArray(selectedVariant.attribute_values) && selectedVariant.attribute_values.length > 0) {
+      optionLabel = selectedVariant.attribute_values.map((av) => av.value).join(', ');
+    } else if (selectedVariant.attributes && typeof selectedVariant.attributes === 'object') {
+      optionLabel = Object.values(selectedVariant.attributes).flat().join(', ');
+    }
+
+    const attrVals = Array.isArray(selectedVariant.attribute_values)
+      ? selectedVariant.attribute_values
+      : (Array.isArray(selectedVariant.attributeValues) ? selectedVariant.attributeValues : []);
+    const attrOthers = attrVals
+      .map((av) => (av.other ? String(av.other).trim() : ''))
+      .filter(Boolean);
+    const otherItems = [];
+    if (selectedVariant.other && String(selectedVariant.other).trim()) {
+      otherItems.push(String(selectedVariant.other).trim());
+    }
+    attrOthers.forEach((ao) => {
+      if (!otherItems.includes(ao)) otherItems.push(ao);
+    });
+
+    return {
+      stock,
+      reserved,
+      available,
+      sku,
+      price,
+      optionLabel: optionLabel || 'Standard Option',
+      attributes: attrVals,
+      otherItems,
+    };
+  }, [selectedVariant, product, selectedVariantIndex]);
 
   // Aggregated analytics & financials
   const stats = useMemo(() => {
@@ -204,12 +264,191 @@ const ProductDetailPage = () => {
     return [];
   }, [product, variants]);
 
-  const handleSelectVariant = (v) => {
+  const handleSelectVariant = (v, direction) => {
     if (!v) return;
     const vId = v.id || v.variant_id;
+    if (direction) {
+      setSlideDirection(direction);
+    } else {
+      const targetIdx = variants.findIndex((item) => (item.id || item.variant_id) === vId);
+      const currIdx = variants.findIndex((item) => (item.id || item.variant_id) === selectedVariantId);
+      if (targetIdx !== -1 && currIdx !== -1 && targetIdx !== currIdx) {
+        setSlideDirection(targetIdx > currIdx ? 'next' : 'prev');
+      }
+    }
     setSelectedVariantId(vId);
-    setActiveImage(v.imageUrl || v.imagePreview || '');
+    const variantImg = v.imageUrl || v.imagePreview;
+    setActiveImage(variantImg || product?.imageUrl || product?.image || '');
   };
+
+  // Compute currently active index within previewItems
+  const activePreviewIndex = useMemo(() => {
+    if (!previewItems.length) return 0;
+    const idx = previewItems.findIndex((item) =>
+      selectedVariantId ? item.id === selectedVariantId : activeImage === item.imageUrl
+    );
+    return idx >= 0 ? idx : 0;
+  }, [previewItems, selectedVariantId, activeImage]);
+
+  const handleSelectByIndex = (targetIdx, forcedDir) => {
+    if (!previewItems.length) return;
+    const boundedIdx = (targetIdx + previewItems.length) % previewItems.length;
+    const dir = forcedDir || (boundedIdx >= activePreviewIndex ? 'next' : 'prev');
+    setSlideDirection(dir);
+    const targetItem = previewItems[boundedIdx];
+    if (targetItem) {
+      if (targetItem.variant) {
+        handleSelectVariant(targetItem.variant, dir);
+      } else {
+        setActiveImage(targetItem.imageUrl || '');
+      }
+    }
+  };
+
+  const handleNextVariant = () => {
+    if (previewItems.length <= 1) return;
+    handleSelectByIndex(activePreviewIndex + 1, 'next');
+  };
+
+  const handlePrevVariant = () => {
+    if (previewItems.length <= 1) return;
+    handleSelectByIndex(activePreviewIndex - 1, 'prev');
+  };
+
+  // Touch Swipe & Mouse Drag gesture state refs
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const mouseDragRef = useRef({ isDown: false, startX: 0, moved: false });
+
+  // Mobile Touch Swipe Handlers (Horizontal gesture detection with real-time tracking)
+  const handleTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+      setDragOffset(0);
+      setIsDragging(false);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (previewItems.length <= 1) return;
+    if (e.touches && e.touches[0]) {
+      const deltaX = e.touches[0].clientX - touchStartRef.current.x;
+      const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+      if (Math.abs(deltaX) > 6 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (animMode === 'drag') {
+          setDragOffset(deltaX);
+          setIsDragging(true);
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      const deltaX = touchStartRef.current.x - e.changedTouches[0].clientX;
+      const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
+      const deltaTime = Date.now() - touchStartRef.current.time;
+
+      if (animMode === 'drag') {
+        setIsDragging(false);
+        if (dragOffset < -42) {
+          handleNextVariant();
+        } else if (dragOffset > 42) {
+          handlePrevVariant();
+        }
+        setDragOffset(0);
+      } else {
+        if (Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY) && deltaTime < 650) {
+          if (deltaX > 0) {
+            handleNextVariant();
+          } else {
+            handlePrevVariant();
+          }
+        }
+      }
+    }
+  };
+
+  // PC Mouse Drag Handlers (Real-time physics tracking + click-and-drag)
+  const handleMouseDown = (e) => {
+    if (e.button !== 0 || previewItems.length <= 1) return;
+    mouseDragRef.current = {
+      isDown: true,
+      startX: e.clientX,
+      moved: false,
+    };
+    setDragOffset(0);
+    if (animMode === 'drag') {
+      setIsDragging(true);
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!mouseDragRef.current.isDown) return;
+    const deltaX = e.clientX - mouseDragRef.current.startX;
+    if (Math.abs(deltaX) > 4) {
+      mouseDragRef.current.moved = true;
+      if (animMode === 'drag') {
+        setDragOffset(deltaX);
+      }
+    }
+  };
+
+  const handleMouseUp = (e) => {
+    if (!mouseDragRef.current.isDown) return;
+    const deltaX = mouseDragRef.current.startX - e.clientX;
+    const wasMoved = mouseDragRef.current.moved;
+    mouseDragRef.current.isDown = false;
+    setIsDragging(false);
+
+    if (animMode === 'drag') {
+      if (dragOffset < -42) {
+        handleNextVariant();
+      } else if (dragOffset > 42) {
+        handlePrevVariant();
+      }
+      setDragOffset(0);
+    } else {
+      if (wasMoved && Math.abs(deltaX) > 40) {
+        if (deltaX > 0) {
+          handleNextVariant();
+        } else {
+          handlePrevVariant();
+        }
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    mouseDragRef.current.isDown = false;
+    setIsDragging(false);
+    setDragOffset(0);
+  };
+
+  // PC Keyboard Arrow Navigation
+  const handleMediaKeyDown = (e) => {
+    if (previewItems.length <= 1) return;
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      handlePrevVariant();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      handleNextVariant();
+    }
+  };
+
+  // Thumbnail strip scroll sync ref
+  const thumbListRef = useRef(null);
+  useEffect(() => {
+    if (!thumbListRef.current) return;
+    const activeEl = thumbListRef.current.querySelector('.product-detail-thumb--active');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }, [selectedVariantId, activeImage]);
 
   // Filtered variants for the search bar inside Tab 1 matrix table
   const filteredVariants = useMemo(() => {
@@ -346,10 +585,112 @@ const ProductDetailPage = () => {
             {/* ── LEFT SIDEBAR: Compact Product Hub & Registry ── */}
             <aside className="product-detail-sidebar">
               <div className="product-detail-card product-detail-hub-card">
-                {/* 1. Media Preview */}
-                <div className="product-detail-main-media">
+                {/* 1. Media Preview (Touch Swipe on Mobile, Mouse Drag / Chevrons on PC) */}
+                <div
+                  className="product-detail-main-media"
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseLeave}
+                  onKeyDown={handleMediaKeyDown}
+                  tabIndex={previewItems.length > 1 ? 0 : -1}
+                  role="region"
+                  aria-label="Product variant image carousel. Swipe or use arrow keys to navigate."
+                  title={previewItems.length > 1 ? "Swipe or click arrows to view variants" : undefined}
+                >
+                  {previewItems.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="product-detail-media-nav product-detail-media-nav--prev"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePrevVariant();
+                        }}
+                        aria-label="Previous variant photo"
+                        title="Previous variant (Left Arrow or Swipe Right)"
+                      >
+                        <ChevronLeftIcon sx={{ fontSize: 22 }} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="product-detail-media-nav product-detail-media-nav--next"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNextVariant();
+                        }}
+                        aria-label="Next variant photo"
+                        title="Next variant (Right Arrow or Swipe Left)"
+                      >
+                        <ChevronRightIcon sx={{ fontSize: 22 }} />
+                      </button>
+
+                      <div className="product-detail-media-counter">
+                        {activePreviewIndex + 1} / {previewItems.length}
+                      </div>
+
+                      {/* Animation Mode Switcher Pill */}
+                      <div
+                        className="product-detail-anim-toggle"
+                        onClick={(e) => e.stopPropagation()}
+                        title="Switch between Option 1 (Slide), Option 2 (Fade), and Option 3 (Drag)"
+                      >
+                        <button
+                          type="button"
+                          className={`product-detail-anim-btn ${animMode === 'slide' ? 'product-detail-anim-btn--active' : ''}`}
+                          onClick={() => setAnimMode('slide')}
+                          title="Option 1: Directional Slide Animation"
+                        >
+                          Slide
+                        </button>
+                        <button
+                          type="button"
+                          className={`product-detail-anim-btn ${animMode === 'fade' ? 'product-detail-anim-btn--active' : ''}`}
+                          onClick={() => setAnimMode('fade')}
+                          title="Option 2: Soft Fade Dissolve Animation"
+                        >
+                          Fade
+                        </button>
+                        <button
+                          type="button"
+                          className={`product-detail-anim-btn ${animMode === 'drag' ? 'product-detail-anim-btn--active' : ''}`}
+                          onClick={() => setAnimMode('drag')}
+                          title="Option 3: Real-Time Finger / Mouse Drag Physics"
+                        >
+                          Drag
+                        </button>
+                      </div>
+                    </>
+                  )}
+
                   {activeImage ? (
-                    <img src={activeImage} alt={productName} className="product-detail-preview-img" />
+                    <img
+                      key={`${selectedVariantId || 'default'}-${activePreviewIndex}-${animMode}`}
+                      src={activeImage}
+                      alt={productName}
+                      className={`product-detail-preview-img ${animMode === 'slide'
+                        ? `product-detail-preview-img--slide-${slideDirection}`
+                        : animMode === 'fade'
+                          ? 'product-detail-preview-img--fade'
+                          : 'product-detail-preview-img--drag'
+                        }`}
+                      style={
+                        animMode === 'drag'
+                          ? {
+                              transform: `translateX(${dragOffset}px) scale(${isDragging ? 0.98 : 1})`,
+                              transition: isDragging
+                                ? 'none'
+                                : 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease',
+                              opacity: Math.max(0.35, 1 - Math.abs(dragOffset) / 380),
+                            }
+                          : undefined
+                      }
+                      draggable={false}
+                    />
                   ) : (
                     <div className="product-detail-no-media">
                       <p>No photo available</p>
@@ -358,7 +699,7 @@ const ProductDetailPage = () => {
                 </div>
 
                 {previewItems.length > 0 && (
-                  <div className="product-detail-thumbs">
+                  <div className="product-detail-thumbs" ref={thumbListRef}>
                     {previewItems.map((item, idx) => {
                       const isActive = selectedVariantId
                         ? selectedVariantId === item.id
@@ -395,11 +736,46 @@ const ProductDetailPage = () => {
                   </div>
                 )}
 
-                {/* 2. Catalog Details Inside Same Card */}
+                {/* 2. Product Information & Catalog Registry */}
                 <div className="product-detail-registry-section">
-                  <h3 className="product-detail-card-heading">Catalog Registry</h3>
                   <div className="product-detail-meta-list">
-                    <div className="product-detail-meta-item">
+                    {/* Active Variant Option & Price Hero Row */}
+                    <div className="product-detail-hero-row">
+                      <div className="product-detail-hero-info">
+                        <span className="product-detail-hero-name">
+                          {productName}
+                        </span>
+                      </div>
+                      <div className="product-detail-hero-price-wrap">
+                        <span className="product-detail-hero-price">
+                          {currencyFormatter.format(selectedVariantData?.price ?? stats?.basePrice ?? 0)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Dynamic Variant Attributes / Notes Strip */}
+                    {((selectedVariantData?.attributes?.length > 0) || (selectedVariantData?.otherItems?.length > 0)) && (
+                      <div className="product-detail-variant-attrs-strip">
+                        {selectedVariantData.attributes.map((av, avIdx) => (
+                          <span key={av.value_id || avIdx} className="product-detail-variant-attr-badge">
+                            {av.attribute_name ? (
+                              <span className="attr-name">{av.attribute_name}:</span>
+                            ) : null}
+                            <span className="attr-val">
+                              {typeof av === 'object' && av !== null ? av.value : String(av)}
+                            </span>
+                          </span>
+                        ))}
+                        {selectedVariantData.otherItems.map((otherTxt, otIdx) => (
+                          <span key={otIdx} className="product-detail-variant-attr-badge">
+                            <span className="attr-val">{otherTxt}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Master Catalog Details */}
+                    <div className="product-detail-meta-item product-detail-meta-item--divider">
                       <span className="product-detail-meta-label">Category</span>
                       <span className="product-detail-chip product-detail-chip--cat">{categoryName}</span>
                     </div>
@@ -416,7 +792,9 @@ const ProductDetailPage = () => {
 
                     <div className="product-detail-meta-item">
                       <span className="product-detail-meta-label">Unit of Measure</span>
-                      <span className="product-detail-meta-value">PCS (Pieces)</span>
+                      <span className="product-detail-meta-value">
+                        {product.unit_of_measure || product.uom || 'PCS (Pieces)'}
+                      </span>
                     </div>
 
                     <div className="product-detail-meta-item">
@@ -507,16 +885,22 @@ const ProductDetailPage = () => {
                             }
 
                             return (
-                              <tr key={v.id || v.variant_id || idx}>
+                              <tr
+                                key={v.id || v.variant_id || idx}
+                                className={`product-detail-tr-interactive ${selectedVariantId === (v.id || v.variant_id)
+                                  ? 'product-detail-tr--selected'
+                                  : ''
+                                  }`}
+                                onClick={() => handleSelectVariant(v)}
+                                title={`Click to select ${vSku}`}
+                              >
                                 <td>
                                   <div
                                     className={`product-detail-tbl-avatar ${selectedVariantId === (v.id || v.variant_id)
-                                        ? 'product-detail-tbl-avatar--selected'
-                                        : ''
+                                      ? 'product-detail-tbl-avatar--selected'
+                                      : ''
                                       }`}
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => handleSelectVariant(v)}
-                                    title={`Click to preview ${vSku}`}
+                                    title={`Preview ${vSku}`}
                                   >
                                     {v.imageUrl || v.imagePreview ? (
                                       <img src={v.imageUrl || v.imagePreview} alt={vSku} />
@@ -532,7 +916,10 @@ const ProductDetailPage = () => {
                                     <button
                                       type="button"
                                       className="product-detail-copy-btn"
-                                      onClick={() => handleCopy(vSku)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCopy(vSku);
+                                      }}
                                       title="Copy SKU"
                                     >
                                       {copiedSku === vSku ? (
@@ -604,7 +991,14 @@ const ProductDetailPage = () => {
 
                                 <td className="product-detail-td--stock" style={{ textAlign: 'center', fontWeight: 600 }}>{vStock}</td>
                                 <td className="product-detail-td--stock" style={{ textAlign: 'center', color: '#64748b' }}>{vRes}</td>
-                                <td className="product-detail-td--stock" style={{ textAlign: 'center', fontWeight: 700, color: '#059669' }}>
+                                <td
+                                  className="product-detail-td--stock"
+                                  style={{
+                                    textAlign: 'center',
+                                    fontWeight: 700,
+                                    color: vAvail > 0 ? '#059669' : '#94a3b8',
+                                  }}
+                                >
                                   {vAvail}
                                 </td>
                               </tr>

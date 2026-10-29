@@ -66,30 +66,42 @@ export const ProductDetailSkeleton = () => {
                   <Skeleton
                     key={i}
                     variant="rounded"
-                    width={52}
-                    height={52}
+                    width={40}
+                    height={40}
                     style={{ borderRadius: '8px' }}
                   />
                 ))}
               </div>
 
-              {/* Catalog Details */}
-              <div className="product-detail-registry-section" style={{ marginTop: '18px' }}>
-                <Skeleton variant="text" width={120} height={18} style={{ marginBottom: '14px' }} />
+              {/* Product Information Skeleton (Unified List) */}
+              <div className="product-detail-registry-section" style={{ marginTop: '14px' }}>
                 <div className="product-detail-meta-list">
+                  {/* Hero Row Skeleton */}
+                  <div className="product-detail-hero-row" style={{ alignItems: 'center', paddingBottom: '6px' }}>
+                    <Skeleton variant="text" width={150} height={26} />
+                    <Skeleton variant="rounded" width={80} height={28} style={{ borderRadius: '6px' }} />
+                  </div>
+
+                  {/* Attributes Strip Skeleton */}
+                  <div style={{ display: 'flex', gap: '6px', padding: '6px 0 10px' }}>
+                    <Skeleton variant="rounded" width={68} height={24} style={{ borderRadius: '6px' }} />
+                    <Skeleton variant="rounded" width={86} height={24} style={{ borderRadius: '6px' }} />
+                    <Skeleton variant="rounded" width={52} height={24} style={{ borderRadius: '6px' }} />
+                  </div>
+
                   {[
-                    { labelWidth: 60, valWidth: 80 },
-                    { labelWidth: 50, valWidth: 90 },
-                    { labelWidth: 80, valWidth: 100 },
-                    { labelWidth: 90, valWidth: 70 },
-                    { labelWidth: 75, valWidth: 65 },
+                    { labelWidth: 60, valWidth: 95 },
+                    { labelWidth: 50, valWidth: 80 },
+                    { labelWidth: 80, valWidth: 55 },
+                    { labelWidth: 90, valWidth: 75 },
+                    { labelWidth: 75, valWidth: 50 },
                   ].map((item, idx) => (
                     <div className="product-detail-meta-item" key={idx}>
-                      <Skeleton variant="text" width={item.labelWidth} height={14} />
+                      <Skeleton variant="text" width={item.labelWidth} height={16} />
                       <Skeleton
                         variant="rounded"
                         width={item.valWidth}
-                        height={22}
+                        height={24}
                         style={{ borderRadius: '6px' }}
                       />
                     </div>

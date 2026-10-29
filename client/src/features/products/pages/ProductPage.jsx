@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logo from '../../../assets/images/logo.png';
 import './product.css';
 
 import {
@@ -355,27 +356,28 @@ const ProductPage = () => {
     };
   }, [printableVariantRows, filteredRows]);
 
-  // Request 3: Smart Pagination for A4 Printable Pages
-  // Page 1: 17 items (perfectly fills the page with IMS Header + Executive Summary table, leaving no excess empty space)
-  // Page 2+: 25 items (full-height detailed items list with balanced margins)
+  // Request 3: Smart Pagination for True A4 Printable Pages (1188px height)
+  // Page 1: 28 items (fully fills Page 1 down to the footer)
+  // Page 2+: 33 items (fully fills subsequent detailed pages down to the footer)
+  const PAGE_1_SIZE = 28;
+  const SUBSEQUENT_PAGE_SIZE = 33;
+
   const printPages = useMemo(() => {
     const list = printableVariantRows || [];
     if (list.length === 0) return [[]];
-    const page1Size = 17;
-    const subsequentPageSize = 25;
     const pagesList = [];
-    pagesList.push(list.slice(0, page1Size));
-    let i = page1Size;
+    pagesList.push(list.slice(0, PAGE_1_SIZE));
+    let i = PAGE_1_SIZE;
     while (i < list.length) {
-      pagesList.push(list.slice(i, i + subsequentPageSize));
-      i += subsequentPageSize;
+      pagesList.push(list.slice(i, i + SUBSEQUENT_PAGE_SIZE));
+      i += SUBSEQUENT_PAGE_SIZE;
     }
     return pagesList.length > 0 ? pagesList : [[]];
   }, [printableVariantRows]);
 
   const getItemGlobalNo = (pageNumber, itemIndex) => {
     if (pageNumber === 1) return itemIndex + 1;
-    return 17 + (pageNumber - 2) * 25 + itemIndex + 1;
+    return PAGE_1_SIZE + (pageNumber - 2) * SUBSEQUENT_PAGE_SIZE + itemIndex + 1;
   };
 
   const stats = useMemo(() => {
@@ -903,37 +905,29 @@ const ProductPage = () => {
           showToast(`Exported ${printableVariantRows.length} variant items to Excel.`);
         }}
         renderPage={(pageRows, pageNumber, totalPages) => (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', minHeight: '100%' }}>
             {/* Header: only on Page 1 */}
             {pageNumber === 1 && (
-              <div style={{ marginBottom: '14px' }}>
+              <div style={{ marginBottom: '22px', paddingTop: '6px' }}>
                 <div
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: '12px',
+                    marginBottom: '18px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <img
+                      src={logo}
+                      alt="Moon IMS Logo"
                       style={{
-                        width: '38px',
-                        height: '38px',
-                        borderRadius: '8px',
-                        backgroundColor: '#eff6ff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#2563eb',
-                        fontWeight: 800,
-                        fontSize: '15px',
-                        border: '1px solid #bfdbfe',
-                        letterSpacing: '-0.02em',
+                        width: '42px',
+                        height: '42px',
+                        objectFit: 'contain',
+                        display: 'block',
                       }}
-                    >
-                      IMS
-                    </div>
+                    />
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
                         INVENTORY MANAGEMENT SYSTEM
@@ -949,10 +943,10 @@ const ProductPage = () => {
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+                <div style={{ textAlign: 'center', padding: '6px 0 10px' }}>
                   <h3
                     style={{
-                      margin: '0 0 4px',
+                      margin: 0,
                       fontSize: '20px',
                       fontWeight: 800,
                       color: '#0f172a',
@@ -962,81 +956,12 @@ const ProductPage = () => {
                   >
                     REPORT PRODUCT INVENTORY
                   </h3>
-                  <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
-                    រយៈពេល ៖ {new Date().toLocaleDateString('km-KH', { month: 'long', year: 'numeric' })}
-                  </div>
-                </div>
-
-                {/* EXECUTIVE SUMMARY */}
-                <div style={{ marginBottom: '14px' }}>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 800,
-                      color: '#0f172a',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    EXECUTIVE SUMMARY
-                  </div>
-                  <table className="print-report-table" style={{ marginTop: 0 }}>
-                    <colgroup>
-                      <col style={{ width: '26%' }} />
-                      <col style={{ width: '15%' }} />
-                      <col style={{ width: '14%' }} />
-                      <col style={{ width: '14%' }} />
-                      <col style={{ width: '15%' }} />
-                      <col style={{ width: '16%' }} />
-                    </colgroup>
-                    <thead>
-                      <tr>
-                        <th>Metric</th>
-                        <th style={{ textAlign: 'center' }}>Total Variants</th>
-                        <th style={{ textAlign: 'center' }}>In Stock</th>
-                        <th style={{ textAlign: 'center' }}>Low Stock</th>
-                        <th style={{ textAlign: 'center' }}>Out of Stock</th>
-                        <th style={{ textAlign: 'right' }}>Total Qty</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td style={{ fontWeight: 600, color: '#0f172a' }}>Catalog Overview</td>
-                        <td style={{ textAlign: 'center', fontWeight: 700 }}>{printSummary.totalVariants}</td>
-                        <td style={{ textAlign: 'center', color: '#16a34a', fontWeight: 700 }}>
-                          {printSummary.inStock}
-                        </td>
-                        <td style={{ textAlign: 'center', color: '#d97706', fontWeight: 700 }}>
-                          {printSummary.lowStock}
-                        </td>
-                        <td style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700 }}>
-                          {printSummary.outOfStock}
-                        </td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>
-                          {printSummary.totalQty}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
               </div>
             )}
 
             {/* DETAILED PRODUCTS TABLE */}
             <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  color: '#0f172a',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                  marginBottom: '6px',
-                }}
-              >
-                DETAILED PRODUCTS {totalPages > 1 ? `(Page ${pageNumber} of ${totalPages})` : ''}
-              </div>
               <table className="print-report-table" style={{ marginTop: 0 }}>
                 <colgroup>
                   {printColWidths.map((w, idx) => (
@@ -1067,13 +992,13 @@ const ProductPage = () => {
 
                     return (
                       <tr key={item.variant_id || item.id || idx}>
-                        <td style={{ color: '#64748b', textAlign: 'center' }}>{globalNo}</td>
+                        <td style={{ color: '#475569', textAlign: 'center', fontWeight: 500 }}>{globalNo}</td>
                         <td style={{ fontWeight: 600, color: '#0f172a' }}>
                           {item.product_name || item.name}
                         </td>
                         <td style={{ color: '#334155' }}>{formattedAttrs}</td>
                         <td style={{ textAlign: 'center', color: '#94a3b8' }}>{detail}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0d9488', fontSize: '12.5px' }}>
+                        <td style={{ textAlign: 'right', fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>
                           ${price.toFixed(2)}
                         </td>
                         {activePrintCols.includes('sku') && (
@@ -1128,12 +1053,11 @@ const ProductPage = () => {
                 paddingTop: '16px',
                 paddingBottom: '4px',
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 fontSize: '11px',
                 color: '#94a3b8',
               }}
             >
-              <span>Inventory Management System • Confidential</span>
               <span>
                 Page {pageNumber} of {totalPages}
               </span>
