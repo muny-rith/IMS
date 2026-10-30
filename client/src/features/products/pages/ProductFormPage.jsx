@@ -95,7 +95,8 @@ const normalizeFormValues = (defaultValues, mode) => {
 
 const ProductFormPage = () => {
   const { id } = useParams();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname, state } = location;
   const navigate = useNavigate();
 
   const isEdit = pathname.includes('/edit/');
@@ -204,12 +205,18 @@ const ProductFormPage = () => {
   }, [imagePreview]);
 
   const handleClose = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
+    if (state?.from === 'catalog') {
+      if (window.history.state?.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate('/products', { replace: true });
+      }
     } else if (isEdit && id) {
-      navigate(`/products/view/${id}`);
+      navigate(`/products/view/${id}`, { replace: true });
+    } else if (window.history.state?.idx > 0) {
+      navigate(-1);
     } else {
-      navigate('/products');
+      navigate('/products', { replace: true });
     }
   };
 
@@ -250,13 +257,9 @@ const ProductFormPage = () => {
 
     if (result.success) {
       if (isEdit && id) {
-        if (window.history.length > 1) {
-          navigate(-1);
-        } else {
-          navigate(`/products/view/${id}`, { replace: true });
-        }
+        navigate(`/products/view/${id}`, { replace: true });
       } else {
-        navigate('/products');
+        navigate('/products', { replace: true });
       }
     } else {
       alert(result.message || 'Something went wrong.');
@@ -382,13 +385,13 @@ const ProductFormPage = () => {
           </button>
           <div className="product-form-header__info">
             <div className="product-form-breadcrumbs">
-              <span className="clickable" onClick={() => navigate('/products')}>
+              <span className="clickable" onClick={() => navigate('/products', { replace: true })}>
                 Products
               </span>
               <span>/</span>
               {isEdit && defaultValues?.name && (
                 <>
-                  <span className="clickable" onClick={() => navigate(`/products/view/${id}`)}>
+                  <span className="clickable" onClick={() => navigate(`/products/view/${id}`, { replace: true })}>
                     {defaultValues.name}
                   </span>
                   <span>/</span>

@@ -258,7 +258,7 @@ const ProductPage = () => {
       if (row && row.id) {
         safeSessionStorage.setItem('last_viewed_product_id', String(row.id));
       }
-      navigate(`/products/edit/${row.id}`);
+      navigate(`/products/edit/${row.id}`, { state: { from: 'catalog' } });
     },
     [navigate]
   );
