@@ -986,37 +986,40 @@ const ProductPage = () => {
             {/* Mobile Bottom Pagination Bar */}
             {(!loading || rows.length > 0) && mobileTotalCount > 0 && (
               <div className="product-mobile-pagination">
-                <div className="product-mobile-pagination__controls">
-                  <button
-                    type="button"
-                    className="product-mobile-pagination__btn"
-                    onClick={handleMobilePrevPage}
-                    disabled={clampedMobilePage <= 1}
-                    aria-label="Previous 25 products"
-                  >
-                    <ChevronLeftIcon sx={{ fontSize: 20 }} />
-                    <span>Previous</span>
-                  </button>
-
-                  <div className="product-mobile-pagination__indicator">
-                    Page {clampedMobilePage} / {mobileTotalPages}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="product-mobile-pagination__btn"
-                    onClick={handleMobileNextPage}
-                    disabled={clampedMobilePage >= mobileTotalPages}
-                    aria-label="Next 25 products"
-                  >
-                    <span>Next</span>
-                    <ChevronRightIcon sx={{ fontSize: 20 }} />
-                  </button>
-                </div>
-
                 <div className="product-mobile-pagination__summary">
                   Showing <strong>{mobileStartIndex + 1}–{mobileEndIndex}</strong> of <strong>{mobileTotalCount}</strong> products
                 </div>
+                <div className="product-mobile-pagination__controls">
+                  <Button
+                    variant="outline"
+                    startIcon={<ChevronLeftIcon sx={{ fontSize: 20 }} />}
+                    onClick={handleMobilePrevPage}
+                    disabled={clampedMobilePage <= 1}
+                    className="product-mobile-pagination__btn"
+                    aria-label="Previous 25 products"
+                    responsiveCollapse={true}
+                  // value='Previous'
+                  >
+                  </Button>
+
+                  <div className="product-mobile-pagination__indicator">
+                    <span>Page&nbsp;</span> {clampedMobilePage} / {mobileTotalPages}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    endIcon={<ChevronRightIcon sx={{ fontSize: 20 }} />}
+                    onClick={handleMobileNextPage}
+                    disabled={clampedMobilePage >= mobileTotalPages}
+                    className="product-mobile-pagination__btn"
+                    aria-label="Next 25 products"
+                    responsiveCollapse={true}
+                  // value='Next'
+                  >
+                  </Button>
+                </div>
+
+
               </div>
             )}
           </div>
