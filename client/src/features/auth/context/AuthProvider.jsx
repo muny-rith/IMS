@@ -15,14 +15,15 @@ import {
   signInWithEmail,
   signOutUser,
 } from "../services/authService";
+import { safeStorage } from "../../../lib/api";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(() => {
     try {
-      const localUserStr = localStorage.getItem("moon-ims-user");
-      const localToken = localStorage.getItem("moon-ims-token");
+      const localUserStr = safeStorage.getItem("moon-ims-user");
+      const localToken = safeStorage.getItem("moon-ims-token");
       if (localUserStr) {
         return { access_token: localToken, user: JSON.parse(localUserStr) };
       }
@@ -32,8 +33,12 @@ export const AuthProvider = ({ children }) => {
     return null;
   });
   const [loading, setLoading] = useState(() => {
-    const localUserStr = localStorage.getItem("moon-ims-user");
-    return !localUserStr;
+    try {
+      const localUserStr = safeStorage.getItem("moon-ims-user");
+      return !localUserStr;
+    } catch {
+      return true;
+    }
   });
 
   const signOut = useCallback(async () => {

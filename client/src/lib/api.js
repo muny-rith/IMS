@@ -3,24 +3,48 @@ import axios from 'axios';
 const AUTH_TOKEN_KEY = 'moon-ims-token';
 const REFRESH_TOKEN_KEY = 'moon-ims-refresh-token';
 
-let inMemoryAccessToken = localStorage.getItem(AUTH_TOKEN_KEY) || null;
-let inMemoryRefreshToken = localStorage.getItem(REFRESH_TOKEN_KEY) || null;
+export const safeStorage = {
+  getItem: (key) => {
+    try {
+      return typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(key) : null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key, value) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(key, value);
+    } catch {
+      // ignore storage quota / permissions error
+    }
+  },
+  removeItem: (key) => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  },
+};
+
+let inMemoryAccessToken = safeStorage.getItem(AUTH_TOKEN_KEY) || null;
+let inMemoryRefreshToken = safeStorage.getItem(REFRESH_TOKEN_KEY) || null;
 
 export const setAccessToken = (token) => {
   inMemoryAccessToken = token;
   if (token) {
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    safeStorage.setItem(AUTH_TOKEN_KEY, token);
   } else {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
+    safeStorage.removeItem(AUTH_TOKEN_KEY);
   }
 };
 
 export const setRefreshToken = (token) => {
   inMemoryRefreshToken = token;
   if (token) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+    safeStorage.setItem(REFRESH_TOKEN_KEY, token);
   } else {
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
+    safeStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 };
 
@@ -34,11 +58,11 @@ export const setTokens = (accessToken, refreshToken) => {
 export const clearTokens = () => {
   setAccessToken(null);
   setRefreshToken(null);
-  localStorage.removeItem('moon-ims-user');
+  safeStorage.removeItem('moon-ims-user');
 };
 
-export const getAccessToken = () => inMemoryAccessToken || localStorage.getItem(AUTH_TOKEN_KEY);
-export const getRefreshToken = () => inMemoryRefreshToken || localStorage.getItem(REFRESH_TOKEN_KEY);
+export const getAccessToken = () => inMemoryAccessToken || safeStorage.getItem(AUTH_TOKEN_KEY);
+export const getRefreshToken = () => inMemoryRefreshToken || safeStorage.getItem(REFRESH_TOKEN_KEY);
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:50257/api',
@@ -88,7 +112,7 @@ export const executeSilentRefresh = async () => {
 
       setTokens(activeAccessToken, newRefreshToken || storedRefreshToken);
       if (user) {
-        localStorage.setItem('moon-ims-user', JSON.stringify(user));
+        safeStorage.setItem('moon-ims-user', JSON.stringify(user));
       }
 
       return {

@@ -4,6 +4,7 @@ import api, {
   getAccessToken,
   getRefreshToken,
   executeSilentRefresh,
+  safeStorage,
 } from "../../../lib/api";
 
 const AUTH_USER_KEY = "moon-ims-user";
@@ -72,7 +73,7 @@ export const signInWithEmail = async ({ email, password }) => {
   const activeToken = accessToken || token;
 
   setTokens(activeToken, refreshToken);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  safeStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 
   const session = { access_token: activeToken, user };
   notifyListeners("SIGNED_IN", session);
@@ -115,7 +116,7 @@ export const refreshSession = async () => {
  * 4. Get Current Session with verification
  */
 export const getCurrentSession = async () => {
-  const localUserStr = localStorage.getItem(AUTH_USER_KEY);
+  const localUserStr = safeStorage.getItem(AUTH_USER_KEY);
   const activeToken = getAccessToken();
 
   if (!activeToken && !localUserStr) {
@@ -128,7 +129,7 @@ export const getCurrentSession = async () => {
       const response = await api.get('/auth/session');
       const user = response.data?.data?.user || response.data?.session?.user;
       if (user) {
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+        safeStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
         return { access_token: activeToken, user };
       }
     } catch (err) {

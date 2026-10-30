@@ -86,6 +86,30 @@ const INITIAL_TOAST = {
   severity: 'success',
 };
 
+const safeSessionStorage = {
+  getItem: (key) => {
+    try {
+      return typeof window !== 'undefined' && window.sessionStorage ? window.sessionStorage.getItem(key) : null;
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key, val) => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) window.sessionStorage.setItem(key, val);
+    } catch {
+      // ignore
+    }
+  },
+  removeItem: (key) => {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) window.sessionStorage.removeItem(key);
+    } catch {
+      // ignore
+    }
+  },
+};
+
 const StatCard = ({ icon, label, value, tone = 'default' }) => (
   <div className={`product-stat-card product-stat-card--${tone}`}>
     <div className="product-stat-card__icon">{icon}</div>
@@ -253,7 +277,7 @@ const ProductPage = () => {
   const openViewModal = useCallback(
     (row) => {
       if (row && row.id) {
-        sessionStorage.setItem('last_viewed_product_id', String(row.id));
+        safeSessionStorage.setItem('last_viewed_product_id', String(row.id));
       }
       navigate(`/products/view/${row.id}`);
     },
@@ -263,7 +287,7 @@ const ProductPage = () => {
   const openEditModal = useCallback(
     (row) => {
       if (row && row.id) {
-        sessionStorage.setItem('last_viewed_product_id', String(row.id));
+        safeSessionStorage.setItem('last_viewed_product_id', String(row.id));
       }
       navigate(`/products/edit/${row.id}`);
     },
@@ -365,7 +389,7 @@ const ProductPage = () => {
 
   // Entity Anchor: center and highlight the last viewed product on return
   useEffect(() => {
-    const lastId = sessionStorage.getItem('last_viewed_product_id');
+    const lastId = safeSessionStorage.getItem('last_viewed_product_id');
     if (!lastId || loading || rows.length === 0) return;
 
     const timer = setTimeout(() => {
@@ -379,7 +403,7 @@ const ProductPage = () => {
         setTimeout(() => {
           targetElement.classList.remove('product-row-highlight');
         }, 1600);
-        sessionStorage.removeItem('last_viewed_product_id');
+        safeSessionStorage.removeItem('last_viewed_product_id');
       }
     }, 120);
 

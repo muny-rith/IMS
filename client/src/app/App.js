@@ -1,6 +1,7 @@
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { AuthProvider } from "../features/auth/context/AuthProvider";
 import AppRoutes from "./routes";
+import ErrorBoundary from "../components/common/ErrorBoundary/ErrorBoundary";
 import "./App.css";
 
 const theme = createTheme({
@@ -11,11 +12,13 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider theme={theme}>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
