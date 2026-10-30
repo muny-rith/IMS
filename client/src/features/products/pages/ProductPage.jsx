@@ -13,7 +13,6 @@ import {
   DialogTitle,
   IconButton,
   Snackbar,
-  Tooltip,
   useMediaQuery,
 } from '@mui/material';
 
@@ -41,42 +40,12 @@ import ProductMobileCardList from '../components/ProductMobileCardList';
 import MultiSelect from '../../../components/ui/MultiSelect/MultiSelect';
 import ProductBulkActionsBar from '../components/ProductBulkActionsBar';
 import { ProductStatsSkeleton } from '../components/ProductTableSkeleton';
-import ProductHoverPreview from '../components/ProductHoverPreview';
 import { exportProductsToExcel, exportProductsToCsv } from '../utils/exportProducts';
 import {
   syncProductsToGoogleSheets,
   fetchVariantsForExport,
   formatVariantAttributes,
 } from '../services/productService';
-
-
-
-const PREVIEW_TOOLTIP_PROPS = {
-  enterDelay: 180,
-  leaveDelay: 100,
-  disableInteractive: true,
-  slotProps: {
-    popper: {
-      modifiers: [
-        {
-          name: 'offset',
-          options: {
-            offset: [0, 8],
-          },
-        },
-      ],
-    },
-    tooltip: {
-      sx: {
-        p: 0,
-        backgroundColor: 'transparent !important',
-        boxShadow: 'none !important',
-        maxWidth: 'none !important',
-        border: 'none !important',
-      },
-    },
-  },
-};
 
 
 
@@ -677,32 +646,26 @@ const ProductPage = () => {
         align: 'center',
         headerAlign: 'center',
         renderCell: (params) => (
-          <Tooltip
-            title={<ProductHoverPreview product={params.row} />}
-            placement="bottom-start"
-            {...PREVIEW_TOOLTIP_PROPS}
-          >
-            <Box
-              className="product-avatar-cell product-avatar-clickable"
-              onClick={(e) => {
+          <Box
+            className="product-avatar-cell product-avatar-clickable"
+            onClick={(e) => {
+              e.stopPropagation();
+              openViewModal(params.row);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
                 e.stopPropagation();
                 openViewModal(params.row);
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                  openViewModal(params.row);
-                }
-              }}
-              aria-label={`View ${params.row.name || 'product'}`}
-            >
-              <Avatar src={params.row.image ?? undefined} className="product-avatar">
-                {params.row.name?.[0]?.toUpperCase() ?? '?'}
-              </Avatar>
-            </Box>
-          </Tooltip>
+              }
+            }}
+            aria-label={`View ${params.row.name || 'product'}`}
+          >
+            <Avatar src={params.row.image ?? undefined} className="product-avatar">
+              {params.row.name?.[0]?.toUpperCase() ?? '?'}
+            </Avatar>
+          </Box>
         ),
       },
       {
@@ -710,32 +673,26 @@ const ProductPage = () => {
         headerName: 'Name',
         flex: 1.35,
         renderCell: (params) => (
-          <Tooltip
-            title={<ProductHoverPreview product={params.row} />}
-            placement="bottom-start"
-            {...PREVIEW_TOOLTIP_PROPS}
-          >
-            <div
-              className="product-name-clickable"
-              onClick={(e) => {
+          <div
+            className="product-name-clickable"
+            onClick={(e) => {
+              e.stopPropagation();
+              openViewModal(params.row);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
                 e.stopPropagation();
                 openViewModal(params.row);
-              }}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                  openViewModal(params.row);
-                }
-              }}
-              aria-label={`View ${params.row.name || 'product'}`}
-            >
-              <span className="product-name-clickable__text">
-                {params.row.name || '—'}
-              </span>
-            </div>
-          </Tooltip>
+              }
+            }}
+            aria-label={`View ${params.row.name || 'product'}`}
+          >
+            <span className="product-name-clickable__text">
+              {params.row.name || '—'}
+            </span>
+          </div>
         ),
       },
       {
