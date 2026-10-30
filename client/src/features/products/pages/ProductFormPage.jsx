@@ -204,7 +204,9 @@ const ProductFormPage = () => {
   }, [imagePreview]);
 
   const handleClose = () => {
-    if (isEdit && id) {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else if (isEdit && id) {
       navigate(`/products/view/${id}`);
     } else {
       navigate('/products');
@@ -248,7 +250,11 @@ const ProductFormPage = () => {
 
     if (result.success) {
       if (isEdit && id) {
-        navigate(`/products/view/${id}`, { replace: true });
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate(`/products/view/${id}`, { replace: true });
+        }
       } else {
         navigate('/products');
       }

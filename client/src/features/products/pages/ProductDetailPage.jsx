@@ -313,21 +313,28 @@ const ProductDetailPage = () => {
   };
 
   // Touch Swipe & Mouse Drag gesture state refs
-  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0, isEdgeSwipe: false });
   const mouseDragRef = useRef({ isDown: false, startX: 0, moved: false });
+  const pageTouchStartRef = useRef({ x: 0, y: 0, time: 0 });
 
-  // Mobile Touch Swipe Handlers (Horizontal gesture detection with vertical scroll protection)
+  // Mobile Touch Swipe Handlers for Image Carousel
   const handleTouchStart = (e) => {
     if (e.touches && e.touches[0]) {
+      const startX = e.touches[0].clientX;
       touchStartRef.current = {
-        x: e.touches[0].clientX,
+        x: startX,
         y: e.touches[0].clientY,
         time: Date.now(),
+        // If touch starts within 45px of screen edge, reserve for phone native swipe-back
+        isEdgeSwipe: startX < 45,
       };
     }
   };
 
   const handleTouchEnd = (e) => {
+    // If swipe originated at screen edge, ignore carousel and let phone perform native swipe-back
+    if (touchStartRef.current.isEdgeSwipe) return;
+
     if (e.changedTouches && e.changedTouches[0]) {
       const deltaX = touchStartRef.current.x - e.changedTouches[0].clientX;
       const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY;
@@ -339,6 +346,32 @@ const ProductDetailPage = () => {
         } else {
           handlePrevVariant();
         }
+      }
+    }
+  };
+
+  // Full-Page Touch Swipe Back Handler (guarantees 1-swipe back in PWA & mobile browsers)
+  const handlePageTouchStart = (e) => {
+    if (e.touches && e.touches[0]) {
+      pageTouchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      };
+    }
+  };
+
+  const handlePageTouchEnd = (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      const startX = pageTouchStartRef.current.x;
+      const currentX = e.changedTouches[0].clientX;
+      const deltaX = currentX - startX;
+      const deltaY = Math.abs(e.changedTouches[0].clientY - pageTouchStartRef.current.y);
+      const deltaTime = Date.now() - pageTouchStartRef.current.time;
+
+      // Swiping right from left edge (startX <= 40px, deltaX >= 70px) triggers clean return to /products
+      if (startX <= 40 && deltaX >= 70 && deltaX > deltaY * 1.4 && deltaTime < 550) {
+        handleBack();
       }
     }
   };
@@ -483,7 +516,11 @@ const ProductDetailPage = () => {
   const departmentName = product.department || '—';
 
   return (
-    <div className="product-detail-page">
+    <div
+      className="product-detail-page"
+      onTouchStart={handlePageTouchStart}
+      onTouchEnd={handlePageTouchEnd}
+    >
       {/* ── 1. Compact Header Bar (Matching ProductPage Style) ── */}
       <div className="product-header">
         <div className="product-header__left">
